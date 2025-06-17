@@ -6,14 +6,16 @@ export function BarangayFooter() {
         <div className="flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
           {/* Office Hours */}
           <div className="text-left">
-            <span className="font-medium">Office Hours:</span> Mon-Fri 8:00 AM - 5:00 PM | Sat 8:00 AM - 12:00 PM
+            <span className="font-medium">Office Hours:</span> Mon-Fri 8:00 AM -
+            5:00 PM | Sat 8:00 AM - 12:00 PM
           </div>
-          
+
           {/* Support Contact */}
           <div className="text-center">
-            <span className="font-medium">Support:</span> (02) 1234-5678 | support.impact@dilg.gov.ph
+            <span className="font-medium">Support:</span> (02) 1234-5678 |
+            support.impact@dilg.gov.ph
           </div>
-          
+
           {/* Copyright */}
           <div className="text-right text-gray-400">
             &copy; 2024 DILG-Sulop | The IMPACT Project
@@ -22,4 +24,4 @@ export function BarangayFooter() {
       </div>
     </footer>
   );
-} 
+}

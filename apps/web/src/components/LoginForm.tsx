@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 
 export function LoginForm() {
   return (
-    <div className="w-full max-w-md mx-auto">
+    <div className="w-full max-w-md mx-auto opacity-0 animate-slide-in-up animation-delay-200">
       <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 p-10">
         {/* Header */}
         <div className="text-center mb-10">

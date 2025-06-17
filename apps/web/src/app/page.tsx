@@ -8,11 +8,11 @@ export default function Home() {
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* top right */}
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-blob"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-0 animate-fade-in-blob animation-delay-800 animate-blob"></div>
         {/* bottom left */}
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-200 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-200 rounded-full mix-blend-multiply filter blur-xl opacity-0 animate-fade-in-blob animation-delay-2000 animate-blob"></div>
         {/* top left */}
-        <div className="absolute top-40 left-40 w-80 h-80 bg-slate-200 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob animation-delay-4000"></div>
+        <div className="absolute top-40 left-40 w-80 h-80 bg-slate-200 rounded-full mix-blend-multiply filter blur-xl opacity-0 animate-fade-in-blob-light animation-delay-4000 animate-blob"></div>
       </div>
 
       {/* Content */}
@@ -27,15 +27,15 @@ export default function Home() {
       </div>
 
       {/* Mobile header for smaller screens */}
-      <div className="lg:hidden absolute top-8 left-0 right-0 text-center z-20">
+      <div className="lg:hidden absolute top-8 left-0 right-0 text-center z-20 opacity-0 animate-fade-in animation-delay-200">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          Barangay System
+          SGLGB Assessment
         </h1>
-        <p className="text-gray-600">Secure access to community services</p>
+        <p className="text-gray-600">Partner in Governance Excellence</p>
       </div>
 
       {/* Footer - positioned at bottom */}
-      <div className="absolute bottom-0 left-0 right-0 z-10">
+      <div className="absolute bottom-0 left-0 right-0 z-10 opacity-0 animate-slide-in-up animation-delay-800">
         <BarangayFooter />
       </div>
     </main>
