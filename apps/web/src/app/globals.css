@@ -45,71 +45,71 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --background: #001d39;
+  --foreground: #0a4174;
+  --card: #bdd8e9;
+  --card-foreground: #001d39;
+  --popover: #bdd8e9;
+  --popover-foreground: #001d39;
+  --primary: #0a4174;
+  --primary-foreground: #bdd8e9;
+  --secondary: #49769f;
+  --secondary-foreground: #bdd8e9;
+  --muted: #6ea2b3;
+  --muted-foreground: #001d39;
+  --accent: #7bbde8;
+  --accent-foreground: #001d39;
+  --destructive: #ea4335;
+  --border: #4e8ea2;
+  --input: #4e8ea2;
+  --ring: #0a4174;
+  --chart-1: #001d39;
+  --chart-2: #0a4174;
+  --chart-3: #49769f;
+  --chart-4: #4e8ea2;
+  --chart-5: #6ea2b3;
+  --sidebar: #0a4174;
+  --sidebar-foreground: #bdd8e9;
+  --sidebar-primary: #001d39;
+  --sidebar-primary-foreground: #bdd8e9;
+  --sidebar-accent: #7bbde8;
+  --sidebar-accent-foreground: #001d39;
+  --sidebar-border: #4e8ea2;
+  --sidebar-ring: #0a4174;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #001d39;
+  --foreground: #bdd8e9;
+  --card: #0a4174;
+  --card-foreground: #bdd8e9;
+  --popover: #0a4174;
+  --popover-foreground: #bdd8e9;
+  --primary: #7bbde8;
+  --primary-foreground: #001d39;
+  --secondary: #49769f;
+  --secondary-foreground: #bdd8e9;
+  --muted: #4e8ea2;
+  --muted-foreground: #bdd8e9;
+  --accent: #6ea2b3;
+  --accent-foreground: #001d39;
+  --destructive: #ea4335;
+  --border: #4e8ea2;
+  --input: #4e8ea2;
+  --ring: #bdd8e9;
+  --chart-1: #bdd8e9;
+  --chart-2: #7bbde8;
+  --chart-3: #6ea2b3;
+  --chart-4: #4e8ea2;
+  --chart-5: #49769f;
+  --sidebar: #001d39;
+  --sidebar-foreground: #bdd8e9;
+  --sidebar-primary: #0a4174;
+  --sidebar-primary-foreground: #bdd8e9;
+  --sidebar-accent: #7bbde8;
+  --sidebar-accent-foreground: #001d39;
+  --sidebar-border: #4e8ea2;
+  --sidebar-ring: #bdd8e9;
 }
 
 @layer base {
@@ -119,4 +119,81 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Utility classes for barangay management system */
+@layer components {
+  .input-base {
+    @apply block w-full px-4 py-3 border border-gray-300 rounded-xl bg-white placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-400 hover:shadow-sm;
+  }
+
+  .input-base:focus {
+    @apply shadow-md ring-blue-500/20;
+  }
+
+  .input-base.error {
+    @apply border-red-500 focus:ring-red-500;
+  }
+
+  .btn-primary {
+    @apply w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium py-3 px-4 rounded-xl transition-all duration-200 shadow-sm hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98];
+  }
+
+  .btn-secondary {
+    @apply w-full border border-gray-300 bg-white hover:bg-gray-50 active:bg-gray-100 text-gray-700 font-medium py-3 px-4 rounded-xl transition-all duration-200 shadow-sm hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transform hover:scale-[1.02] active:scale-[0.98];
+  }
+
+  .text-civic-hero {
+    @apply text-4xl font-bold text-gray-900;
+  }
+
+  .text-civic-subtitle {
+    @apply text-lg text-gray-600;
+  }
+
+  .text-civic-body {
+    @apply text-gray-700;
+  }
+}
+
+/* Custom animations for modern blob effects */
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
 }

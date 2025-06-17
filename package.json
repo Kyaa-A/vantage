@@ -27,5 +27,8 @@
   "devDependencies": {
     "openapi-typescript-codegen": "^0.29.0",
     "turbo": "^2.5.4"
+  },
+  "dependencies": {
+    "react-icons": "^5.5.0"
   }
 }
