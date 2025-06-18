@@ -124,7 +124,7 @@
 /* Utility classes for barangay management system */
 @layer components {
   .input-base {
-    @apply block w-full px-4 py-3 border border-gray-300 rounded-xl bg-white placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-400 hover:shadow-sm;
+    @apply block w-full px-2 lg:px-3 xl:px-4 py-1.5 lg:py-2 xl:py-2.5 border border-gray-300 rounded-md lg:rounded-lg xl:rounded-xl bg-white placeholder-gray-400 text-gray-900 text-xs lg:text-sm xl:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-400 hover:shadow-sm;
   }
 
   .input-base:focus {
@@ -136,23 +136,23 @@
   }
 
   .btn-primary {
-    @apply w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium py-3 px-4 rounded-xl transition-all duration-200 shadow-sm hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98];
+    @apply w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium py-1.5 lg:py-2 xl:py-2.5 px-3 lg:px-4 rounded-md lg:rounded-lg xl:rounded-xl transition-all duration-200 shadow-sm hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98];
   }
 
   .btn-secondary {
-    @apply w-full border border-gray-300 bg-white hover:bg-gray-50 active:bg-gray-100 text-gray-700 font-medium py-3 px-4 rounded-xl transition-all duration-200 shadow-sm hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transform hover:scale-[1.02] active:scale-[0.98];
+    @apply w-full border border-gray-300 bg-white hover:bg-gray-50 active:bg-gray-100 text-gray-700 font-medium py-1.5 lg:py-2 xl:py-2.5 px-3 lg:px-4 rounded-md lg:rounded-lg xl:rounded-xl transition-all duration-200 shadow-sm hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transform hover:scale-[1.02] active:scale-[0.98];
   }
 
   .text-civic-hero {
-    @apply text-4xl font-bold text-gray-900;
+    @apply text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900;
   }
 
   .text-civic-subtitle {
-    @apply text-lg text-gray-600;
+    @apply text-xs lg:text-sm xl:text-base text-gray-600;
   }
 
   .text-civic-body {
-    @apply text-gray-700;
+    @apply text-xs lg:text-sm xl:text-base text-gray-700;
   }
 }
 

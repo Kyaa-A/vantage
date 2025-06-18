@@ -1,9 +1,9 @@
 export function BarangayFooter() {
   return (
-    <footer className="w-full text-center text-xs text-gray-500 bg-white/80 backdrop-blur-sm py-4 px-6">
+    <footer className="w-full text-center text-xs text-gray-500 bg-white/80 backdrop-blur-sm py-2 lg:py-3 px-4 lg:px-6">
       <div className="max-w-6xl mx-auto">
         {/* Main footer content in horizontal layout */}
-        <div className="flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
+        <div className="flex flex-col md:flex-row justify-between items-center space-y-1 md:space-y-0 text-xs lg:text-sm">
           {/* Office Hours */}
           <div className="text-left">
             <span className="font-medium">Office Hours:</span> Mon-Fri 8:00 AM -
