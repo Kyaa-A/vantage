@@ -13,12 +13,12 @@ export function BarangayFooter() {
           {/* Support Contact */}
           <div className="text-center">
             <span className="font-medium">Support:</span> (02) 1234-5678 |
-            support.impact@dilg.gov.ph
+            support.vantage@dilg.gov.ph
           </div>
 
           {/* Copyright */}
           <div className="text-right text-gray-400">
-            &copy; 2024 DILG-Sulop | The IMPACT Project
+            &copy; 2024 DILG-Sulop | The VANTAGE Project
           </div>
         </div>
       </div>

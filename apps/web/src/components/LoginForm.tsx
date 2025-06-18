@@ -16,7 +16,7 @@ export function LoginForm() {
             Welcome, Partner in Governance
           </h1>
           <p className="text-xs lg:text-sm xl:text-base text-gray-600">
-            Sign in to manage your SGLGB assessment
+          Sign in to the VANTAGE Platform.
           </p>
         </div>
 
