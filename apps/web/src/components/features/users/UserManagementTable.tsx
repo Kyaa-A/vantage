@@ -11,6 +11,22 @@ interface UserManagementTableProps {
   onEditUser?: (user: User) => void;
 }
 
+function humanizeRole(role: string) {
+  switch (role) {
+    case 'SUPERADMIN':
+      return 'Superadmin';
+    case 'MLGOO_DILG':
+      return 'MLGOO DILG';
+    case 'AREA_ASSESSOR':
+      return 'Area Assessor';
+    case 'BLGU_USER':
+      return 'BLGU USER';
+    default:
+      // Capitalize and replace underscores with spaces for any other roles
+      return role.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  }
+}
+
 export default function UserManagementTable({ users, onEditUser }: UserManagementTableProps) {
   // Fetch barangays and governance areas data
   const { data: barangaysData } = useBarangays();
@@ -55,7 +71,7 @@ export default function UserManagementTable({ users, onEditUser }: UserManagemen
                     'bg-blue-100 text-blue-800 border-blue-200'
                   }`}
                 >
-                  {user.role}
+                  {humanizeRole(user.role)}
                 </Badge>
                 
                 <Badge 
