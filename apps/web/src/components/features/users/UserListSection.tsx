@@ -35,21 +35,15 @@ export default function UserListSection() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-start gap-4">
-        <div className="flex-1">
-          <h2 className="text-lg font-semibold text-gray-900">Users</h2>
-          <p className="text-sm text-gray-600">Manage user accounts and permissions</p>
-        </div>
-        <div className="flex-shrink-0">
-          <Button 
-            onClick={() => setIsFormOpen(true)} 
-            className="flex items-center gap-2 px-4 py-2"
-            size="default"
-          >
-            <Plus className="h-4 w-4" />
-            Add User
-          </Button>
-        </div>
+      <div className="flex justify-end">
+        <Button 
+          onClick={() => setIsFormOpen(true)} 
+          className="flex items-center gap-2 px-4 py-2"
+          size="default"
+        >
+          <Plus className="h-4 w-4" />
+          Add User
+        </Button>
       </div>
       
       <UserManagementTable 

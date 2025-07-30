@@ -2,6 +2,9 @@ import DataTable, { Column } from '@/components/shared/DataTable';
 import type { User } from '@vantage/shared/src/generated/schemas/users';
 import { Button } from '@/components/ui/button';
 import { Edit } from 'lucide-react';
+import { useBarangays } from '@/hooks/useBarangays';
+import { useGovernanceAreas } from '@/hooks/useGovernanceAreas';
+import type { Barangay, GovernanceArea } from '@vantage/shared';
 
 interface UserManagementTableProps {
   users: User[];
@@ -11,6 +14,17 @@ interface UserManagementTableProps {
 type UserTableRow = Record<string, unknown> & User;
 
 export default function UserManagementTable({ users, onEditUser }: UserManagementTableProps) {
+  // Fetch barangays and governance areas data
+  const { data: barangaysData } = useBarangays();
+  const { data: governanceAreasData } = useGovernanceAreas();
+  
+  // Type assertions and create lookup maps
+  const barangays = barangaysData as Barangay[] | undefined;
+  const governanceAreas = governanceAreasData as GovernanceArea[] | undefined;
+  
+  const barangayMap = new Map(barangays?.map(b => [b.id, b.name]) || []);
+  const governanceAreaMap = new Map(governanceAreas?.map(g => [g.id, g.name]) || []);
+
   const columns: Column<UserTableRow>[] = [
     { key: 'name', label: 'Name', sortable: true },
     { key: 'email', label: 'Email', sortable: true },
@@ -20,10 +34,18 @@ export default function UserManagementTable({ users, onEditUser }: UserManagemen
       label: 'Assigned Barangay/Area',
       render: (_: unknown, user: UserTableRow) => {
         if (user.role === 'BLGU_USER') {
-          return user.barangay_id ? `Barangay #${user.barangay_id}` : '-';
+          if (user.barangay_id) {
+            const barangayName = barangayMap.get(user.barangay_id);
+            return barangayName || `Barangay #${user.barangay_id}`;
+          }
+          return '-';
         }
         if (user.role === 'AREA_ASSESSOR') {
-          return user.governance_area_id ? `Area #${user.governance_area_id}` : '-';
+          if (user.governance_area_id) {
+            const areaName = governanceAreaMap.get(user.governance_area_id);
+            return areaName || `Area #${user.governance_area_id}`;
+          }
+          return '-';
         }
         return '-';
       },

@@ -19,7 +19,7 @@ import {
 import { useGovernanceAreas } from '@/hooks/useGovernanceAreas';
 import { useBarangays } from '@/hooks/useBarangays';
 import { UserRole, UserAdminCreate, UserAdminUpdate, Barangay, GovernanceArea } from '@vantage/shared';
-import { usePostUsers, usePutUsersUserId } from '@vantage/shared/src/generated/endpoints/users';
+import { usePostUsers, usePutUsersUserId, getGetUsersQueryKey } from '@vantage/shared/src/generated/endpoints/users';
 import { useQueryClient } from '@tanstack/react-query';
 
 interface UserFormProps {
@@ -195,7 +195,7 @@ export function UserForm({ open, onOpenChange, initialValues, isEditing = false 
         {
           onSuccess: () => {
             // Invalidate the users query to refetch the data
-            queryClient.invalidateQueries({ queryKey: ['users'] });
+            queryClient.invalidateQueries({ queryKey: getGetUsersQueryKey() });
             onOpenChange(false);
           },
           onError: (error) => {
@@ -224,7 +224,7 @@ export function UserForm({ open, onOpenChange, initialValues, isEditing = false 
         {
           onSuccess: () => {
             // Invalidate the users query to refetch the data
-            queryClient.invalidateQueries({ queryKey: ['users'] });
+            queryClient.invalidateQueries({ queryKey: getGetUsersQueryKey() });
             onOpenChange(false);
           },
           onError: (error) => {
