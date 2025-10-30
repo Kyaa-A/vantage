@@ -114,7 +114,8 @@ export function useCurrentAssessment() {
       id: string;
       name: string;
       size: number;
-      url: string;
+      url?: string;
+      storage_path?: string;
     }>;
     feedback_comments?: Array<{
       comment: string;
@@ -152,7 +153,13 @@ export function useCurrentAssessment() {
         (indicator.response.response_data as any).has_budget_plan
           ? ("yes" as const)
           : ("no" as const),
-      movFiles: indicator.movs || [],
+      movFiles: (indicator.movs || []).map((m: any) => ({
+        id: String(m.id),
+        name: m.name ?? m.original_filename ?? m.filename,
+        size: m.size ?? m.file_size,
+        url: m.url ?? "",
+        storagePath: m.storage_path,
+      })),
       assessorComment: indicator.feedback_comments?.[0]?.comment,
       responseId: indicator.response?.id ?? null,
       requiresRework: indicator.response?.requires_rework === true,
@@ -373,7 +380,19 @@ export function useDeleteMOV() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ movId }: { movId: number }) => {
+    mutationFn: async ({ movId, storagePath }: { movId: number; storagePath?: string }) => {
+      // Try deleting from Supabase first if we have a storage path
+      if (storagePath) {
+        try {
+          const { deleteMovFile } = await import("@/lib/uploadMov");
+          await deleteMovFile(storagePath);
+        } catch (err) {
+          // Continue with DB deletion even if storage deletion fails
+          // eslint-disable-next-line no-console
+          console.warn("Failed to delete file from storage:", err);
+        }
+      }
+      // Remove DB record
       return deleteAssessmentsMovs$MovId(movId);
     },
     onSuccess: () => {

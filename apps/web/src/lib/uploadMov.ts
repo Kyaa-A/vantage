@@ -29,3 +29,12 @@ export async function getSignedUrl(storagePath: string, expiresIn = 60) {
   if (error) throw error;
   return data.signedUrl;
 }
+
+export async function deleteMovFile(storagePath: string) {
+  if (!storagePath) return;
+  const { error } = await supabase.storage.from("movs").remove([storagePath]);
+  if (error) {
+    // Surface a consistent error to callers; they may still proceed to delete DB record
+    throw new Error(`Supabase delete failed: ${error.message}`);
+  }
+}

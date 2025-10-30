@@ -49,6 +49,7 @@ export function DynamicIndicatorForm({
     size: number;
     url: string;
     section?: string;
+    storagePath?: string;
   };
   const [localMovs, setLocalMovs] = React.useState<LocalMov[]>(
     (movFiles || []).map((f) => ({
@@ -56,6 +57,7 @@ export function DynamicIndicatorForm({
       name: f.name,
       size: f.size,
       url: f.url,
+      storagePath: (f as any).storagePath || (f as any).storage_path,
     }))
   );
 
@@ -77,7 +79,7 @@ export function DynamicIndicatorForm({
           const name = f.name || f.original_filename || f.filename;
           const size = f.size ?? f.file_size;
           let url = f.url as string | undefined;
-          const storagePath = f.storage_path as string | undefined;
+          const storagePath = (f.storage_path ?? (f as any).storagePath) as string | undefined;
           if (!url && storagePath) {
             const cached = urlCacheRef.current.get(storagePath);
             if (cached) {
@@ -88,14 +90,14 @@ export function DynamicIndicatorForm({
             }
           }
           const section =
-            typeof f.storage_path === "string"
-              ? f.storage_path.includes("bfdp_monitoring_forms")
+            typeof storagePath === "string"
+              ? storagePath.includes("bfdp_monitoring_forms")
                 ? "bfdp_monitoring_forms"
-                : f.storage_path.includes("photo_documentation")
+                : storagePath.includes("photo_documentation")
                 ? "photo_documentation"
                 : undefined
               : undefined;
-          return { id: String(f.id), name, size, url: url || "", section };
+          return { id: String(f.id), name, size, url: url || "", section, storagePath };
         })
       );
       if (!cancelled) setLocalMovs(mapped);
@@ -232,6 +234,8 @@ export function DynamicIndicatorForm({
                             name: file.name,
                             size: file.size,
                             url,
+                            storagePath,
+                            section: (field as any).mov_upload_section,
                           },
                         ]);
                         if (updateAssessmentData) {
@@ -318,7 +322,7 @@ export function DynamicIndicatorForm({
                             type="button"
                             disabled={isDisabled || isDeleting}
                             onClick={() => {
-                              deleteMOV({ movId: parseInt(f.id) });
+                              deleteMOV({ movId: parseInt(f.id), storagePath: f.storagePath });
                               setLocalMovs((prev) =>
                                 prev.filter((x) => x.id !== f.id)
                               );
@@ -502,7 +506,7 @@ export function DynamicIndicatorForm({
                                 type="button"
                                 disabled={isDisabled || isDeleting}
                                 onClick={() => {
-                                  deleteMOV({ movId: parseInt(f.id) });
+                                  deleteMOV({ movId: parseInt(f.id), storagePath: f.storagePath });
                                   setLocalMovs((prev) =>
                                     prev.filter((x) => x.id !== f.id)
                                   );
@@ -551,6 +555,48 @@ export function DynamicIndicatorForm({
       >
         {Object.entries(formSchema.properties || {}).map(
           ([name, field]: [string, FormField]) => renderField(name, field)
+        )}
+
+        {localMovs.length > 0 && (
+          <div className="pt-4 mt-2 border-t border-[var(--border)]">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-2 h-2 bg-[var(--cityscape-yellow)] rounded-full"></div>
+              <h4 className="text-sm font-semibold text-[var(--foreground)]">
+                All Uploaded Files
+              </h4>
+            </div>
+            <div className="mt-2 space-y-1">
+              {localMovs.map((f) => (
+                <div key={f.id} className="text-xs flex items-center gap-2">
+                  <a
+                    href={f.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="underline"
+                  >
+                    {f.name}
+                  </a>
+                  <span>({(f.size / 1024 / 1024).toFixed(1)} MB)</span>
+                  {f.section && (
+                    <span className="text-[var(--text-secondary)]">
+                      · {f.section === "bfdp_monitoring_forms" ? "BFDP Monitoring Forms" : "Photo Documentation"}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    disabled={isDisabled || isDeleting}
+                    onClick={() => {
+                      deleteMOV({ movId: parseInt(f.id), storagePath: f.storagePath });
+                      setLocalMovs((prev) => prev.filter((x) => x.id !== f.id));
+                    }}
+                    className="text-[var(--destructive)]"
+                  >
+                    Delete
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
       </form>
     </Form>

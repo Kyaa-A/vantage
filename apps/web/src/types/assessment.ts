@@ -45,6 +45,7 @@ export interface MOVFile {
   name: string; // API returns name instead of filename
   size: number;
   url: string;
+  storagePath?: string; // Supabase storage path for deletion
   uploadedAt?: string; // Make uploadedAt optional since API doesn't always return it
 }
 

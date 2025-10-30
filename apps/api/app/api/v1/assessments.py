@@ -15,6 +15,7 @@ from app.schemas.assessment import (
     AssessmentSubmissionValidation,
     MOVCreate,
 )
+from app.db.models.assessment import MOV as MOVModel
 from app.services.assessment_service import assessment_service
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -426,7 +427,7 @@ async def delete_mov(
     from Supabase Storage should be handled separately.
     """
     # First get the MOV to verify ownership
-    mov = db.query(MOV).filter(MOV.id == mov_id).first()
+    mov = db.query(MOVModel).filter(MOVModel.id == mov_id).first()
     if mov is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="MOV not found"
