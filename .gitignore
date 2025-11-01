@@ -141,4 +141,11 @@ dmypy.json
 *.key
 *.crt
 *.p12
-*.pfx 
+*.pfx
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
