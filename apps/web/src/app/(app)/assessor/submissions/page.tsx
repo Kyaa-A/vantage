@@ -1,30 +1,88 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAssessorGovernanceArea } from '@/hooks/useAssessorGovernanceArea';
-import { generateSubmissionsData } from '@/components/features/submissions/SubmissionsData';
+import { useAssessorQueue } from '@/hooks/useAssessor';
 import { KPICards, SubmissionsFilters, SubmissionsTable } from '@/components/features/submissions';
-import { SubmissionsFilter, BarangaySubmission } from '@/types/submissions';
-import { toast } from 'react-hot-toast';
+import { SubmissionsFilter, BarangaySubmission, SubmissionsKPI, SubmissionsData } from '@/types/submissions';
+
+// Map API status to UI areaStatus
+function mapStatusToAreaStatus(status: string): BarangaySubmission['areaStatus'] {
+  const normalizedStatus = status.toLowerCase();
+  if (normalizedStatus.includes('submitted') || normalizedStatus.includes('review')) {
+    return 'awaiting_review';
+  }
+  if (normalizedStatus.includes('rework')) {
+    return 'needs_rework';
+  }
+  if (normalizedStatus.includes('validated')) {
+    return 'validated';
+  }
+  return 'in_progress';
+}
+
+// Map API status to UI overallStatus
+function mapStatusToOverallStatus(status: string): BarangaySubmission['overallStatus'] {
+  const normalizedStatus = status.toLowerCase();
+  if (normalizedStatus.includes('submitted') || normalizedStatus.includes('review')) {
+    return 'submitted';
+  }
+  if (normalizedStatus.includes('rework')) {
+    return 'needs_rework';
+  }
+  if (normalizedStatus.includes('validated')) {
+    return 'validated';
+  }
+  if (normalizedStatus.includes('draft')) {
+    return 'draft';
+  }
+  return 'under_review';
+}
 
 export default function AssessorSubmissionsPage() {
+  const router = useRouter();
   const { governanceAreaName, isLoading: governanceAreaLoading } = useAssessorGovernanceArea();
+  const { data: queueData, isLoading: queueLoading, error: queueError } = useAssessorQueue();
+  
   const [filters, setFilters] = useState<SubmissionsFilter>({
     search: '',
     status: []
   });
-  const [filteredSubmissions, setFilteredSubmissions] = useState<BarangaySubmission[]>([]);
-  const [submissionsData, setSubmissionsData] = useState(generateSubmissionsData('Environmental Management'));
 
-  // Update data when governance area is loaded
-  useEffect(() => {
-    if (governanceAreaName && !governanceAreaLoading) {
-      setSubmissionsData(generateSubmissionsData(governanceAreaName));
-    }
-  }, [governanceAreaName, governanceAreaLoading]);
+  // Transform API data to UI shape
+  const submissionsData: SubmissionsData | null = useMemo(() => {
+    if (!queueData || queueLoading) return null;
+
+    // Map queue items to BarangaySubmission
+    const submissions: BarangaySubmission[] = queueData.map((item) => ({
+      id: item.assessment_id.toString(),
+      barangayName: item.barangay_name || 'Unknown',
+      areaProgress: 0, // Not provided by API, default to 0
+      areaStatus: mapStatusToAreaStatus(item.status),
+      overallStatus: mapStatusToOverallStatus(item.status),
+      lastUpdated: item.updated_at,
+    }));
+
+    // Calculate KPIs from queue data
+    const kpi: SubmissionsKPI = {
+      awaitingReview: submissions.filter(s => s.areaStatus === 'awaiting_review').length,
+      inRework: submissions.filter(s => s.areaStatus === 'needs_rework').length,
+      validated: submissions.filter(s => s.areaStatus === 'validated').length,
+      avgReviewTime: 0, // Not provided by API, default to 0
+    };
+
+    return {
+      kpi,
+      submissions,
+      governanceArea: governanceAreaName || 'Unknown',
+    };
+  }, [queueData, queueLoading, governanceAreaName]);
 
   // Filter submissions based on search and status
-  useEffect(() => {
+  const filteredSubmissions = useMemo(() => {
+    if (!submissionsData) return [];
+
     let filtered = submissionsData.submissions;
 
     // Apply search filter
@@ -41,24 +99,20 @@ export default function AssessorSubmissionsPage() {
       );
     }
 
-    setFilteredSubmissions(filtered);
-  }, [submissionsData.submissions, filters]);
+    return filtered;
+  }, [submissionsData, filters]);
 
   const handleSubmissionClick = (submission: BarangaySubmission) => {
     // Navigate to the assessment validation page
-    // For now, show a toast message
-    toast.success(`Opening ${submission.barangayName} assessment for review`);
-    
-    // TODO: Navigate to actual assessment page
-    // router.push(`/assessor/assessments/${submission.id}`);
+    router.push(`/assessor/assessments/${submission.id}`);
   };
 
   const handleFiltersChange = (newFilters: SubmissionsFilter) => {
     setFilters(newFilters);
   };
 
-  // Show loading if governance area is loading
-  if (governanceAreaLoading) {
+  // Show loading if governance area or queue is loading
+  if (governanceAreaLoading || queueLoading) {
     return (
       <div className="space-y-8">
         <div className="animate-pulse">
@@ -69,6 +123,22 @@ export default function AssessorSubmissionsPage() {
           {[...Array(4)].map((_, i) => (
             <div key={i} className="h-32 bg-[var(--muted)] rounded-sm animate-pulse"></div>
           ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (queueError || !submissionsData) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-sm p-6">
+          <h2 className="text-lg font-semibold text-[var(--foreground)] mb-2">
+            Error Loading Submissions
+          </h2>
+          <p className="text-[var(--text-secondary)]">
+            {queueError ? 'Failed to load submissions queue. Please try again later.' : 'No submissions data available.'}
+          </p>
         </div>
       </div>
     );

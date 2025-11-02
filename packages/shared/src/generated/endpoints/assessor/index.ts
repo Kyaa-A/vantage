@@ -21,7 +21,9 @@ import type {
 
 import type {
   AssessmentDetailsResponse,
+  AssessorAnalyticsResponse,
   AssessorQueueItem,
+  BodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPost,
   HTTPValidationError,
   MOVCreate,
   MOVUploadResponse,
@@ -183,7 +185,8 @@ The assessor must have permission to review responses in the same governance
 area as the assessment response's indicator.
 
 Note: The actual file upload to Supabase Storage should be handled by the
-frontend before calling this endpoint.
+frontend before calling this endpoint. This endpoint is for JSON-based uploads.
+For multipart file uploads, use the /movs/upload endpoint.
  * @summary Upload Mov For Assessor
  */
 export const postAssessorAssessmentResponses$ResponseIdMovs = (
@@ -245,6 +248,95 @@ export const usePostAssessorAssessmentResponsesResponseIdMovs = <TError = HTTPVa
       > => {
 
       const mutationOptions = getPostAssessorAssessmentResponsesResponseIdMovsMutationOptions(options);
+
+      return useMutation(mutationOptions );
+    }
+    /**
+ * Upload a MOV file via multipart/form-data for an assessment response.
+
+This endpoint accepts a file upload and handles the complete flow:
+1. Validates assessor permissions (using existing firewall in deps.py)
+2. Uploads file to Supabase Storage via storage_service
+3. Creates MOV record marked as "Uploaded by Assessor"
+4. Returns MOVUploadResponse with stored path and MOV entity
+
+The assessor must have permission to review responses in the same governance
+area as the assessment response's indicator. Existing JSON-based BLGU MOV
+endpoints remain unchanged.
+
+Args:
+    response_id: The ID of the assessment response
+    file: The file to upload (multipart/form-data)
+    filename: Optional custom filename (if not provided, uses file.filename)
+
+Returns:
+    MOVUploadResponse with success status, storage path, and MOV entity
+ * @summary Upload Mov File For Assessor
+ */
+export const postAssessorAssessmentResponses$ResponseIdMovsUpload = (
+    responseId: number,
+    bodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPost: BodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPost,
+ options?: SecondParameter<typeof mutator>,signal?: AbortSignal
+) => {
+      
+      const formData = new FormData();
+formData.append(`file`, bodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPost.file)
+if(bodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPost.filename !== undefined && bodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPost.filename !== null) {
+ formData.append(`filename`, bodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPost.filename)
+ }
+
+      return mutator<MOVUploadResponse>(
+      {url: `http://localhost:8000/api/v1/assessor/assessment-responses/${responseId}/movs/upload`, method: 'POST',
+      headers: {'Content-Type': 'multipart/form-data', },
+       data: formData, signal
+    },
+      options);
+    }
+  
+
+
+export const getPostAssessorAssessmentResponsesResponseIdMovsUploadMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAssessorAssessmentResponses$ResponseIdMovsUpload>>, TError,{responseId: number;data: BodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPost}, TContext>, request?: SecondParameter<typeof mutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postAssessorAssessmentResponses$ResponseIdMovsUpload>>, TError,{responseId: number;data: BodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPost}, TContext> => {
+
+const mutationKey = ['postAssessorAssessmentResponsesResponseIdMovsUpload'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAssessorAssessmentResponses$ResponseIdMovsUpload>>, {responseId: number;data: BodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPost}> = (props) => {
+          const {responseId,data} = props ?? {};
+
+          return  postAssessorAssessmentResponses$ResponseIdMovsUpload(responseId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostAssessorAssessmentResponsesResponseIdMovsUploadMutationResult = NonNullable<Awaited<ReturnType<typeof postAssessorAssessmentResponses$ResponseIdMovsUpload>>>
+    export type PostAssessorAssessmentResponsesResponseIdMovsUploadMutationBody = BodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPost
+    export type PostAssessorAssessmentResponsesResponseIdMovsUploadMutationError = HTTPValidationError
+
+    /**
+ * @summary Upload Mov File For Assessor
+ */
+export const usePostAssessorAssessmentResponsesResponseIdMovsUpload = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAssessorAssessmentResponses$ResponseIdMovsUpload>>, TError,{responseId: number;data: BodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPost}, TContext>, request?: SecondParameter<typeof mutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof postAssessorAssessmentResponses$ResponseIdMovsUpload>>,
+        TError,
+        {responseId: number;data: BodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPost},
+        TContext
+      > => {
+
+      const mutationOptions = getPostAssessorAssessmentResponsesResponseIdMovsUploadMutationOptions(options);
 
       return useMutation(mutationOptions );
     }
@@ -530,4 +622,76 @@ export const usePostAssessorAssessmentsAssessmentIdClassify = <TError = HTTPVali
 
       return useMutation(mutationOptions );
     }
+    /**
+ * Get analytics data for the assessor's governance area.
+
+Returns comprehensive analytics including:
+- Overview: Performance metrics with totals, pass/fail counts, pass rate, and trend series
+- Hotspots: Top underperforming indicators/areas with affected barangays and reasons
+- Workflow: Counts/durations by status, average review times, and rework metrics
+
+The analytics are calculated using existing assessment and response data
+filtered by the assessor's governance area. This endpoint provides a minimal
+implementation that can be extended as the UI grows.
+ * @summary Get Assessor Analytics
+ */
+export const getAssessorAnalytics = (
     
+ options?: SecondParameter<typeof mutator>,signal?: AbortSignal
+) => {
+      
+      
+      return mutator<AssessorAnalyticsResponse>(
+      {url: `http://localhost:8000/api/v1/assessor/analytics`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+export const getGetAssessorAnalyticsQueryKey = () => {
+    return [`http://localhost:8000/api/v1/assessor/analytics`] as const;
+    }
+
+    
+export const getGetAssessorAnalyticsQueryOptions = <TData = Awaited<ReturnType<typeof getAssessorAnalytics>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAssessorAnalytics>>, TError, TData>, request?: SecondParameter<typeof mutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAssessorAnalyticsQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAssessorAnalytics>>> = ({ signal }) => getAssessorAnalytics(requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn,   staleTime: 300000, refetchOnWindowFocus: false,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAssessorAnalytics>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAssessorAnalyticsQueryResult = NonNullable<Awaited<ReturnType<typeof getAssessorAnalytics>>>
+export type GetAssessorAnalyticsQueryError = unknown
+
+
+/**
+ * @summary Get Assessor Analytics
+ */
+
+export function useGetAssessorAnalytics<TData = Awaited<ReturnType<typeof getAssessorAnalytics>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAssessorAnalytics>>, TError, TData>, request?: SecondParameter<typeof mutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAssessorAnalyticsQueryOptions(options)
+
+  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+

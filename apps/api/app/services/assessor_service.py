@@ -1,18 +1,21 @@
 # 🛠️ Assessor Service
 # Business logic for assessor features
 
-from typing import List
+from datetime import datetime, timedelta
+from typing import Any, Dict, List
 
-from app.db.enums import AssessmentStatus, ValidationStatus
+from app.db.enums import AssessmentStatus, ComplianceStatus, ValidationStatus
 from app.db.models.assessment import (
-    MOV,
+    MOV as MOVModel,  # SQLAlchemy model - alias to avoid conflict
     Assessment,
     AssessmentResponse,
     FeedbackComment,
 )
-from app.db.models.governance_area import Indicator
+from app.db.models.governance_area import GovernanceArea, Indicator
 from app.db.models.user import User
-from app.schemas.assessment import MOVCreate
+from app.schemas.assessment import MOV, MOVCreate  # Pydantic schema
+from app.services.storage_service import storage_service
+from fastapi import UploadFile
 from sqlalchemy.orm import Session, joinedload
 
 
@@ -182,7 +185,7 @@ class AssessorService:
             }
 
         # Create the MOV
-        db_mov = MOV(
+        db_mov = MOVModel(  # Use SQLAlchemy model, not Pydantic schema
             filename=mov_create.filename,
             original_filename=mov_create.original_filename,
             file_size=mov_create.file_size,
@@ -199,6 +202,130 @@ class AssessorService:
             "success": True,
             "message": "MOV uploaded successfully",
             "mov_id": db_mov.id,
+        }
+
+    def upload_mov_file_for_assessor(
+        self,
+        db: Session,
+        file: UploadFile,
+        response_id: int,
+        assessor: User,
+        custom_filename: str | None = None,
+    ) -> dict:
+        """
+        Upload a MOV file to Supabase Storage and create MOV record.
+
+        This method handles the complete flow of uploading a file:
+        1. Validates assessor permissions
+        2. Uploads file to Supabase Storage via storage_service
+        3. Creates MOV record marked as "Uploaded by Assessor"
+        4. Returns complete MOV upload response
+
+        Args:
+            db: Database session
+            file: The uploaded file (FastAPI UploadFile)
+            response_id: The ID of the assessment response this MOV belongs to
+            assessor: The assessor performing the upload
+            custom_filename: Optional custom filename (if not provided, uses file.filename)
+
+        Returns:
+            dict: Success status, MOV details, storage path, and MOV entity
+        """
+        # Get the assessment response
+        response = (
+            db.query(AssessmentResponse)
+            .filter(AssessmentResponse.id == response_id)
+            .first()
+        )
+
+        if not response:
+            return {
+                "success": False,
+                "message": "Assessment response not found",
+                "mov_id": None,
+                "storage_path": None,
+                "mov": None,
+            }
+
+        # Verify the assessor has permission to upload MOVs for this response
+        # by checking if the response's indicator belongs to the assessor's governance area
+        indicator = (
+            db.query(Indicator).filter(Indicator.id == response.indicator_id).first()
+        )
+
+        if not indicator or indicator.governance_area_id != assessor.governance_area_id:
+            return {
+                "success": False,
+                "message": "Access denied. You can only upload MOVs for responses in your governance area",
+                "mov_id": None,
+                "storage_path": None,
+                "mov": None,
+            }
+
+        # Upload file to Supabase Storage via storage_service
+        try:
+            upload_result = storage_service.upload_mov(
+                file=file, response_id=response_id, db=db
+            )
+        except ValueError as e:
+            return {
+                "success": False,
+                "message": f"Upload failed: {str(e)}",
+                "mov_id": None,
+                "storage_path": None,
+                "mov": None,
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "message": f"Storage upload error: {str(e)}",
+                "mov_id": None,
+                "storage_path": None,
+                "mov": None,
+            }
+
+        # Create the MOV record marked as "Uploaded by Assessor"
+        # Note: The filename stored uses the original filename from the upload,
+        # but we document in comments that this was uploaded by assessor
+        stored_filename = upload_result["filename"]
+        original_filename = custom_filename or upload_result["original_filename"]
+        
+        db_mov = MOVModel(  # Use SQLAlchemy model, not Pydantic schema
+            filename=stored_filename,
+            original_filename=original_filename,
+            file_size=upload_result["file_size"],
+            content_type=upload_result["content_type"],
+            storage_path=upload_result["storage_path"],
+            response_id=response_id,
+            # Status defaults to UPLOADED
+            # This MOV is marked as "Uploaded by Assessor" via the storage path
+            # pattern: assessment-{assessment_id}/response-{response_id}/
+            # and by the fact that this endpoint is assessor-only
+        )
+
+        db.add(db_mov)
+        db.commit()
+        db.refresh(db_mov)
+
+        # Convert MOV to dict for response
+        mov_dict = {
+            "id": db_mov.id,
+            "filename": db_mov.filename,
+            "original_filename": db_mov.original_filename,
+            "file_size": db_mov.file_size,
+            "content_type": db_mov.content_type,
+            "storage_path": db_mov.storage_path,
+            "status": db_mov.status.value if hasattr(db_mov.status, "value") else str(db_mov.status),
+            "response_id": db_mov.response_id,
+            "uploaded_at": db_mov.uploaded_at.isoformat(),
+        }
+
+        return {
+            "success": True,
+            "message": "MOV uploaded successfully by assessor",
+            "mov_id": db_mov.id,
+            "storage_path": upload_result["storage_path"],
+            "mov": mov_dict,
         }
 
     def get_assessment_details_for_assessor(
@@ -538,6 +665,250 @@ class AssessorService:
             else None,
             "classification_result": classification_result,
             "notification_result": notification_result,
+        }
+
+    def get_analytics(self, db: Session, assessor: User) -> Dict[str, Any]:
+        """
+        Get analytics data for the assessor's governance area.
+
+        Calculates:
+        - Overview: Performance metrics (total assessed, passed, failed, pass rate, trends)
+        - Hotspots: Top underperforming indicators with affected barangays
+        - Workflow: Counts by status, average review times, rework metrics
+
+        Args:
+            db: Database session
+            assessor: The assessor requesting analytics
+
+        Returns:
+            dict: Analytics data structured for AssessorAnalyticsResponse
+        """
+        # Get governance area name
+        governance_area = (
+            db.query(GovernanceArea)
+            .filter(GovernanceArea.id == assessor.governance_area_id)
+            .first()
+        )
+        governance_area_name = governance_area.name if governance_area else "Unknown"
+
+        # Get all assessments in the assessor's governance area
+        # via indicators that belong to responses
+        assessments = (
+            db.query(Assessment)
+            .join(AssessmentResponse, AssessmentResponse.assessment_id == Assessment.id)
+            .join(Indicator, Indicator.id == AssessmentResponse.indicator_id)
+            .options(
+                joinedload(Assessment.blgu_user).joinedload(User.barangay),
+                joinedload(Assessment.responses).joinedload(
+                    AssessmentResponse.indicator
+                ),
+            )
+            .filter(Indicator.governance_area_id == assessor.governance_area_id)
+            .filter(
+                Assessment.status.in_(
+                    [
+                        AssessmentStatus.SUBMITTED_FOR_REVIEW,
+                        AssessmentStatus.NEEDS_REWORK,
+                        AssessmentStatus.VALIDATED,
+                    ]
+                )
+            )
+            .distinct(Assessment.id)
+            .all()
+        )
+
+        # Calculate overview (performance metrics)
+        total_assessed = len(assessments)
+        passed = sum(
+            1
+            for a in assessments
+            if a.final_compliance_status == ComplianceStatus.PASSED
+        )
+        failed = sum(
+            1
+            for a in assessments
+            if a.final_compliance_status == ComplianceStatus.FAILED
+        )
+        # If compliance status not set, count based on validation status
+        # An assessment passes if majority of responses are Pass
+        if total_assessed > 0:
+            assessments_without_compliance = [
+                a
+                for a in assessments
+                if a.final_compliance_status is None
+            ]
+            for a in assessments_without_compliance:
+                if a.responses:
+                    pass_count = sum(
+                        1
+                        for r in a.responses
+                        if r.validation_status == ValidationStatus.PASS
+                    )
+                    fail_count = sum(
+                        1
+                        for r in a.responses
+                        if r.validation_status == ValidationStatus.FAIL
+                    )
+                    if pass_count > fail_count:
+                        passed += 1
+                    elif fail_count > 0:
+                        failed += 1
+
+        pass_rate = (passed / total_assessed * 100) if total_assessed > 0 else 0.0
+
+        # Simple trend series: last 6 months of assessment submissions
+        # This is a minimal implementation - can be extended with more granular data
+        trend_series = []
+        if assessments:
+            # Group by month (simplified - just show last 6 months)
+            current_date = datetime.utcnow()
+            for i in range(6):
+                month_date = current_date - timedelta(days=30 * (5 - i))
+                month_assessed = sum(
+                    1
+                    for a in assessments
+                    if a.submitted_at
+                    and a.submitted_at.year == month_date.year
+                    and a.submitted_at.month == month_date.month
+                )
+                trend_series.append(
+                    {
+                        "month": month_date.strftime("%Y-%m"),
+                        "assessed": month_assessed,
+                    }
+                )
+
+        # Calculate hotspots (top underperforming indicators)
+        # Find indicators with most failures (validation_status = Fail)
+        indicator_failures: Dict[int, Dict[str, Any]] = {}
+        barangay_failures: Dict[int, List[str]] = {}
+
+        for assessment in assessments:
+            barangay_name = getattr(
+                getattr(assessment.blgu_user, "barangay", None), "name", "Unknown"
+            )
+            for response in assessment.responses:
+                if (
+                    response.indicator.governance_area_id == assessor.governance_area_id
+                    and response.validation_status == ValidationStatus.FAIL
+                ):
+                    indicator_id = response.indicator.id
+                    indicator_name = response.indicator.name
+
+                    if indicator_id not in indicator_failures:
+                        indicator_failures[indicator_id] = {
+                            "indicator": indicator_name,
+                            "failed_count": 0,
+                            "barangays": [],
+                        }
+                        barangay_failures[indicator_id] = []
+
+                    indicator_failures[indicator_id]["failed_count"] += 1
+                    if barangay_name not in barangay_failures[indicator_id]:
+                        barangay_failures[indicator_id].append(barangay_name)
+                        indicator_failures[indicator_id]["barangays"].append(
+                            barangay_name
+                        )
+
+        # Convert to list and sort by failed_count (top 10)
+        hotspots_list = [
+            {
+                "indicator": data["indicator"],
+                "indicator_id": indicator_id,
+                "failed_count": data["failed_count"],
+                "barangays": data["barangays"],
+                "reason": None,  # Can be extended with feedback comments analysis
+            }
+            for indicator_id, data in sorted(
+                indicator_failures.items(), key=lambda x: x[1]["failed_count"], reverse=True
+            )[:10]
+        ]
+
+        # Calculate workflow metrics
+        total_reviewed = sum(
+            1
+            for a in assessments
+            if a.status == AssessmentStatus.VALIDATED
+            or any(r.validation_status is not None for r in a.responses)
+        )
+
+        # Calculate average time to first review
+        review_times = []
+        for assessment in assessments:
+            if assessment.submitted_at:
+                # Find first validation timestamp from responses
+                first_validation = None
+                for response in assessment.responses:
+                    if response.validation_status is not None:
+                        # Use updated_at as proxy for validation time
+                        if (
+                            first_validation is None
+                            or response.updated_at < first_validation
+                        ):
+                            first_validation = response.updated_at
+
+                if first_validation:
+                    time_diff = (first_validation - assessment.submitted_at).total_seconds() / (
+                        24 * 3600
+                    )  # Convert to days
+                    if time_diff > 0:
+                        review_times.append(time_diff)
+
+        avg_time_to_first_review = (
+            sum(review_times) / len(review_times) if review_times else 0.0
+        )
+
+        # Calculate rework cycle time
+        rework_times = []
+        rework_count = 0
+        for assessment in assessments:
+            if assessment.rework_count > 0:
+                rework_count += 1
+                # Simplified: estimate rework cycle time from status transitions
+                # Time from submission to validation (if validated after rework)
+                if (
+                    assessment.submitted_at
+                    and assessment.validated_at
+                    and assessment.validated_at > assessment.submitted_at
+                ):
+                    time_diff = (
+                        (assessment.validated_at - assessment.submitted_at).total_seconds()
+                        / (24 * 3600)
+                    )
+                    rework_times.append(time_diff)
+
+        avg_rework_cycle_time = (
+            sum(rework_times) / len(rework_times) if rework_times else 0.0
+        )
+
+        rework_rate = (rework_count / total_assessed * 100) if total_assessed > 0 else 0.0
+
+        # Counts by status
+        counts_by_status: Dict[str, int] = {}
+        for status in AssessmentStatus:
+            count = sum(1 for a in assessments if a.status == status)
+            if count > 0:
+                counts_by_status[status.value] = count
+
+        # Build response
+        return {
+            "overview": {
+                "total_assessed": total_assessed,
+                "passed": passed,
+                "failed": failed,
+                "pass_rate": round(pass_rate, 2),
+                "trend_series": trend_series,
+            },
+            "hotspots": hotspots_list,
+            "workflow": {
+                "avg_time_to_first_review": round(avg_time_to_first_review, 1),
+                "avg_rework_cycle_time": round(avg_rework_cycle_time, 1),
+                "total_reviewed": total_reviewed,
+                "rework_rate": round(rework_rate, 2),
+                "counts_by_status": counts_by_status,
+            },
+            "assessment_period": "SGLGB 2024",  # Can be made dynamic
+            "governance_area_name": governance_area_name,
         }
 
 

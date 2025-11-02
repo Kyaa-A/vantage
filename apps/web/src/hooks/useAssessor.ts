@@ -2,9 +2,10 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import {
+    useGetAssessorAnalytics,
     useGetAssessorAssessmentsAssessmentId,
     useGetAssessorQueue,
-    usePostAssessorAssessmentResponsesResponseIdMovs,
+    usePostAssessorAssessmentResponsesResponseIdMovsUpload,
     usePostAssessorAssessmentResponsesResponseIdValidate,
     usePostAssessorAssessmentsAssessmentIdFinalize,
     usePostAssessorAssessmentsAssessmentIdRework
@@ -18,6 +19,10 @@ const assessorKeys = {
 
 export function useAssessorQueue() {
   return useGetAssessorQueue();
+}
+
+export function useAssessorAnalytics() {
+  return useGetAssessorAnalytics();
 }
 
 export function useAssessorAssessmentDetails(assessmentId: string) {
@@ -35,12 +40,16 @@ export function useAssessorValidationMutation(_assessmentId: string) {
   });
 }
 
-export function useAssessorMOVUploadMutation(_assessmentId: string) {
-  return usePostAssessorAssessmentResponsesResponseIdMovs({
+export function useAssessorMOVUploadMutation(assessmentId: string) {
+  const queryClient = useQueryClient();
+  
+  return usePostAssessorAssessmentResponsesResponseIdMovsUpload({
     mutation: {
       onSuccess: () => {
-        // Invalidate the assessment details query to refresh the data
-        // This will be handled by the component using the mutation
+        // Invalidate the assessment details query to refresh the data and show new MOVs
+        queryClient.invalidateQueries({ 
+          queryKey: assessorKeys.assessmentDetails(assessmentId) 
+        });
       },
     },
   });

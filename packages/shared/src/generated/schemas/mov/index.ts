@@ -6,6 +6,19 @@
 import type { MOVStatus } from '../common';
 
 /**
+ * MOVCreate
+ */
+export interface MOVCreate {
+  filename: string;
+  original_filename: string;
+  file_size: number;
+  content_type: string;
+  storage_path: string;
+  response_id: number;
+}
+
+
+/**
  * Mov
  */
 export interface Mov {
@@ -18,17 +31,4 @@ export interface Mov {
   status: MOVStatus;
   response_id: number;
   uploaded_at: string;
-}
-
-
-/**
- * MOVCreate
- */
-export interface MOVCreate {
-  filename: string;
-  original_filename: string;
-  file_size: number;
-  content_type: string;
-  storage_path: string;
-  response_id: number;
 }

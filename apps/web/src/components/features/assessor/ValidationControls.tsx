@@ -9,7 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { useAssessorMOVUploadMutation, useAssessorValidationMutation } from "@/hooks/useAssessor";
 import { useQueryClient } from "@tanstack/react-query";
-import { MOVCreate, ValidationStatus } from "@vantage/shared";
+import { ValidationStatus } from "@vantage/shared";
 import { AlertTriangle, CheckCircle, FileText, MessageSquare, Save, Upload, X, XCircle } from "lucide-react";
 import { useRef, useState } from "react";
 
@@ -121,30 +121,16 @@ export function ValidationControls({
     }
 
     try {
-      // For now, we'll create a mock storage path since we don't have Supabase integration yet
-      // In a real implementation, you would upload to Supabase first and get the storage path
-      const mockStoragePath = `movs/${Date.now()}-${selectedFile.name}`;
-      
-      const movData: MOVCreate = {
-        filename: selectedFile.name,
-        original_filename: selectedFile.name,
-        file_size: selectedFile.size,
-        content_type: selectedFile.type,
-        storage_path: mockStoragePath,
-        response_id: responseId,
-      };
-
+      // Upload file via multipart endpoint (handles Supabase storage server-side)
       await movUploadMutation.mutateAsync({
         responseId,
-        data: movData,
+        data: {
+          file: selectedFile, // File object (will be converted to Blob automatically)
+          filename: selectedFile.name, // Optional custom filename
+        },
       });
 
-      // Invalidate the assessment details query to refresh the data
-      queryClient.invalidateQueries({ 
-        queryKey: ["assessor", "assessment", assessmentId] 
-      });
-
-      // Clear the selected file
+      // Clear the selected file after successful upload
       setSelectedFile(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";

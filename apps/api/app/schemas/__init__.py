@@ -31,11 +31,15 @@ from .assessment import (
     MOVUpdate,
 )
 from .assessor import (
+    AssessorAnalyticsResponse,
     AssessmentDetailsResponse,
     AssessorQueueItem,
     MOVUploadResponse,
+    PerformanceOverview,
+    SystemicWeakness,
     ValidationRequest,
     ValidationResponse,
+    WorkflowMetrics,
 )
 from .system import ApiResponse, ErrorResponse, HealthCheck, SuccessResponse
 from .token import AuthToken, LoginRequest, Token, TokenPayload
@@ -88,4 +92,8 @@ __all__ = [
     "ValidationRequest",
     "ValidationResponse",
     "MOVUploadResponse",
+    "AssessorAnalyticsResponse",
+    "PerformanceOverview",
+    "SystemicWeakness",
+    "WorkflowMetrics",
 ]

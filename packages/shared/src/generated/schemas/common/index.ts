@@ -73,6 +73,24 @@ export const MOVStatus = {
 
 
 /**
+ * PerformanceOverview
+ */
+export interface PerformanceOverview {
+  total_assessed: number;
+  passed: number;
+  failed: number;
+  pass_rate: number;
+  trend_series?: PerformanceOverviewTrendSeriesItem[];
+}
+
+
+/**
+ * PerformanceOverviewTrendSeriesItem
+ */
+export type PerformanceOverviewTrendSeriesItem = {[key: string]: number | string};
+
+
+/**
  * ProgressSummary
  */
 export interface ProgressSummary {
@@ -80,3 +98,21 @@ export interface ProgressSummary {
   total: number;
   percentage: number;
 }
+
+
+/**
+ * WorkflowMetrics
+ */
+export interface WorkflowMetrics {
+  avg_time_to_first_review: number;
+  avg_rework_cycle_time: number;
+  total_reviewed: number;
+  rework_rate: number;
+  counts_by_status?: WorkflowMetricsCountsByStatus;
+}
+
+
+/**
+ * WorkflowMetricsCountsByStatus
+ */
+export type WorkflowMetricsCountsByStatus = {[key: string]: number};

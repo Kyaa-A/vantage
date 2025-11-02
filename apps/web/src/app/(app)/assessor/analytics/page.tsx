@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { SystemicWeakness } from "@/components/features/analytics/AssessorAnalyticsTypes";
-import { generateAssessorData } from "@/components/features/analytics/AssessorAnalyticsData";
+import { useState, useMemo } from "react";
+import { AssessorData, SystemicWeakness } from "@/components/features/analytics/AssessorAnalyticsTypes";
+import { useAssessorAnalytics } from "@/hooks/useAssessor";
 import { useAssessorGovernanceArea } from "@/hooks/useAssessorGovernanceArea";
 import {
   GlobalFilter,
@@ -16,17 +16,9 @@ import {
 export default function AssessorAnalyticsPage() {
   const [selectedWeakness, setSelectedWeakness] = useState<SystemicWeakness | null>(null);
   const [showWeaknessModal, setShowWeaknessModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   
   const { governanceAreaName, isLoading: governanceAreaLoading } = useAssessorGovernanceArea();
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
-
-    return () => clearTimeout(timer);
-  }, []);
+  const { data: analyticsData, isLoading: analyticsLoading, error: analyticsError } = useAssessorAnalytics();
 
   const handleWeaknessClick = (weakness: SystemicWeakness) => {
     setSelectedWeakness(weakness);
@@ -38,16 +30,54 @@ export default function AssessorAnalyticsPage() {
     setSelectedWeakness(null);
   };
 
-  // Show loading if either the page is loading or governance area is loading
-  if (isLoading || governanceAreaLoading) {
+  // Show loading if either the page is loading or analytics is loading
+  if (analyticsLoading || governanceAreaLoading) {
     return <AnalyticsSkeleton />;
   }
 
-  // Use real governance area name or fallback to Environmental Management
-  const areaName = governanceAreaName || "Environmental Management";
-  
-  // Generate data based on the real governance area
-  const assessorData = generateAssessorData(areaName);
+  // Show error state
+  if (analyticsError || !analyticsData) {
+    return (
+      <div className="space-y-8">
+        <div className="bg-[var(--card)] border border-[var(--border)] rounded-sm p-6">
+          <h2 className="text-lg font-semibold text-[var(--foreground)] mb-2">
+            Error Loading Analytics
+          </h2>
+          <p className="text-[var(--text-secondary)]">
+            {analyticsError ? 'Failed to load analytics data. Please try again later.' : 'No analytics data available.'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Map API response to UI shape
+  const assessorData: AssessorData = useMemo(() => {
+    const governanceArea = analyticsData.governance_area_name || governanceAreaName || "Unknown";
+    
+    return {
+      name: governanceArea,
+      assignedBarangays: analyticsData.overview.total_assessed, // Use total_assessed as proxy for assigned barangays
+      assessmentPeriod: analyticsData.assessment_period || "SGLGB 2024",
+      performance: {
+        totalAssessed: analyticsData.overview.total_assessed,
+        passed: analyticsData.overview.passed,
+        failed: analyticsData.overview.failed,
+        passRate: analyticsData.overview.pass_rate,
+      },
+      systemicWeaknesses: analyticsData.hotspots.map((hotspot) => ({
+        indicator: hotspot.indicator,
+        failedCount: hotspot.failed_count,
+        barangays: hotspot.barangays,
+      })),
+      workflowMetrics: {
+        avgTimeToFirstReview: analyticsData.workflow.avg_time_to_first_review,
+        avgReworkCycleTime: analyticsData.workflow.avg_rework_cycle_time,
+        totalReviewed: analyticsData.workflow.total_reviewed,
+        reworkRate: analyticsData.workflow.rework_rate,
+      },
+    };
+  }, [analyticsData, governanceAreaName]);
 
   return (
     <div className="space-y-8">

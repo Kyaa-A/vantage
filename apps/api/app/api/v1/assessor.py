@@ -1,12 +1,13 @@
 # 🧭 Assessor API Routes
 # Endpoints for assessor-specific functionality (secure queue, validation actions)
 
-from typing import List
+from typing import List, Optional
 
 from app.api import deps
 from app.db.models.user import User
 from app.schemas import (
     AssessmentDetailsResponse,
+    AssessorAnalyticsResponse,
     AssessorQueueItem,
     MOVCreate,
     MOVUploadResponse,
@@ -14,7 +15,7 @@ from app.schemas import (
     ValidationResponse,
 )
 from app.services import assessor_service, intelligence_service
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 router = APIRouter()
@@ -81,7 +82,8 @@ async def upload_mov_for_assessor(
     area as the assessment response's indicator.
 
     Note: The actual file upload to Supabase Storage should be handled by the
-    frontend before calling this endpoint.
+    frontend before calling this endpoint. This endpoint is for JSON-based uploads.
+    For multipart file uploads, use the /movs/upload endpoint.
     """
     # Verify the MOV is for the correct response
     if mov_data.response_id != response_id:
@@ -96,6 +98,59 @@ async def upload_mov_for_assessor(
     )
 
     return MOVUploadResponse(**result)
+
+
+@router.post(
+    "/assessment-responses/{response_id}/movs/upload",
+    response_model=MOVUploadResponse,
+    tags=["assessor"],
+)
+async def upload_mov_file_for_assessor(
+    response_id: int,
+    file: UploadFile = File(..., description="The MOV file to upload"),
+    filename: Optional[str] = Form(None, description="Optional custom filename"),
+    db: Session = Depends(deps.get_db),
+    current_assessor: User = Depends(deps.get_current_area_assessor_user),
+):
+    """
+    Upload a MOV file via multipart/form-data for an assessment response.
+
+    This endpoint accepts a file upload and handles the complete flow:
+    1. Validates assessor permissions (using existing firewall in deps.py)
+    2. Uploads file to Supabase Storage via storage_service
+    3. Creates MOV record marked as "Uploaded by Assessor"
+    4. Returns MOVUploadResponse with stored path and MOV entity
+
+    The assessor must have permission to review responses in the same governance
+    area as the assessment response's indicator. Existing JSON-based BLGU MOV
+    endpoints remain unchanged.
+
+    Args:
+        response_id: The ID of the assessment response
+        file: The file to upload (multipart/form-data)
+        filename: Optional custom filename (if not provided, uses file.filename)
+
+    Returns:
+        MOVUploadResponse with success status, storage path, and MOV entity
+    """
+    try:
+        result = assessor_service.upload_mov_file_for_assessor(
+            db=db,
+            file=file,
+            response_id=response_id,
+            assessor=current_assessor,
+            custom_filename=filename,
+        )
+
+        # Return result dict directly - FastAPI will serialize it according to response_model
+        # Using dict return to avoid Pydantic validation issues with nested MOV dict
+        return result
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to upload MOV file: {str(e)}",
+        )
 
 
 @router.get(
@@ -226,3 +281,36 @@ async def classify_assessment(
         from fastapi import HTTPException
 
         raise HTTPException(status_code=500, detail=f"Classification failed: {str(e)}")
+
+
+@router.get(
+    "/analytics",
+    response_model=AssessorAnalyticsResponse,
+    tags=["assessor"],
+)
+async def get_assessor_analytics(
+    db: Session = Depends(deps.get_db),
+    current_assessor: User = Depends(deps.get_current_area_assessor_user),
+):
+    """
+    Get analytics data for the assessor's governance area.
+
+    Returns comprehensive analytics including:
+    - Overview: Performance metrics with totals, pass/fail counts, pass rate, and trend series
+    - Hotspots: Top underperforming indicators/areas with affected barangays and reasons
+    - Workflow: Counts/durations by status, average review times, and rework metrics
+
+    The analytics are calculated using existing assessment and response data
+    filtered by the assessor's governance area. This endpoint provides a minimal
+    implementation that can be extended as the UI grows.
+    """
+    try:
+        analytics_data = assessor_service.get_analytics(
+            db=db, assessor=current_assessor
+        )
+        return AssessorAnalyticsResponse(**analytics_data)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to retrieve analytics: {str(e)}",
+        )

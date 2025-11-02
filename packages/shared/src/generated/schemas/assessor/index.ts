@@ -3,6 +3,34 @@
 // 📁 Assessor-related types
 // 🏷️  Based on FastAPI tag: "assessor"
 
+import type { PerformanceOverview } from '../common';
+import type { SystemicWeakness } from '../system';
+import type { WorkflowMetrics } from '../common';
+
+/**
+ * AssessorAnalyticsResponse
+ */
+export interface AssessorAnalyticsResponse {
+  overview: PerformanceOverview;
+  hotspots: SystemicWeakness[];
+  workflow: WorkflowMetrics;
+  assessment_period?: AssessorAnalyticsResponseAssessmentPeriod;
+  governance_area_name?: AssessorAnalyticsResponseGovernanceAreaName;
+}
+
+
+/**
+ * AssessorAnalyticsResponseAssessmentPeriod
+ */
+export type AssessorAnalyticsResponseAssessmentPeriod = string | null;
+
+
+/**
+ * AssessorAnalyticsResponseGovernanceAreaName
+ */
+export type AssessorAnalyticsResponseGovernanceAreaName = string | null;
+
+
 /**
  * AssessorQueueItem
  */
@@ -19,3 +47,20 @@ export interface AssessorQueueItem {
  * AssessorQueueItemSubmissionDate
  */
 export type AssessorQueueItemSubmissionDate = string | null;
+
+
+/**
+ * BodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPost
+ */
+export interface BodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPost {
+  /** The MOV file to upload */
+  file: Blob;
+  /** Optional custom filename */
+  filename?: BodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPostFilename;
+}
+
+
+/**
+ * BodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPostFilename
+ */
+export type BodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPostFilename = string | null;

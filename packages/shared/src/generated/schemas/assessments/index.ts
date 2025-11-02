@@ -214,6 +214,29 @@ export type AssessmentSubmissionValidationWarningsItem = { [key: string]: unknow
 
 
 /**
+ * AssessorAnalyticsResponseAssessmentPeriod
+ */
+export type AssessorAnalyticsResponseAssessmentPeriod = string | null;
+
+
+/**
+ * BodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPost
+ */
+export interface BodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPost {
+  /** The MOV file to upload */
+  file: Blob;
+  /** Optional custom filename */
+  filename?: BodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPostFilename;
+}
+
+
+/**
+ * BodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPostFilename
+ */
+export type BodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPostFilename = string | null;
+
+
+/**
  * DeleteAssessmentsMovsMovId200
  */
 export type DeleteAssessmentsMovsMovId200 = {[key: string]: string};

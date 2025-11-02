@@ -30,6 +30,9 @@ This matrix maps each functional requirement from the PRD to the corresponding E
 - `apps/web/src/components/features/assessor/ValidationControls.tsx`
 - `apps/web/src/components/shared/FilePreviewerModal.tsx`
 - `apps/web/src/hooks/useAssessor.ts`
+- `apps/api/app/services/storage_service.py`
+- `apps/api/app/api/v1/assessor.py` (multipart upload endpoint, analytics endpoint)
+- `apps/api/app/schemas/assessor.py` (MOVUploadResponse extended, AssessorAnalyticsResponse)
 
 ## Plan Update: Assessor — Replace Mocks, Add Supabase Uploads, and Analytics Endpoint
 
@@ -49,25 +52,25 @@ This section adds a new integration-focused epic to wire existing assessor UI to
 
 ### 4.0 Epic: Integration & Analytics
 
-- [ ] 4.1 Story: Backend — Supabase Integration
+- [x] 4.1 Story: Backend — Supabase Integration
 
-  - [ ] 4.1.1 Atomic: Add settings and env vars
+  - [x] 4.1.1 Atomic: Add settings and env vars
     - Files: `apps/api/app/core/config.py`, `apps/api/.env`
     - Acceptance: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` defined in `Settings` and loaded from `.env` (local) or environment (prod). Keys never exposed to frontend.
-  - [ ] 4.1.2 Atomic: Implement `storage_service.py`
+  - [x] 4.1.2 Atomic: Implement `storage_service.py`
     - Files: `apps/api/app/services/storage_service.py` (new)
     - Acceptance: Service initializes Supabase client with service-role key and implements `upload_mov(file, *, response_id)` that stores files under bucket `movs` with prefix `assessment-{assessment_id}/response-{response_id}/`. Returns stored path and metadata suitable for persistence.
 
-- [ ] 4.2 Story: Backend — MOV Upload Endpoint (Assessor)
+- [x] 4.2 Story: Backend — MOV Upload Endpoint (Assessor)
 
-  - [ ] 4.2.1 Atomic: Add multipart upload route
+  - [x] 4.2.1 Atomic: Add multipart upload route
     - Files: `apps/api/app/api/v1/assessor.py`, `apps/api/app/schemas/assessment.py`, `apps/api/app/services/assessor_service.py`
     - Acceptance: `POST /api/v1/assessor/assessment-responses/{response_id}/movs/upload` accepts `multipart/form-data` (`file`, optional `filename`), validates assessor permissions (existing firewall in `deps.py`), uploads via `storage_service`, creates MOV record marked as "Uploaded by Assessor", and returns `MOVUploadResponse` including stored path and MOV entity. Existing JSON-based BLGU MOV endpoints remain unchanged.
     - Note: Do not expose Supabase credentials; only persist storage path/URL in DB. Signed URLs can be added later.
 
-- [ ] 4.3 Story: Backend — Assessor Analytics Endpoint
+- [x] 4.3 Story: Backend — Assessor Analytics Endpoint
 
-  - [ ] 4.3.1 Atomic: Add analytics route and service method(s)
+  - [x] 4.3.1 Atomic: Add analytics route and service method(s)
     - Files: `apps/api/app/api/v1/assessor.py`, `apps/api/app/schemas/assessor.py`, `apps/api/app/services/assessor_service.py`
     - Acceptance: `GET /api/v1/assessor/analytics` returns `AssessorAnalyticsResponse` covering current UI widgets:
       - `overview`: totals and trend series
@@ -75,30 +78,31 @@ This section adds a new integration-focused epic to wire existing assessor UI to
       - `workflow`: counts/durations by status
     - Start minimal using existing assessment/response data and extend as UI grows.
 
-- [ ] 4.4 Story: OpenAPI and Types
+- [x] 4.4 Story: OpenAPI and Types
 
-  - [ ] 4.4.1 Atomic: Ensure routes are in main router and regenerate clients
+  - [x] 4.4.1 Atomic: Ensure routes are in main router and regenerate clients
     - Files: `apps/api/app/api/v1/assessor.py`, root `orval.config.ts`
-    - Acceptance: New endpoints appear in OpenAPI; run `pnpm generate` at repo root to refresh `@vantage/shared` client types and functions.
+    - Acceptance: New endpoints appear in OpenAPI; run `pnpm generate-types` at repo root to refresh `@vantage/shared` client types and functions.
+    - Note: Routes verified in main router (`apps/api/app/api/v1/__init__.py`). Type regeneration requires API server running on `http://localhost:8000`. Run `pnpm generate-types` after starting the API.
 
-- [ ] 4.5 Story: Frontend — Wire Submissions and Dashboard
+- [x] 4.5 Story: Frontend — Wire Submissions and Dashboard
 
-  - [ ] 4.5.1 Atomic: Replace queue mocks on Submissions page
+  - [x] 4.5.1 Atomic: Replace queue mocks on Submissions page
     - Files: `apps/web/src/app/(app)/assessor/submissions/page.tsx`, `apps/web/src/hooks/useAssessor.ts`
     - Acceptance: Use `useAssessorQueue()` (generated client + TanStack Query) instead of `generateSubmissionsData`. Preserve existing filters and map to current UI shape.
-  - [ ] 4.5.2 Atomic: Dashboard uses real queue via client subcomponent
+  - [x] 4.5.2 Atomic: Dashboard uses real queue via client subcomponent
     - Files: `apps/web/src/app/(app)/assessor/dashboard/page.tsx`
     - Acceptance: Fetch queue client-side and pass items to `<SubmissionsQueue />` without breaking current UI.
 
-- [ ] 4.6 Story: Frontend — Analytics
+- [x] 4.6 Story: Frontend — Analytics
 
-  - [ ] 4.6.1 Atomic: Replace analytics mocks with hook
+  - [x] 4.6.1 Atomic: Replace analytics mocks with hook
     - Files: `apps/web/src/app/(app)/assessor/analytics/page.tsx`, `apps/web/src/hooks/useAssessor.ts`
     - Acceptance: Implement `useAssessorAnalytics()` (generated from `/assessor/analytics`) and adapt widget prop mapping to the API response shape.
 
-- [ ] 4.7 Story: Frontend — MOV Upload in Validation Flow
-  - [ ] 4.7.1 Atomic: Use multipart endpoint in validation controls
-    - Files: `apps/web/src/app/(app)/assessor/assessments/[id]/ValidationControls.tsx`, `apps/web/src/hooks/useAssessor.ts`
+- [x] 4.7 Story: Frontend — MOV Upload in Validation Flow
+  - [x] 4.7.1 Atomic: Use multipart endpoint in validation controls
+    - Files: `apps/web/src/components/features/assessor/ValidationControls.tsx`, `apps/web/src/hooks/useAssessor.ts`
     - Acceptance: Remove mock storage path usage, submit file via multipart upload mutation; on success invalidate assessor detail query to reflect new MOVs.
 
 ### Config & Security

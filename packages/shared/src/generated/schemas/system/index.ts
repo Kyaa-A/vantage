@@ -4,6 +4,30 @@
 // 🏷️  Based on FastAPI tag: "system"
 
 /**
+ * SystemicWeakness
+ */
+export interface SystemicWeakness {
+  indicator: string;
+  indicator_id?: SystemicWeaknessIndicatorId;
+  failed_count: number;
+  barangays: string[];
+  reason?: SystemicWeaknessReason;
+}
+
+
+/**
+ * SystemicWeaknessIndicatorId
+ */
+export type SystemicWeaknessIndicatorId = number | null;
+
+
+/**
+ * SystemicWeaknessReason
+ */
+export type SystemicWeaknessReason = string | null;
+
+
+/**
  * ApiResponse
  */
 export interface ApiResponse {
@@ -47,11 +71,31 @@ export type HealthCheckConnections = { [key: string]: unknown };
 export interface MOVUploadResponse {
   success: boolean;
   message: string;
-  mov_id: MOVUploadResponseMovId;
+  mov_id?: MOVUploadResponseMovId;
+  storage_path?: MOVUploadResponseStoragePath;
+  mov?: MOVUploadResponseMov;
 }
+
+
+/**
+ * MOVUploadResponseMov
+ */
+export type MOVUploadResponseMov = MOVUploadResponseMovAnyOf | null;
+
+
+/**
+ * MOVUploadResponseMovAnyOf
+ */
+export type MOVUploadResponseMovAnyOf = { [key: string]: unknown };
 
 
 /**
  * MOVUploadResponseMovId
  */
 export type MOVUploadResponseMovId = number | null;
+
+
+/**
+ * MOVUploadResponseStoragePath
+ */
+export type MOVUploadResponseStoragePath = string | null;
