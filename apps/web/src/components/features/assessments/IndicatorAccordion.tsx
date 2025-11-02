@@ -196,34 +196,54 @@ export function IndicatorAccordion({
                     const allAnswered = required.every((f: string) =>
                       typeof data[f] === 'string' && ['yes','no','na'].includes(String(data[f]))
                     );
-                    const hasYes = required.some((f: string) => data[f] === 'yes');
-                    const movCount = (indicator.movFiles?.length as number) || 0;
+                    const props = (indicator.formSchema as any)?.properties || {};
                     
-                    // Check if all required sections have MOVs (for per-section uploads like Area 1)
+                    // Build map of field_name -> section for fields with mov_upload_section
+                    const fieldToSection: Record<string, string> = {};
+                    for (const [fieldName, fieldProps] of Object.entries(props)) {
+                      const section = (fieldProps as any)?.mov_upload_section;
+                      if (typeof section === 'string') {
+                        fieldToSection[fieldName] = section;
+                      }
+                    }
+                    
+                    // Only require MOVs for sections where the answer is "yes"
+                    const requiredSectionsWithYes = new Set<string>();
+                    for (const field of required) {
+                      const value = data[field];
+                      if (typeof value === 'string' && value.toLowerCase() === 'yes' && field in fieldToSection) {
+                        requiredSectionsWithYes.add(fieldToSection[field]);
+                      }
+                    }
+                    
+                    // Check if all required sections (with "yes" answers) have MOVs
                     let allSectionsSatisfied = false;
-                    if (hasSectionUploads && hasYes) {
-                      const props = (indicator.formSchema as any)?.properties || {};
-                      const requiredSections: string[] = Object.values(props)
-                        .map((v: any) => v?.mov_upload_section)
-                        .filter((s: any) => typeof s === 'string') as string[];
+                    if (requiredSectionsWithYes.size > 0) {
                       const present = new Set<string>();
                       for (const m of (indicator.movFiles || [])) {
                         const sp = (m as any).storagePath || (m as any).url || '';
-                        for (const rs of requiredSections) {
-                          if (typeof sp === 'string' && sp.includes(rs)) present.add(rs);
+                        const movSection = (m as any).section;
+                        for (const rs of requiredSectionsWithYes) {
+                          if (movSection === rs) {
+                            present.add(rs);
+                          } else if (typeof sp === 'string' && sp.includes(rs)) {
+                            present.add(rs);
+                          }
                         }
                       }
-                      allSectionsSatisfied = requiredSections.length > 0
-                        ? requiredSections.every((s) => present.has(s))
-                        : movCount > 0;
+                      allSectionsSatisfied = Array.from(requiredSectionsWithYes).every((s) => present.has(s));
+                    } else {
+                      // No sections require MOVs (all "no" or "na"), so it's complete
+                      allSectionsSatisfied = true;
                     }
                     
                     // Status logic: completed only if:
                     // - All answered AND
-                    // - (Not "yes" OR (has MOVs AND if per-section uploads, all sections satisfied))
-                    const newStatus = allAnswered && (!hasYes || (hasSectionUploads ? allSectionsSatisfied : movCount > 0))
+                    // - (No "yes" answers OR all "yes" sections have MOVs)
+                    const hasYes = requiredSectionsWithYes.size > 0;
+                    const newStatus = allAnswered && (!hasYes || allSectionsSatisfied)
                       ? 'completed'
-                      : (allAnswered && hasYes && !(hasSectionUploads ? allSectionsSatisfied : movCount > 0))
+                      : (allAnswered && hasYes && !allSectionsSatisfied)
                         ? 'in_progress'
                         : 'not_started';
 
@@ -247,43 +267,46 @@ export function IndicatorAccordion({
                           }
                         }
                       };
-                      const updateInTree = (nodes: any[]): boolean => {
-                        for (let i = 0; i < nodes.length; i++) {
-                          if (nodes[i].id === indicator.id) {
-                            const current = nodes[i];
-                            nodes[i] = {
-                              ...current,
+                      const updateInTree = (nodes: any[]): any[] => {
+                        return nodes.map((node) => {
+                          if (node.id === indicator.id) {
+                            // Create a new node object to ensure React detects the change
+                            return {
+                              ...node,
                               responseData: data, // Keep flat for frontend
                               status: newStatus,
                             };
-                            // After updating the leaf, recompute container statuses above
-                            return true;
                           }
-                          if (
-                            nodes[i].children &&
-                            updateInTree(nodes[i].children)
-                          ) {
-                            // We updated a descendant; recompute this container
-                            const container = nodes[i];
-                            if (Array.isArray(container.children) && container.children.length > 0) {
-                              const allCompleted = container.children.every(
-                                (c: any) => c.status === 'completed'
-                              );
-                              container.status = allCompleted ? 'completed' : container.status;
-                            }
-                            return true;
+                          if (node.children && node.children.length > 0) {
+                            // Recursively update children
+                            const updatedChildren = updateInTree(node.children);
+                            const allCompleted = updatedChildren.every(
+                              (c: any) => c.status === 'completed'
+                            );
+                            // Create a new container object with updated children
+                            return {
+                              ...node,
+                              children: updatedChildren,
+                              status: allCompleted ? 'completed' : node.status,
+                            };
                           }
-                        }
-                        return false;
+                          return node;
+                        });
                       };
-                      for (const area of updatedData.governanceAreas) {
-                        if (area.indicators && updateInTree(area.indicators))
-                          break;
-                      }
+                      // Create new area objects to ensure React detects changes
+                      updatedData.governanceAreas = updatedData.governanceAreas.map((area: any) => {
+                        if (area.indicators && area.indicators.length > 0) {
+                          const updatedIndicators = updateInTree(area.indicators);
+                          return { ...area, indicators: updatedIndicators }; // Create new area object
+                        }
+                        return area;
+                      });
                       // Global pass to ensure all containers reflect latest children state
                       for (const area of updatedData.governanceAreas) {
                         if (area.indicators) recomputeContainerStatuses(area.indicators);
                       }
+                      
+                      // Return updated data - updateAssessmentData will recompute counts automatically
                       return updatedData;
                     });
 

@@ -429,7 +429,10 @@ export function DynamicIndicatorForm({
                       }
                     }
                     finishSectionProgress(sectionKey);
-                    e.currentTarget.value = "";
+                    // Clear file input value if element still exists
+                    if (e.currentTarget) {
+                      e.currentTarget.value = "";
+                    }
                   }}
                 />
                 {(() => {
@@ -591,8 +594,15 @@ export function DynamicIndicatorForm({
                 </div>
               )}
               <RadioGroup
-                onValueChange={(value) => form.setValue(name, value)}
-                defaultValue={String(form.getValues(name) || "")}
+                onValueChange={(value) => {
+                  form.setValue(name, value, { shouldDirty: true });
+                  // Trigger onChange immediately for real-time updates
+                  if (onChange) {
+                    const currentValues = form.getValues();
+                    onChange({ ...currentValues, [name]: value });
+                  }
+                }}
+                value={String(form.watch(name) || "")}
                 disabled={isDisabled}
                 className="space-y-3"
               >
@@ -790,7 +800,13 @@ export function DynamicIndicatorForm({
                           }
                         }
                         finishSectionProgress(sectionKey);
-                        e.currentTarget.value = "";
+                        // Clear file input value if element still exists
+                        if (e.currentTarget) {
+                          // Clear file input value if element still exists
+                    if (e.currentTarget) {
+                      e.currentTarget.value = "";
+                    }
+                        }
                       }}
                     />
                     {(() => {

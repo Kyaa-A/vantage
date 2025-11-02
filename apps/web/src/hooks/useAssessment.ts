@@ -485,9 +485,34 @@ export function useCurrentAssessment() {
   );
 
   // Sync local assessment whenever the server data changes
+  // But preserve optimistic updates to prevent race conditions where server hasn't processed updates yet
   useEffect(() => {
     if (transformedData) {
-      setLocalAssessment(transformedData as unknown as Assessment);
+      setLocalAssessment((prev) => {
+        // If we have a previous state with optimistic updates, be smart about when to sync
+        if (prev && transformedData) {
+          const serverCompleted = (transformedData as any).completedIndicators || 0;
+          const localCompleted = prev.completedIndicators || 0;
+          const serverTotal = (transformedData as any).totalIndicators || 0;
+          const localTotal = prev.totalIndicators || 0;
+          
+          // If totals don't match, always sync (schema might have changed)
+          if (serverTotal !== localTotal) {
+            return transformedData as unknown as Assessment;
+          }
+          
+          // If local has higher completion count, preserve it (server might be stale)
+          // Only sync if server count is higher or equal (meaning server caught up)
+          if (serverCompleted >= localCompleted) {
+            return transformedData as unknown as Assessment;
+          }
+          
+          // If server is lower, keep optimistic update but merge other changes if needed
+          // This prevents flickering when server hasn't finished processing yet
+          return prev;
+        }
+        return transformedData as unknown as Assessment;
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [assessmentData]);
@@ -524,7 +549,8 @@ export function useCurrentAssessment() {
             // 1. Must have complianceAnswer (extract from responseData)
             // 2. If "yes", must have MOVs (check per-section if applicable)
             
-            const responseData = n.responseData || {};
+            // Use n.responseData (frontend format) first, then fall back to backend format
+            const responseData = n.responseData || (n.response?.response_data as any) || {};
             if (!responseData || Object.keys(responseData).length === 0) {
               return acc; // No response data - not completed
             }
@@ -581,26 +607,89 @@ export function useCurrentAssessment() {
             }
             
             if (complianceAnswer === "yes") {
-              // Check MOVs with per-section validation if applicable
+              // Check MOVs only for sections with "yes" answers
+              // Sections with "no" or "na" don't need MOVs
               const props = (n.formSchema as any)?.properties || {};
-              const requiredSections: string[] = Object.values(props)
-                .map((v: any) => v?.mov_upload_section)
-                .filter((s: any) => typeof s === 'string') as string[];
+              // Use n.responseData (frontend format) if available, otherwise fall back to n.response?.response_data
+              const responseData = n.responseData || (n.response?.response_data as any) || {};
               
-              if (requiredSections.length > 0) {
+              // Build map of field_name -> section for fields with mov_upload_section
+              const fieldToSection: Record<string, string> = {};
+              for (const [fieldName, fieldProps] of Object.entries(props)) {
+                const section = (fieldProps as any)?.mov_upload_section;
+                if (typeof section === 'string') {
+                  fieldToSection[fieldName] = section;
+                }
+              }
+              
+              // Only require MOVs for sections where the answer is "yes"
+              const requiredSectionsWithYes = new Set<string>();
+              for (const [fieldName, section] of Object.entries(fieldToSection)) {
+                const value = responseData[fieldName];
+                if (typeof value === 'string' && value.toLowerCase() === 'yes') {
+                  requiredSectionsWithYes.add(section);
+                }
+              }
+              
+              if (requiredSectionsWithYes.size > 0) {
                 const present = new Set<string>();
-                for (const mov of (n.movFiles || [])) {
-                  const sp = (mov as any).storagePath || (mov as any).url || (mov as any).storage_path || '';
-                  for (const rs of requiredSections) {
-                    if (typeof sp === 'string' && sp.includes(rs)) {
+                // Use n.movFiles (frontend format) if available, otherwise fall back to n.movs
+                const movsToCheck = n.movFiles || n.movs || [];
+                for (const mov of movsToCheck) {
+                  const sp = (mov as any).storage_path || (mov as any).storagePath || (mov as any).url || '';
+                  // Detect section from storage path (same logic as validation)
+                  const movSection = (() => {
+                    if (typeof sp !== "string") return undefined;
+                    const sections = [
+                      "bfdp_monitoring_forms",
+                      "photo_documentation",
+                      "bdrrmc_documents",
+                      "bpoc_documents",
+                      "social_welfare_documents",
+                      "business_registration_documents",
+                      "beswmc_documents",
+                    ];
+                    for (const sec of sections) {
+                      const pathOnly = sp.split('?')[0];
+                      const hasSection = 
+                        pathOnly.includes(`/${sec}/`) ||
+                        pathOnly.endsWith(`/${sec}`) ||
+                        pathOnly.includes(`/${sec}-`) ||
+                        pathOnly.includes(`${sec}/`) ||
+                        new RegExp(`[/_-]${sec.replace(/_/g, '[_/]')}[_/-]`).test(pathOnly);
+                      
+                      if (hasSection) {
+                        return sec;
+                      }
+                    }
+                    return undefined;
+                  })();
+                  
+                  for (const rs of requiredSectionsWithYes) {
+                    // Check both explicit section detection and storage path
+                    if (movSection === rs) {
                       present.add(rs);
+                    } else if (typeof sp === 'string' && sp.length > 0) {
+                      const pathOnly = sp.split('?')[0];
+                      const hasSection = 
+                        pathOnly.includes(`/${rs}/`) ||
+                        pathOnly.endsWith(`/${rs}`) ||
+                        pathOnly.includes(`/${rs}-`) ||
+                        pathOnly.includes(`${rs}/`) ||
+                        new RegExp(`[/_-]${rs.replace(/_/g, '[_/]')}[_/-]`).test(pathOnly);
+                      
+                      if (hasSection) {
+                        present.add(rs);
+                      }
                     }
                   }
                 }
-                const allSectionsHaveMOVs = requiredSections.every((s) => present.has(s));
+                const allSectionsHaveMOVs = Array.from(requiredSectionsWithYes).every((s) => present.has(s));
                 return acc + (allSectionsHaveMOVs ? 1 : 0);
               } else {
-                const hasMOVs = (n.movFiles || []).length > 0;
+                // Has "yes" but no section-based uploads, so require at least one MOV overall
+                const movsToCheck = n.movFiles || n.movs || [];
+                const hasMOVs = movsToCheck.length > 0;
                 return acc + (hasMOVs ? 1 : 0);
               }
             }
@@ -701,75 +790,90 @@ export function useAssessmentValidation(assessment: Assessment | null) {
         return;
       }
       
-      // If "yes", check MOVs are present (with per-section validation if applicable)
-      if (complianceAnswer === "yes") {
-        const props = (indicator.formSchema as any)?.properties || {};
-        const requiredSections: string[] = Object.values(props)
-          .map((v: any) => v?.mov_upload_section)
-          .filter((s: any) => typeof s === 'string') as string[];
+      // Check MOVs only for sections with "yes" answers
+      // Sections with "no" or "na" don't need MOVs
+      // Note: responseData is already defined above
+      const props = (indicator.formSchema as any)?.properties || {};
+      
+      // Build map of field_name -> section for fields with mov_upload_section
+      const fieldToSection: Record<string, string> = {};
+      for (const [fieldName, fieldProps] of Object.entries(props)) {
+        const section = (fieldProps as any)?.mov_upload_section;
+        if (typeof section === 'string') {
+          fieldToSection[fieldName] = section;
+        }
+      }
+      
+      // Only require MOVs for sections where the answer is "yes"
+      const requiredSectionsWithYes = new Set<string>();
+      for (const [fieldName, section] of Object.entries(fieldToSection)) {
+        const value = responseData[fieldName];
+        if (typeof value === 'string' && value.toLowerCase() === 'yes') {
+          requiredSectionsWithYes.add(section);
+        }
+      }
+      
+      if (requiredSectionsWithYes.size > 0) {
+        // Check all required sections (with "yes" answers) have at least one MOV
+        const present = new Set<string>();
+        const movFilesList = indicator.movFiles || [];
         
-        if (requiredSections.length > 0) {
-          // Check all required sections have at least one MOV
-          const present = new Set<string>();
-          const movFilesList = indicator.movFiles || [];
+        console.log(`[VALIDATION] Checking indicator ${indicator.code}:`, {
+          requiredSectionsWithYes: Array.from(requiredSectionsWithYes),
+          movCount: movFilesList.length,
+          movs: movFilesList.map((m: any) => ({
+            storagePath: (m as any).storagePath,
+            section: (m as any).section,
+          })),
+        });
+        
+        for (const mov of movFilesList) {
+          const sp = (mov as any).storagePath || (mov as any).storage_path || (mov as any).url || '';
+          const movSection = (mov as any).section;
           
-          console.log(`[VALIDATION] Checking indicator ${indicator.code}:`, {
-            requiredSections,
-            movCount: movFilesList.length,
-            movs: movFilesList.map((m: any) => ({
-              storagePath: (m as any).storagePath,
-              section: (m as any).section,
-            })),
-          });
-          
-          for (const mov of movFilesList) {
-            const sp = (mov as any).storagePath || (mov as any).storage_path || (mov as any).url || '';
-            const movSection = (mov as any).section;
-            
-            // Check both explicit section field and storage path
-            for (const rs of requiredSections) {
-              // If MOV has explicit section metadata, use that
-              if (movSection === rs) {
+          // Check both explicit section field and storage path
+          for (const rs of requiredSectionsWithYes) {
+            // If MOV has explicit section metadata, use that
+            if (movSection === rs) {
+              present.add(rs);
+              continue;
+            }
+            // Otherwise, check if section name appears in storage path
+            // Storage path format from frontend: "assessmentId/responseId/section/timestamp-filename"
+            // e.g., "1/123/bdrrmc_documents/1234567890-file.pdf"
+            if (typeof sp === 'string' && sp.length > 0) {
+              // Remove any URL prefixes and get just the path
+              const pathOnly = sp.split('?')[0]; // Remove query params if present
+              // Check various patterns: /section/, /section (at end), section/ (after /)
+              const hasSection = 
+                pathOnly.includes(`/${rs}/`) ||      // Matches: /bdrrmc_documents/
+                pathOnly.endsWith(`/${rs}`) ||       // Matches: .../bdrrmc_documents
+                pathOnly.includes(`/${rs}-`) ||      // Matches: /bdrrmc_documents-timestamp
+                pathOnly.includes(`${rs}/`) ||       // Matches: bdrrmc_documents/
+                new RegExp(`[/_-]${rs.replace(/_/g, '[_/]')}[_/-]`).test(pathOnly); // Flexible matching
+              
+              if (hasSection) {
                 present.add(rs);
-                continue;
-              }
-              // Otherwise, check if section name appears in storage path
-              // Storage path format from frontend: "assessmentId/responseId/section/timestamp-filename"
-              // e.g., "1/123/bdrrmc_documents/1234567890-file.pdf"
-              if (typeof sp === 'string' && sp.length > 0) {
-                // Remove any URL prefixes and get just the path
-                const pathOnly = sp.split('?')[0]; // Remove query params if present
-                // Check various patterns: /section/, /section (at end), section/ (after /)
-                const hasSection = 
-                  pathOnly.includes(`/${rs}/`) ||      // Matches: /bdrrmc_documents/
-                  pathOnly.endsWith(`/${rs}`) ||       // Matches: .../bdrrmc_documents
-                  pathOnly.includes(`/${rs}-`) ||      // Matches: /bdrrmc_documents-timestamp
-                  pathOnly.includes(`${rs}/`) ||       // Matches: bdrrmc_documents/
-                  new RegExp(`[/_-]${rs.replace(/_/g, '[_/]')}[_/-]`).test(pathOnly); // Flexible matching
-                
-                if (hasSection) {
-                  present.add(rs);
-                }
               }
             }
           }
-          
-          const missingSections = requiredSections.filter(s => !present.has(s));
-          console.log(`[VALIDATION] Indicator ${indicator.code} sections:`, {
-            required: requiredSections,
-            present: Array.from(present),
-            missing: missingSections,
-          });
-          
-          const allSectionsHaveMOVs = requiredSections.every((s) => present.has(s));
-          if (!allSectionsHaveMOVs) {
-            missingMOVs.push(`${indicator.code} - ${indicator.name} (missing sections: ${missingSections.join(', ')})`);
-          }
-        } else {
-          // No section requirements, just check if at least one MOV exists
-          if ((indicator.movFiles || []).length === 0) {
-            missingMOVs.push(`${indicator.code} - ${indicator.name}`);
-          }
+        }
+        
+        const missingSections = Array.from(requiredSectionsWithYes).filter(s => !present.has(s));
+        console.log(`[VALIDATION] Indicator ${indicator.code} sections:`, {
+          required: Array.from(requiredSectionsWithYes),
+          present: Array.from(present),
+          missing: missingSections,
+        });
+        
+        const allSectionsHaveMOVs = Array.from(requiredSectionsWithYes).every((s) => present.has(s));
+        if (!allSectionsHaveMOVs) {
+          missingMOVs.push(`${indicator.code} - ${indicator.name} (missing sections: ${missingSections.join(', ')})`);
+        }
+      } else if (complianceAnswer === "yes") {
+        // Has "yes" but no section-based uploads, so require at least one MOV overall
+        if ((indicator.movFiles || []).length === 0) {
+          missingMOVs.push(`${indicator.code} - ${indicator.name}`);
         }
       }
       // "no" or "na" - no MOVs needed, so no validation needed
@@ -988,7 +1092,10 @@ export function useUpdateResponse() {
     }) => {
       return putAssessmentsResponses$ResponseId(responseId, data);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      // Small delay to ensure backend has finished processing the update and computing is_completed
+      // This prevents race conditions where refetch happens before backend finishes processing
+      await new Promise(resolve => setTimeout(resolve, 500));
       queryClient.invalidateQueries({ queryKey: assessmentKeys.current() });
       queryClient.invalidateQueries({ queryKey: assessmentKeys.validation() });
       queryClient.invalidateQueries({ queryKey: getGetAssessmentsMyAssessmentQueryKey() });

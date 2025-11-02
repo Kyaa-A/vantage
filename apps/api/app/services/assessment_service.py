@@ -936,12 +936,8 @@ class AssessmentService:
         # If we have flat compliance fields, use the same logic as Area 1 (areas 2-6 follow same pattern)
         if flat_compliance_fields:
             # Handle flat structure for areas 2-6 child indicators (same as Area 1)
-            # Extract MOV sections from field names (e.g., "bpoc_documents_compliance" -> "bpoc_documents")
-            required_sections = set()
-            for field_name in flat_compliance_fields.keys():
-                # Extract section from field name: "bpoc_documents_compliance" -> "bpoc_documents"
-                section = field_name.replace("_compliance", "")
-                required_sections.add(section)
+            # Only require MOVs for sections where the compliance answer is "yes"
+            # Sections with "no" or "na" don't need MOVs
             
             # Check all compliance fields have valid values
             valid_compliance_values = {"yes", "no", "na"}
@@ -950,31 +946,32 @@ class AssessmentService:
                     print(f"[DEBUG] _check_response_completion: Invalid value '{value}' for field '{field_name}'")
                     return False
             
-            # If any field is "yes", require MOVs for all sections
-            has_any_yes = any(v.lower() == "yes" for v in flat_compliance_fields.values())
-            if has_any_yes:
-                if required_sections:
-                    # Check if MOVs exist for all required sections (same logic as Area 1)
-                    mov_section_hits = {s: False for s in required_sections}
-                    for m in (movs or []):
-                        spath = getattr(m, "storage_path", "") or ""
-                        # Storage path format: "assessmentId/responseId/section/filename" or "assessmentId/responseId/sectionSegmentfilename"
-                        # Check if any required section appears in the path
-                        for s in required_sections:
-                            # Check if section appears in path (e.g., "bpoc_documents" in "1/207/bpoc_documents/file.pdf")
-                            if s in spath:
-                                mov_section_hits[s] = True
-                                print(f"[DEBUG] _check_response_completion: Found MOV for section '{s}' in path '{spath}'")
-                    
-                    print(f"[DEBUG] _check_response_completion: MOV section hits: {mov_section_hits}, required_sections: {required_sections}")
-                    if not all(mov_section_hits.values()):
-                        print(f"[DEBUG] _check_response_completion: Missing MOVs for sections: {[s for s, hit in mov_section_hits.items() if not hit]}")
-                        return False
-                else:
-                    # At least one MOV overall if no sections specified
-                    if len(movs or []) <= 0:
-                        print(f"[DEBUG] _check_response_completion: Has 'yes' but no MOVs found")
-                        return False
+            # Extract sections that require MOVs (only those with "yes" answer)
+            required_sections_with_yes = set()
+            for field_name, value in flat_compliance_fields.items():
+                if value.lower() == "yes":
+                    # Extract section from field name: "bfdp_monitoring_forms_compliance" -> "bfdp_monitoring_forms"
+                    section = field_name.replace("_compliance", "")
+                    required_sections_with_yes.add(section)
+            
+            # Only check MOVs for sections that have "yes" answers
+            if required_sections_with_yes:
+                mov_section_hits = {s: False for s in required_sections_with_yes}
+                for m in (movs or []):
+                    spath = getattr(m, "storage_path", "") or ""
+                    # Storage path format: "assessmentId/responseId/section/filename" or "assessmentId/responseId/sectionSegmentfilename"
+                    # Check if any required section appears in the path
+                    for s in required_sections_with_yes:
+                        # Check if section appears in path (e.g., "bfdp_monitoring_forms" in "1/207/bfdp_monitoring_forms/file.pdf")
+                        if s in spath:
+                            mov_section_hits[s] = True
+                            print(f"[DEBUG] _check_response_completion: Found MOV for section '{s}' in path '{spath}'")
+                
+                print(f"[DEBUG] _check_response_completion: MOV section hits: {mov_section_hits}, required_sections_with_yes: {required_sections_with_yes}")
+                if not all(mov_section_hits.values()):
+                    missing = [s for s, hit in mov_section_hits.items() if not hit]
+                    print(f"[DEBUG] _check_response_completion: Missing MOVs for 'yes' sections: {missing}")
+                    return False
             
             print(f"[DEBUG] _check_response_completion: All checks passed for flat compliance fields: {flat_compliance_fields}")
             return True
@@ -1013,29 +1010,43 @@ class AssessmentService:
             if not value or value not in valid_compliance_values:
                 return False
         
-        # If any required field is answered 'yes', require at least one MOV
-        has_any_yes = any(get_nested_value(response_data, field) == "yes" for field in required_fields)
-        if has_any_yes:
-            required_sections: List[str] = []
-            props = form_schema.get("properties", {}) or {}
-            for v in props.values():
-                section = (v or {}).get("mov_upload_section")
-                if isinstance(section, str):
-                    required_sections.append(section)
-            # If schema lists specific sections, enforce at least one MOV per section
-            if required_sections:
-                section_set = set(required_sections)
-                mov_section_hits = {s: False for s in section_set}
-                for m in (movs or []):
-                    spath = getattr(m, "storage_path", "") or ""
-                    for s in section_set:
-                        if s in spath:
-                            mov_section_hits[s] = True
-                if not all(mov_section_hits.values()):
-                    return False
-            else:
-                # Otherwise at least one MOV overall
+        # Only require MOVs for sections where the answer is "yes"
+        # Sections with "no" or "na" don't need MOVs
+        props = form_schema.get("properties", {}) or {}
+        
+        # Build a map of field_name -> section for fields with mov_upload_section
+        field_to_section: Dict[str, str] = {}
+        for field_name, field_props in props.items():
+            section = (field_props or {}).get("mov_upload_section")
+            if isinstance(section, str):
+                field_to_section[field_name] = section
+        
+        # Only check MOVs for sections where the field answer is "yes"
+        required_sections_with_yes: List[str] = []
+        for field in required_fields:
+            value = get_nested_value(response_data, field)
+            if value == "yes" and field in field_to_section:
+                required_sections_with_yes.append(field_to_section[field])
+        
+        # Only check MOVs for sections that have "yes" answers
+        if required_sections_with_yes:
+            section_set = set(required_sections_with_yes)
+            mov_section_hits = {s: False for s in section_set}
+            for m in (movs or []):
+                spath = getattr(m, "storage_path", "") or ""
+                for s in section_set:
+                    if s in spath:
+                        mov_section_hits[s] = True
+            if not all(mov_section_hits.values()):
+                print(f"[DEBUG] _check_response_completion: Missing MOVs for 'yes' sections: {[s for s, hit in mov_section_hits.items() if not hit]}")
+                return False
+        else:
+            # If no sections require MOVs (all "no" or "na"), check if there's at least one "yes" that needs general MOVs
+            has_any_yes = any(get_nested_value(response_data, field) == "yes" for field in required_fields)
+            if has_any_yes and not field_to_section:
+                # Has "yes" but no section-based uploads, so require at least one MOV overall
                 if len(movs or []) <= 0:
+                    print(f"[DEBUG] _check_response_completion: Has 'yes' but no MOVs found (no section-based uploads)")
                     return False
 
         return True
