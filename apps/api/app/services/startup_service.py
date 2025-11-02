@@ -136,10 +136,10 @@ class StartupService:
             # Ensure official governance area names are used as indicator names
             indicator_service.standardize_indicator_area_names(db)
 
-            # Ensure Environmental Management indicator (Area 6) exists
-            logger.info("  - Ensuring Environmental Management indicator exists...")
-            indicator_service.ensure_environmental_indicator(db)
-            logger.info("  - Environmental indicator ensured.")
+            # Seed indicators for areas 2-6 with specific codes (2.1.1, 3.1.1, 4.1.1, 5.1.1, 6.1.1)
+            logger.info("  - Seeding indicators for governance areas 2-6...")
+            indicator_service.seed_areas_2_to_6_indicators(db)
+            logger.info("  - Areas 2-6 indicators seeding complete.")
 
         except Exception as e:
             logger.warning(f"⚠️  Could not seed initial data: {str(e)}")

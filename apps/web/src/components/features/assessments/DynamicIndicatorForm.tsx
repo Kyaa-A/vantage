@@ -21,13 +21,18 @@ interface DynamicIndicatorFormProps {
   isDisabled?: boolean;
   indicatorId?: string;
   responseId?: number | null;
+  assessmentId?: string;
+  responseIndicatorId?: number;
   movFiles?: Array<{
     id: string;
     name: string;
     size: number;
     url: string;
+    section?: string;
+    storagePath?: string;
   }>;
   updateAssessmentData?: (updater: (data: any) => any) => void;
+  ensureResponseId?: () => Promise<number>;
 }
 
 export function DynamicIndicatorForm({
@@ -38,8 +43,11 @@ export function DynamicIndicatorForm({
   isDisabled = false,
   indicatorId,
   responseId,
+  assessmentId,
+  responseIndicatorId,
   movFiles = [],
   updateAssessmentData,
+  ensureResponseId,
 }: DynamicIndicatorFormProps) {
   const { mutate: uploadMOV, isPending: isUploading } = useUploadMOV();
   const { mutate: deleteMOV, isPending: isDeleting } = useDeleteMOV();
@@ -121,14 +129,25 @@ export function DynamicIndicatorForm({
               urlCacheRef.current.set(storagePath, url);
             }
           }
-          const section =
-            typeof storagePath === "string"
-              ? storagePath.includes("bfdp_monitoring_forms")
-                ? "bfdp_monitoring_forms"
-                : storagePath.includes("photo_documentation")
-                ? "photo_documentation"
-                : undefined
-              : undefined;
+          // Detect section from storage path
+          const section = (() => {
+            if (typeof storagePath !== "string") return undefined;
+            const sections = [
+              "bfdp_monitoring_forms",
+              "photo_documentation",
+              "bdrrmc_documents",
+              "bpoc_documents",
+              "social_welfare_documents",
+              "business_registration_documents",
+              "beswmc_documents",
+            ];
+            for (const sec of sections) {
+              if (storagePath.includes(sec)) {
+                return sec;
+              }
+            }
+            return undefined;
+          })();
           return {
             id: String(f.id),
             name,
@@ -544,14 +563,31 @@ export function DynamicIndicatorForm({
                   <span className="px-2 py-0.5 rounded-sm border border-[var(--border)] bg-[var(--hover)]">
                     Total MOVs: {totalMovCount}
                   </span>
-                  {requiredSections.map((sec) => (
-                    <span
-                      key={sec}
-                      className="px-2 py-0.5 rounded-sm border border-[var(--border)] bg-[var(--hover)]"
-                    >
-                      {sec.replace(/_/g, " ")}: {allMovsForSection(sec).length}
-                    </span>
-                  ))}
+                  {requiredSections.map((sec) => {
+                    const displayName = sec === "bfdp_monitoring_forms"
+                      ? "BFDP Monitoring Forms"
+                      : sec === "photo_documentation"
+                      ? "Photo Documentation"
+                      : sec === "bdrrmc_documents"
+                      ? "BDRRMC Documents"
+                      : sec === "bpoc_documents"
+                      ? "BPOC Documents"
+                      : sec === "social_welfare_documents"
+                      ? "Social Welfare Documents"
+                      : sec === "business_registration_documents"
+                      ? "Business Registration Documents"
+                      : sec === "beswmc_documents"
+                      ? "BESWMC Documents"
+                      : sec.replace(/_/g, " ");
+                    return (
+                      <span
+                        key={sec}
+                        className="px-2 py-0.5 rounded-sm border border-[var(--border)] bg-[var(--hover)]"
+                      >
+                        {displayName.toLowerCase()}: {allMovsForSection(sec).length}
+                      </span>
+                    );
+                  })}
                 </div>
               )}
               <RadioGroup
@@ -579,10 +615,21 @@ export function DynamicIndicatorForm({
                       <div className="w-2 h-2 bg-[var(--cityscape-yellow)] rounded-full"></div>
                       <h4 className="text-sm font-semibold text-[var(--foreground)]">
                         Upload Files for{" "}
-                        {(field as any).mov_upload_section ===
-                        "bfdp_monitoring_forms"
+                        {(field as any).mov_upload_section === "bfdp_monitoring_forms"
                           ? "BFDP Monitoring Forms"
-                          : "Photo Documentation"}
+                          : (field as any).mov_upload_section === "photo_documentation"
+                          ? "Photo Documentation"
+                          : (field as any).mov_upload_section === "bdrrmc_documents"
+                          ? "BDRRMC Documents"
+                          : (field as any).mov_upload_section === "bpoc_documents"
+                          ? "BPOC Documents"
+                          : (field as any).mov_upload_section === "social_welfare_documents"
+                          ? "Social Welfare Documents"
+                          : (field as any).mov_upload_section === "business_registration_documents"
+                          ? "Business Registration Documents"
+                          : (field as any).mov_upload_section === "beswmc_documents"
+                          ? "BESWMC Documents"
+                          : "Documents"}
                       </h4>
                     </div>
                     <input
@@ -594,26 +641,41 @@ export function DynamicIndicatorForm({
                         const sectionKey = (field as any).mov_upload_section || 'unknown_section';
                         startSectionProgress(sectionKey);
                         const files = e.currentTarget.files;
-                        if (!files || !indicatorId || !responseId) return;
+                        if (!files || !indicatorId) return;
+                        
+                        // Ensure we have a responseId before uploading
+                        let actualResponseId = responseId;
+                        if (!actualResponseId && ensureResponseId) {
+                          actualResponseId = await ensureResponseId();
+                        }
+                        if (!actualResponseId) {
+                          console.error("No responseId available for upload");
+                          finishSectionProgress(sectionKey);
+                          return;
+                        }
+                        
+                        // Use actual assessment ID if provided, otherwise fallback to indicatorId for path
+                        const actualAssessmentId = assessmentId || indicatorId;
+                        
                         for (const file of Array.from(files)) {
                           try {
                             const { storagePath } = await uploadMovFile(file, {
-                              assessmentId: indicatorId,
-                              responseId: responseId.toString(),
+                              assessmentId: actualAssessmentId,
+                              responseId: actualResponseId.toString(),
                               section: (field as any).mov_upload_section,
                             });
                             // Upload to backend and update UI immediately
                             await new Promise<void>((resolve, reject) => {
                               uploadMOV(
                                 {
-                                  responseId,
+                                  responseId: actualResponseId!,
                                   data: {
                                     filename: file.name,
                                     original_filename: file.name,
                                     file_size: file.size,
                                     content_type: file.type,
                                     storage_path: storagePath,
-                                    response_id: responseId,
+                                    response_id: actualResponseId!,
                                   },
                                 },
                                 {

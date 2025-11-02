@@ -234,37 +234,61 @@ class AssessmentService:
                 ind for ind in indicators_by_area.get(area.id, []) if getattr(ind, "parent_id", None) is None
             ]
             
-            # For area 1, only use the first indicator as the parent for synthetic children
-            if area.id == 1:
-                # Only take the first indicator for area 1 to use as parent
+            # For areas 1-6, only use the first indicator as the parent for synthetic children
+            if area.id in [1, 2, 3, 4, 5, 6]:
+                # Only take the first indicator to use as parent (nested structure)
                 top_level_inds = top_level_inds[:1]
             
             for ind in top_level_inds:
                 top_level_nodes.append(serialize_indicator_node(ind))
 
-            # Option B (dev/demo): inject synthetic children for Area 1 using existing helper
+            # Option B (dev/demo): inject synthetic children for Areas 1-6 using nested form_schema
             # This enables nested rendering even without DB hierarchy
-            if area.id == 1 and len(top_level_inds) >= 1 and len(top_level_nodes) >= 1:
+            if area.id in [1, 2, 3, 4, 5, 6] and len(top_level_inds) >= 1 and len(top_level_nodes) >= 1:
                 base_ind = top_level_inds[0]
                 base_resp = response_lookup.get(base_ind.id)
                 try:
-                    fi_subs = self._build_fi_mock_subindicators(base_ind, base_resp)
-                    # Override parent display title to match spec (1.1 Compliance ...)
-                    top_level_nodes[0]["name"] = (
-                        "BFDP Board Compliance"
-                    )
-                    # Provide explicit code so frontend doesn't derive from DB id (e.g., 1.119)
-                    top_level_nodes[0]["code"] = "1.1"
-                    # Override the description to match the parent role
-                    top_level_nodes[0]["description"] = (
-                        "Compliance with the Barangay Full Disclosure Policy (BFDP) Board requirements"
-                    )
-                    # Clear MOVs from parent since children will show them
-                    top_level_nodes[0]["movs"] = []
-                    # Clear existing children and add synthetic ones
-                    top_level_nodes[0]["children"] = fi_subs
-                except Exception:
+                    if area.id == 1:
+                        # Area 1 uses the existing specific method
+                        fi_subs = self._build_fi_mock_subindicators(base_ind, base_resp)
+                        # Override parent display title to match spec (1.1 Compliance ...)
+                        top_level_nodes[0]["name"] = (
+                            "BFDP Board Compliance"
+                        )
+                        # Provide explicit code so frontend doesn't derive from DB id (e.g., 1.119)
+                        top_level_nodes[0]["code"] = "1.1"
+                        # Override the description to match the parent role
+                        top_level_nodes[0]["description"] = (
+                            "Compliance with the Barangay Full Disclosure Policy (BFDP) Board requirements"
+                        )
+                        # Clear MOVs from parent since children will show them
+                        top_level_nodes[0]["movs"] = []
+                        # Clear existing children and add synthetic ones
+                        top_level_nodes[0]["children"] = fi_subs
+                    else:
+                        # Areas 2-6 use the same structure as Area 1
+                        subs = self._build_mock_subindicators_for_area(base_ind, base_resp, area.id)
+                        if subs:
+                            # Set parent code (e.g., "2.1", "3.1", etc.) - same pattern as Area 1
+                            top_level_nodes[0]["code"] = f"{area.id}.1"
+                            # Set parent name to match Area 1 pattern
+                            area_names = {
+                                2: "Disaster Preparedness",
+                                3: "Safety, Peace and Order",
+                                4: "Social Protection and Sensitivity",
+                                5: "Business-Friendliness and Competitiveness",
+                                6: "Environmental Management"
+                            }
+                            top_level_nodes[0]["name"] = area_names.get(area.id, base_ind.name)
+                            # Clear MOVs from parent since children will show them (same as Area 1)
+                            top_level_nodes[0]["movs"] = []
+                            # Clear existing children and add synthetic ones
+                            top_level_nodes[0]["children"] = subs
+                except Exception as e:
                     # Fail-safe: ignore mock injection errors in prod paths
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.warning(f"Failed to build sub-indicators for area {area.id}: {str(e)}")
                     pass
 
             area_data["indicators"].extend(top_level_nodes)
@@ -396,6 +420,138 @@ class AssessmentService:
         # subs.append({ ... 1.1.2 ... })
         # subs.append({ ... 1.2.1 ... })
         # subs.append({ ... 1.3.1 ... })
+
+        return subs
+
+    def _build_mock_subindicators_for_area(self, base_indicator, base_response, area_id: int) -> List[Dict[str, Any]]:
+        """
+        Build mock sub-indicators for areas 2-6 using the EXACT same structure as Area 1.
+        These are mock/test indicators that reuse the REAL assessment response (if any) of the base indicator
+        so the frontend can POST MOVs using a valid response_id.
+        """
+        subs: List[Dict[str, Any]] = []
+
+        # Determine an id that the frontend can use for MOV upload. Prefer the
+        # real response id; if none exists yet, fall back to the base indicator id
+        # (upload will 404 until a real response is created by the client elsewhere).
+        safe_id = base_response.id if base_response else base_indicator.id
+        safe_movs = base_response.movs if base_response else []
+        serialized_response = self._serialize_response_obj(base_response)
+        serialized_movs = self._serialize_mov_list(safe_movs)
+
+        # Area-specific configurations (same structure as Area 1, but only 1 indicator per area 2-6)
+        area_configs = {
+            2: {
+                "code": "2.1.1",
+                "name": "Organized Barangay Disaster Risk Reduction and Management Council (BDRRMC)",
+                "description": "BDRRMC is organized with proper documentation and regular meetings",
+                "field1": {
+                    "name": "bdrrmc_documents_compliance",
+                    "title": "BDRRMC Documents: Barangay Resolution establishing BDRRMC, Minutes of meetings, and Documentation of composition",
+                    "description": "Check this box if you have uploaded the required BDRRMC documents",
+                    "section": "bdrrmc_documents"
+                }
+            },
+            3: {
+                "code": "3.1.1",
+                "name": "Organized Barangay Peace and Order Council (BPOC)",
+                "description": "BPOC is organized with proper documentation and functional activities",
+                "field1": {
+                    "name": "bpoc_documents_compliance",
+                    "title": "BPOC Documents: Barangay Resolution establishing BPOC, Minutes of meetings, and Documentation of composition",
+                    "description": "Check this box if you have uploaded the required BPOC documents",
+                    "section": "bpoc_documents"
+                }
+            },
+            4: {
+                "code": "4.1.1",
+                "name": "Social Welfare Programs Implementation",
+                "description": "Comprehensive social welfare programs are implemented for vulnerable sectors",
+                "field1": {
+                    "name": "social_welfare_documents_compliance",
+                    "title": "Social Welfare Documents: Documentation of programs for senior citizens, PWDs, and indigent families",
+                    "description": "Check this box if you have uploaded the required social welfare documents",
+                    "section": "social_welfare_documents"
+                }
+            },
+            5: {
+                "code": "5.1.1",
+                "name": "Business Registration Process",
+                "description": "Efficient and streamlined business registration process exists",
+                "field1": {
+                    "name": "business_registration_documents_compliance",
+                    "title": "Business Registration Documents: Process documentation and registration forms",
+                    "description": "Check this box if you have uploaded the required business registration documents",
+                    "section": "business_registration_documents"
+                }
+            },
+            6: {
+                "code": "6.1.1",
+                "name": "Organized Barangay Environment and Solid Waste Management Council (BESWMC)",
+                "description": "BESWMC is organized with proper documentation and active programs",
+                "field1": {
+                    "name": "beswmc_documents_compliance",
+                    "title": "BESWMC Documents: Barangay Resolution establishing BESWMC, Minutes of meetings, and Documentation of composition",
+                    "description": "Check this box if you have uploaded the required BESWMC documents",
+                    "section": "beswmc_documents"
+                }
+            }
+        }
+
+        config = area_configs.get(area_id)
+        if not config:
+            return subs
+
+        # Build child indicator with EXACT same structure as Area 1
+        subs.append(
+            {
+                "id": str(safe_id + 1000),  # Use unique ID for child
+                # Backend indicator to use when creating/updating responses (existing DB row)
+                "responseIndicatorId": base_indicator.id,
+                "code": config["code"],
+                "name": config["name"],
+                "description": config["description"],
+                "technicalNotes": "See form schema for requirements",
+                "governanceAreaId": str(area_id),
+                "status": "completed" if serialized_response and serialized_response.get("is_completed") else "not_started",
+                "complianceAnswer": None,  # Will be derived from response_data
+                "assessorComment": None,
+                "responseData": serialized_response.get("response_data", {}) if serialized_response else {},
+                "requiresRework": serialized_response.get("requires_rework", False) if serialized_response else False,
+                "responseId": serialized_response.get("id") if serialized_response else None,
+                "response": serialized_response,
+                "movs": serialized_movs,
+                "feedback_comments": [],
+                "children": [],
+                "form_schema": {
+                    "type": "object",
+                    "title": f"{config['code']} - {config['name']}",
+                    "description": config["description"],
+                    "properties": {
+                        config["field1"]["name"]: {
+                            "type": "string",
+                            "title": config["field1"]["title"],
+                            "description": config["field1"]["description"],
+                            "mov_upload_section": config["field1"]["section"],
+                            "enum": ["yes", "no", "na"]
+                        }
+                    },
+                    "required": [config["field1"]["name"]]
+                },
+            }
+        )
+
+        # Extract compliance answer if available (same logic as Area 1)
+        child_data = subs[0]["responseData"]
+        if child_data:
+            # Check for any "yes" value in the response data
+            for key, value in child_data.items():
+                if isinstance(value, str) and value.lower() == "yes":
+                    subs[0]["complianceAnswer"] = "yes"
+                    break
+                elif isinstance(value, bool) and value:
+                    subs[0]["complianceAnswer"] = "yes"
+                    break
 
         return subs
 
@@ -751,41 +907,114 @@ class AssessmentService:
         
         Args:
             form_schema: JSON schema defining the expected form structure
-            response_data: User's response data to check
+            response_data: User's response data to check (may be nested for areas 2-6, or flat for child indicators)
             
         Returns:
             True if response is completed, False otherwise
         """
         if not response_data or not isinstance(response_data, dict):
             return False
+        
+        def extract_compliance_values(data: Dict[str, Any]) -> list:
+            """Recursively extract compliance values (yes/no/na) from nested structures."""
+            values = []
+            for v in data.values():
+                if isinstance(v, dict):
+                    values.extend(extract_compliance_values(v))
+                elif isinstance(v, str) and v.lower() in {"yes", "no", "na"}:
+                    values.append(v.lower())
+            return values
+        
+        # Check if response_data contains flat compliance fields (like "bpoc_documents_compliance" or "bfdp_monitoring_forms_compliance")
+        # This happens for areas 1-6 where child indicators save flat data to parent response
+        # This check should run FIRST before checking form_schema, as it handles both Area 1 and areas 2-6
+        flat_compliance_fields = {
+            k: v for k, v in response_data.items() 
+            if isinstance(k, str) and k.endswith("_compliance") and isinstance(v, str) and v.lower() in {"yes", "no", "na"}
+        }
+        
+        # If we have flat compliance fields, use the same logic as Area 1 (areas 2-6 follow same pattern)
+        if flat_compliance_fields:
+            # Handle flat structure for areas 2-6 child indicators (same as Area 1)
+            # Extract MOV sections from field names (e.g., "bpoc_documents_compliance" -> "bpoc_documents")
+            required_sections = set()
+            for field_name in flat_compliance_fields.keys():
+                # Extract section from field name: "bpoc_documents_compliance" -> "bpoc_documents"
+                section = field_name.replace("_compliance", "")
+                required_sections.add(section)
             
-        # Get required fields from schema
+            # Check all compliance fields have valid values
+            valid_compliance_values = {"yes", "no", "na"}
+            for field_name, value in flat_compliance_fields.items():
+                if value.lower() not in valid_compliance_values:
+                    print(f"[DEBUG] _check_response_completion: Invalid value '{value}' for field '{field_name}'")
+                    return False
+            
+            # If any field is "yes", require MOVs for all sections
+            has_any_yes = any(v.lower() == "yes" for v in flat_compliance_fields.values())
+            if has_any_yes:
+                if required_sections:
+                    # Check if MOVs exist for all required sections (same logic as Area 1)
+                    mov_section_hits = {s: False for s in required_sections}
+                    for m in (movs or []):
+                        spath = getattr(m, "storage_path", "") or ""
+                        # Storage path format: "assessmentId/responseId/section/filename" or "assessmentId/responseId/sectionSegmentfilename"
+                        # Check if any required section appears in the path
+                        for s in required_sections:
+                            # Check if section appears in path (e.g., "bpoc_documents" in "1/207/bpoc_documents/file.pdf")
+                            if s in spath:
+                                mov_section_hits[s] = True
+                                print(f"[DEBUG] _check_response_completion: Found MOV for section '{s}' in path '{spath}'")
+                    
+                    print(f"[DEBUG] _check_response_completion: MOV section hits: {mov_section_hits}, required_sections: {required_sections}")
+                    if not all(mov_section_hits.values()):
+                        print(f"[DEBUG] _check_response_completion: Missing MOVs for sections: {[s for s, hit in mov_section_hits.items() if not hit]}")
+                        return False
+                else:
+                    # At least one MOV overall if no sections specified
+                    if len(movs or []) <= 0:
+                        print(f"[DEBUG] _check_response_completion: Has 'yes' but no MOVs found")
+                        return False
+            
+            print(f"[DEBUG] _check_response_completion: All checks passed for flat compliance fields: {flat_compliance_fields}")
+            return True
+            
+        # Get required fields from schema (original logic for Area 1 and nested structures)
         required_fields = form_schema.get("required", [])
         
         # If no explicit required fields, check all fields in response_data for "yes" answers with MOVs
         if not required_fields:
-            # Check if ANY field has "yes" value (for schemas without explicit "required" array)
-            valid_compliance_values = {"yes", "no", "na"}
-            has_any_yes = any(
-                str(v).lower() == "yes" 
-                for v in response_data.values() 
-                if isinstance(v, str) and str(v).lower() in valid_compliance_values
-            )
+            # Recursively check nested structures for compliance values
+            compliance_values = extract_compliance_values(response_data)
+            has_any_yes = any(v == "yes" for v in compliance_values)
             mov_count = len(movs or [])
             if has_any_yes and mov_count <= 0:
                 return False
             return bool(response_data)
             
         # Check that all required fields have valid compliance values
+        # For nested structures (areas 2-6), recursively search for the fields
+        def get_nested_value(data: Dict[str, Any], field_path: str) -> Any:
+            """Get a value from nested data structure using dot notation or direct key."""
+            if field_path in data:
+                return data[field_path]
+            # Try nested search for areas 2-6 structure
+            for v in data.values():
+                if isinstance(v, dict):
+                    result = get_nested_value(v, field_path)
+                    if result is not None:
+                        return result
+            return None
+        
         valid_compliance_values = {"yes", "no", "na"}
         
         for field in required_fields:
-            value = response_data.get(field)
+            value = get_nested_value(response_data, field)
             if not value or value not in valid_compliance_values:
                 return False
         
         # If any required field is answered 'yes', require at least one MOV
-        has_any_yes = any(response_data.get(field) == "yes" for field in required_fields)
+        has_any_yes = any(get_nested_value(response_data, field) == "yes" for field in required_fields)
         if has_any_yes:
             required_sections: List[str] = []
             props = form_schema.get("properties", {}) or {}
@@ -824,13 +1053,32 @@ class AssessmentService:
             response.is_completed = False
             return False
         form_schema = getattr(response.indicator, "form_schema", {}) or {}
+        response_data = getattr(response, "response_data", None)
+        if response_data is None:
+            response_data = {}
+        # Ensure response_data is a dict (not None)
+        if not isinstance(response_data, dict):
+            response_data = {}
         mov_count = len(getattr(response, "movs", []) or [])
-        completion = self._check_response_completion(form_schema, response.response_data, response.movs)
-        # Debug: trace recompute inputs/outputs
+        movs_list = getattr(response, "movs", []) or []
+        
+        # Debug: log input data
+        try:
+            mov_paths = [getattr(m, "storage_path", "") for m in movs_list]
+            print(
+                f"[DEBUG] recompute_response_completion: response_id={getattr(response, 'id', None)}, "
+                f"indicator_id={getattr(response, 'indicator_id', None)}, "
+                f"response_data={response_data}, mov_count={mov_count}, mov_paths={mov_paths}"
+            )
+        except Exception:
+            pass
+        
+        completion = self._check_response_completion(form_schema, response_data, response.movs)
+        
+        # Debug: trace recompute outputs
         try:
             print(
                 f"[DEBUG] recompute_response_completion: response_id={getattr(response, 'id', None)}, "
-                f"indicator_id={getattr(response, 'indicator_id', None)}, mov_count={mov_count}, "
                 f"new_is_completed={completion}"
             )
         except Exception:
@@ -1000,6 +1248,7 @@ class AssessmentService:
         
         # Recalculate parent response completion status
         if mov_create.response_id:
+            # Refresh the response to ensure MOVs relationship includes the newly created MOV
             db_response = (
                 db.query(AssessmentResponse)
                 .options(
@@ -1010,9 +1259,15 @@ class AssessmentService:
                 .first()
             )
             if db_response:
+                # Explicitly refresh to ensure the newly flushed MOV is included
+                db.refresh(db_response, ["movs"])
+                # Ensure the newly created MOV is in the movs list
+                if db_mov not in db_response.movs:
+                    db_response.movs.append(db_mov)
+                
                 prev = bool(db_response.is_completed)
                 new = self.recompute_response_completion(db_response)
-                print(f"[DEBUG] After MOV create: response_id={db_response.id} prev={prev} new={new} movs={len(db_response.movs)}")
+                print(f"[DEBUG] After MOV create: response_id={db_response.id} prev={prev} new={new} movs={len(db_response.movs)}, storage_paths={[m.storage_path for m in db_response.movs]}")
                 db.add(db_response)
                 
                 # Touch the parent assessment's updated_at to bust frontend cache

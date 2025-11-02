@@ -137,11 +137,11 @@ export const MOCK_GOVERNANCE_AREAS: GovernanceArea[] = [
       {
         id: "dp-1",
         code: "2.1.1",
-        name: "Disaster Risk Reduction Plan",
+        name: "Organized Barangay Disaster Risk Reduction and Management Council (BDRRMC)",
         description:
-          "The barangay has a comprehensive disaster risk reduction and management plan.",
+          "The barangay has an organized BDRRMC with proper documentation and regular meetings.",
         technicalNotes:
-          "Plan must be approved by the Sangguniang Barangay and include evacuation procedures.",
+          "BDRRMC must be established through a barangay resolution, have documented regular meetings, and include representatives from key sectors.",
         governanceAreaId: "disaster-preparedness",
         status: "not_started",
         movFiles: [],
@@ -169,11 +169,11 @@ export const MOCK_GOVERNANCE_AREAS: GovernanceArea[] = [
       {
         id: "po-1",
         code: "3.1.1",
-        name: "Peace and Order Committee",
+        name: "Organized Barangay Peace and Order Council (BPOC)",
         description:
-          "The barangay has an active peace and order committee with regular activities.",
+          "The barangay has an organized BPOC with proper documentation and functional activities.",
         technicalNotes:
-          "Committee must have documented meetings and community engagement activities.",
+          "BPOC must be established through a barangay resolution, have documented regular meetings, and implement peace and order programs.",
         governanceAreaId: "peace-order",
         status: "not_started",
         movFiles: [],
@@ -201,11 +201,11 @@ export const MOCK_GOVERNANCE_AREAS: GovernanceArea[] = [
       {
         id: "sp-1",
         code: "4.1.1",
-        name: "Social Welfare Programs",
+        name: "Social Welfare Programs Implementation",
         description:
-          "The barangay implements social welfare programs for vulnerable sectors.",
+          "The barangay implements comprehensive social welfare programs for vulnerable sectors including senior citizens, PWDs, and indigent families.",
         technicalNotes:
-          "Programs must be documented with beneficiary lists and impact assessments.",
+          "Programs must be documented with beneficiary lists, implementation reports, and impact assessments showing active delivery of services.",
         governanceAreaId: "social-protection",
         status: "not_started",
         movFiles: [],
@@ -233,11 +233,11 @@ export const MOCK_GOVERNANCE_AREAS: GovernanceArea[] = [
       {
         id: "bf-1",
         code: "5.1.1",
-        name: "Business Support Services",
+        name: "Business Registration Process Efficiency",
         description:
-          "The barangay provides support services for local businesses and entrepreneurs.",
+          "The barangay has an efficient and streamlined business registration process with clear procedures and reasonable processing time.",
         technicalNotes:
-          "Services must be documented and accessible to all business owners in the barangay.",
+          "Registration process must be documented with step-by-step procedures, published processing timeframes, and evidence of efficient service delivery.",
         governanceAreaId: "business-friendliness",
         status: "not_started",
         movFiles: [],
@@ -265,11 +265,11 @@ export const MOCK_GOVERNANCE_AREAS: GovernanceArea[] = [
       {
         id: "em-1",
         code: "6.1.1",
-        name: "Environmental Programs",
+        name: "Organized Barangay Environmental and Solid Waste Management Committee (BESWMC)",
         description:
-          "The barangay implements environmental protection and sustainability programs.",
+          "The barangay has an organized BESWMC with proper documentation and active implementation of environmental programs.",
         technicalNotes:
-          "Programs must include waste management, tree planting, or similar environmental initiatives.",
+          "BESWMC must be established through a barangay resolution, have documented regular meetings, and implement solid waste management and environmental protection programs.",
         governanceAreaId: "environmental-management",
         status: "not_started",
         movFiles: [],

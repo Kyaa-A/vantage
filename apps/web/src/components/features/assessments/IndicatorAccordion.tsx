@@ -56,8 +56,13 @@ export function IndicatorAccordion({
     const existing = (indicator as any).responseId as number | null | undefined;
     if (existing) return existing;
 
+    // For synthetic child indicators (areas 2-6), use responseIndicatorId to create response for the parent
+    const indicatorIdToUse = (indicator as any).responseIndicatorId 
+      ? (indicator as any).responseIndicatorId 
+      : parseInt(indicator.id);
+    
     const created = await postAssessmentsResponses({
-      indicator_id: parseInt(((indicator as any).responseIndicatorId ?? indicator.id) as string),
+      indicator_id: typeof indicatorIdToUse === 'number' ? indicatorIdToUse : parseInt(String(indicatorIdToUse)),
       assessment_id: assessment ? parseInt(assessment.id) : 1,
       response_data: {},
     });
@@ -179,8 +184,11 @@ export function IndicatorAccordion({
                 isDisabled={isLocked}
                 indicatorId={indicator.id}
                 responseId={indicator.responseId}
+                assessmentId={assessment?.id}
+                responseIndicatorId={(indicator as any).responseIndicatorId}
                 movFiles={indicator.movFiles || []}
                 updateAssessmentData={updateAssessmentData}
+                ensureResponseId={ensureResponseId}
                 onChange={(data: Record<string, any>) => {
                   if (!isLocked && indicator.id && updateAssessmentData) {
                     // Determine completion locally based on required answers
@@ -190,7 +198,37 @@ export function IndicatorAccordion({
                     );
                     const hasYes = required.some((f: string) => data[f] === 'yes');
                     const movCount = (indicator.movFiles?.length as number) || 0;
-                    const newStatus = allAnswered && (!hasYes || movCount > 0) ? 'completed' : 'not_started';
+                    
+                    // Check if all required sections have MOVs (for per-section uploads like Area 1)
+                    let allSectionsSatisfied = false;
+                    if (hasSectionUploads && hasYes) {
+                      const props = (indicator.formSchema as any)?.properties || {};
+                      const requiredSections: string[] = Object.values(props)
+                        .map((v: any) => v?.mov_upload_section)
+                        .filter((s: any) => typeof s === 'string') as string[];
+                      const present = new Set<string>();
+                      for (const m of (indicator.movFiles || [])) {
+                        const sp = (m as any).storagePath || (m as any).url || '';
+                        for (const rs of requiredSections) {
+                          if (typeof sp === 'string' && sp.includes(rs)) present.add(rs);
+                        }
+                      }
+                      allSectionsSatisfied = requiredSections.length > 0
+                        ? requiredSections.every((s) => present.has(s))
+                        : movCount > 0;
+                    }
+                    
+                    // Status logic: completed only if:
+                    // - All answered AND
+                    // - (Not "yes" OR (has MOVs AND if per-section uploads, all sections satisfied))
+                    const newStatus = allAnswered && (!hasYes || (hasSectionUploads ? allSectionsSatisfied : movCount > 0))
+                      ? 'completed'
+                      : (allAnswered && hasYes && !(hasSectionUploads ? allSectionsSatisfied : movCount > 0))
+                        ? 'in_progress'
+                        : 'not_started';
+
+                    // Areas 2-6 now use the same flat structure as Area 1, no nested wrapping needed
+                    const dataToSave = data;
 
                     // Optimistically update the assessment data tree
                     updateAssessmentData((prevData) => {
@@ -215,7 +253,7 @@ export function IndicatorAccordion({
                             const current = nodes[i];
                             nodes[i] = {
                               ...current,
-                              responseData: data,
+                              responseData: data, // Keep flat for frontend
                               status: newStatus,
                             };
                             // After updating the leaf, recompute container statuses above
@@ -249,9 +287,9 @@ export function IndicatorAccordion({
                       return updatedData;
                     });
 
-                    // Ensure a real response exists, then save
+                    // Ensure a real response exists, then save with nested structure
                     ensureResponseId().then((responseId) =>
-                      updateResponse(responseId, { response_data: data })
+                      updateResponse(responseId, { response_data: dataToSave })
                     );
                   }
                 }}
