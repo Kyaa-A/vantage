@@ -209,13 +209,45 @@ export function useCurrentAssessment() {
         if (typeof val === "boolean") return (val ? "yes" : "no") as any;
         return undefined;
       })(),
-      movFiles: (indicator.movs || []).map((m: any) => ({
-        id: String(m.id),
-        name: m.name ?? m.original_filename ?? m.filename,
-        size: m.size ?? m.file_size,
-        url: m.url ?? "",
-        storagePath: m.storage_path,
-      })),
+      movFiles: (indicator.movs || []).map((m: any) => {
+        const storagePath = m.storage_path || (m as any).storagePath || '';
+        // Detect section from storage path (same logic as DynamicIndicatorForm)
+        const section = (() => {
+          if (typeof storagePath !== "string") return undefined;
+          const sections = [
+            "bfdp_monitoring_forms",
+            "photo_documentation",
+            "bdrrmc_documents",
+            "bpoc_documents",
+            "social_welfare_documents",
+            "business_registration_documents",
+            "beswmc_documents",
+          ];
+          for (const sec of sections) {
+            const pathOnly = storagePath.split('?')[0]; // Remove query params if present
+            const hasSection = 
+              pathOnly.includes(`/${sec}/`) ||
+              pathOnly.endsWith(`/${sec}`) ||
+              pathOnly.includes(`/${sec}-`) ||
+              pathOnly.includes(`${sec}/`) ||
+              new RegExp(`[/_-]${sec.replace(/_/g, '[_/]')}[_/-]`).test(pathOnly);
+            
+            if (hasSection) {
+              return sec;
+            }
+          }
+          return undefined;
+        })();
+        
+        return {
+          id: String(m.id),
+          name: m.name ?? m.original_filename ?? m.filename,
+          size: m.size ?? m.file_size,
+          url: m.url ?? "",
+          storagePath,
+          section,
+        };
+      }),
       assessorComment: indicator.feedback_comments?.[0]?.comment,
       responseId: indicator.response?.id ?? null,
       requiresRework: indicator.response?.requires_rework === true,
@@ -373,9 +405,42 @@ export function useCurrentAssessment() {
                   const present = new Set<string>();
                   for (const mov of movs) {
                     const sp = (mov as any).storage_path || (mov as any).storagePath || '';
+                    // Detect section from storage path (same logic as validation)
+                    const movSection = (() => {
+                      if (typeof sp !== "string") return undefined;
+                      const sections = [
+                        "bfdp_monitoring_forms",
+                        "photo_documentation",
+                        "bdrrmc_documents",
+                        "bpoc_documents",
+                        "social_welfare_documents",
+                        "business_registration_documents",
+                        "beswmc_documents",
+                      ];
+                      for (const sec of sections) {
+                        if (sp.includes(`/${sec}/`) || sp.includes(`/${sec}`) || sp.includes(`${sec}/`)) {
+                          return sec;
+                        }
+                      }
+                      return undefined;
+                    })();
+                    
                     for (const rs of requiredSections) {
-                      if (typeof sp === 'string' && sp.includes(rs)) {
+                      // Check both explicit section detection and storage path
+                      if (movSection === rs) {
                         present.add(rs);
+                      } else if (typeof sp === 'string' && sp.length > 0) {
+                        const pathOnly = sp.split('?')[0]; // Remove query params if present
+                        const hasSection = 
+                          pathOnly.includes(`/${rs}/`) ||
+                          pathOnly.endsWith(`/${rs}`) ||
+                          pathOnly.includes(`/${rs}-`) ||
+                          pathOnly.includes(`${rs}/`) ||
+                          new RegExp(`[/_-]${rs.replace(/_/g, '[_/]')}[_/-]`).test(pathOnly);
+                        
+                        if (hasSection) {
+                          present.add(rs);
+                        }
                       }
                     }
                   }
@@ -646,17 +711,59 @@ export function useAssessmentValidation(assessment: Assessment | null) {
         if (requiredSections.length > 0) {
           // Check all required sections have at least one MOV
           const present = new Set<string>();
-          for (const mov of (indicator.movFiles || [])) {
-            const sp = (mov as any).storagePath || (mov as any).url || '';
+          const movFilesList = indicator.movFiles || [];
+          
+          console.log(`[VALIDATION] Checking indicator ${indicator.code}:`, {
+            requiredSections,
+            movCount: movFilesList.length,
+            movs: movFilesList.map((m: any) => ({
+              storagePath: (m as any).storagePath,
+              section: (m as any).section,
+            })),
+          });
+          
+          for (const mov of movFilesList) {
+            const sp = (mov as any).storagePath || (mov as any).storage_path || (mov as any).url || '';
+            const movSection = (mov as any).section;
+            
+            // Check both explicit section field and storage path
             for (const rs of requiredSections) {
-              if (typeof sp === 'string' && sp.includes(rs)) {
+              // If MOV has explicit section metadata, use that
+              if (movSection === rs) {
                 present.add(rs);
+                continue;
+              }
+              // Otherwise, check if section name appears in storage path
+              // Storage path format from frontend: "assessmentId/responseId/section/timestamp-filename"
+              // e.g., "1/123/bdrrmc_documents/1234567890-file.pdf"
+              if (typeof sp === 'string' && sp.length > 0) {
+                // Remove any URL prefixes and get just the path
+                const pathOnly = sp.split('?')[0]; // Remove query params if present
+                // Check various patterns: /section/, /section (at end), section/ (after /)
+                const hasSection = 
+                  pathOnly.includes(`/${rs}/`) ||      // Matches: /bdrrmc_documents/
+                  pathOnly.endsWith(`/${rs}`) ||       // Matches: .../bdrrmc_documents
+                  pathOnly.includes(`/${rs}-`) ||      // Matches: /bdrrmc_documents-timestamp
+                  pathOnly.includes(`${rs}/`) ||       // Matches: bdrrmc_documents/
+                  new RegExp(`[/_-]${rs.replace(/_/g, '[_/]')}[_/-]`).test(pathOnly); // Flexible matching
+                
+                if (hasSection) {
+                  present.add(rs);
+                }
               }
             }
           }
+          
+          const missingSections = requiredSections.filter(s => !present.has(s));
+          console.log(`[VALIDATION] Indicator ${indicator.code} sections:`, {
+            required: requiredSections,
+            present: Array.from(present),
+            missing: missingSections,
+          });
+          
           const allSectionsHaveMOVs = requiredSections.every((s) => present.has(s));
           if (!allSectionsHaveMOVs) {
-            missingMOVs.push(`${indicator.code} - ${indicator.name}`);
+            missingMOVs.push(`${indicator.code} - ${indicator.name} (missing sections: ${missingSections.join(', ')})`);
           }
         } else {
           // No section requirements, just check if at least one MOV exists
@@ -681,9 +788,21 @@ export function useAssessmentValidation(assessment: Assessment | null) {
 
     const isComplete =
       missingIndicators.length === 0 && missingMOVs.length === 0;
+    // Status comparison should be case-insensitive since backend returns lowercase
+    const normalizedStatus = (assessment.status || '').toLowerCase();
     const canSubmit =
       isComplete &&
-      (assessment.status === "Draft" || assessment.status === "Needs Rework");
+      (normalizedStatus === "draft" || normalizedStatus === "needs rework");
+
+    console.log('[VALIDATION] Final validation result:', {
+      isComplete,
+      canSubmit,
+      status: assessment.status,
+      missingIndicators,
+      missingMOVs,
+      totalIndicators: assessment.totalIndicators,
+      completedIndicators: assessment.completedIndicators,
+    });
 
     return {
       isComplete,
