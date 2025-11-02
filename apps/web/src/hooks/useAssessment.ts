@@ -391,17 +391,32 @@ export function useCurrentAssessment() {
               
               // Check if MOVs are required and present
               if (complianceAnswer === "yes") {
-                // For indicators with per-section uploads, check all sections have MOVs
+                // Check MOVs only for sections with "yes" answers
+                // Sections with "no" or "na" don't need MOVs
                 const formSchema = n.form_schema || {};
                 const props = formSchema.properties || {};
-                const requiredSections: string[] = Object.values(props)
-                  .map((v: any) => v?.mov_upload_section)
-                  .filter((s: any) => typeof s === 'string') as string[];
+                
+                // Build map of field_name -> section for fields with mov_upload_section
+                const fieldToSection: Record<string, string> = {};
+                for (const [fieldName, fieldProps] of Object.entries(props)) {
+                  const section = (fieldProps as any)?.mov_upload_section;
+                  if (typeof section === 'string') {
+                    fieldToSection[fieldName] = section;
+                  }
+                }
+                
+                // Only require MOVs for sections where the answer is "yes"
+                const requiredSectionsWithYes = new Set<string>();
+                for (const [fieldName, section] of Object.entries(fieldToSection)) {
+                  const value = responseData[fieldName];
+                  if (typeof value === 'string' && value.toLowerCase() === 'yes') {
+                    requiredSectionsWithYes.add(section);
+                  }
+                }
                 
                 const movs = n.movs || [];
                 
-                if (requiredSections.length > 0) {
-                  // Check all required sections have at least one MOV
+                if (requiredSectionsWithYes.size > 0) {
                   const present = new Set<string>();
                   for (const mov of movs) {
                     const sp = (mov as any).storage_path || (mov as any).storagePath || '';
@@ -418,14 +433,21 @@ export function useCurrentAssessment() {
                         "beswmc_documents",
                       ];
                       for (const sec of sections) {
-                        if (sp.includes(`/${sec}/`) || sp.includes(`/${sec}`) || sp.includes(`${sec}/`)) {
+                        const pathOnly = sp.split('?')[0];
+                        const hasSection = 
+                          pathOnly.includes(`/${sec}/`) ||
+                          pathOnly.endsWith(`/${sec}`) ||
+                          pathOnly.includes(`/${sec}-`) ||
+                          pathOnly.includes(`${sec}/`) ||
+                          new RegExp(`[/_-]${sec.replace(/_/g, '[_/]')}[_/-]`).test(pathOnly);
+                        if (hasSection) {
                           return sec;
                         }
                       }
                       return undefined;
                     })();
                     
-                    for (const rs of requiredSections) {
+                    for (const rs of requiredSectionsWithYes) {
                       // Check both explicit section detection and storage path
                       if (movSection === rs) {
                         present.add(rs);
@@ -444,10 +466,10 @@ export function useCurrentAssessment() {
                       }
                     }
                   }
-                  const allSectionsHaveMOVs = requiredSections.every((s) => present.has(s));
+                  const allSectionsHaveMOVs = Array.from(requiredSectionsWithYes).every((s) => present.has(s));
                   return acc + (allSectionsHaveMOVs ? 1 : 0);
                 } else {
-                  // No section requirements, just need at least one MOV
+                  // Has "yes" but no section-based uploads, so require at least one MOV overall
                   const hasMOVs = movs.length > 0;
                   return acc + (hasMOVs ? 1 : 0);
                 }
