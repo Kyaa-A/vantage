@@ -8,6 +8,9 @@ import type { AssessmentDetailsResponse } from '@vantage/shared';
 import { usePostAssessorAssessmentResponsesResponseIdMovsUpload } from '@vantage/shared';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 
 interface RightAssessorPanelProps {
   assessment: AssessmentDetailsResponse;
@@ -101,7 +104,7 @@ export function RightAssessorPanel({ assessment, form, setField }: RightAssessor
   return (
     <div className="p-4">
       <div className="text-sm text-muted-foreground mb-3">Assessor Controls</div>
-      <div className="space-y-3">
+      <div className="space-y-4">
         {responses.length === 0 ? (
           <div className="text-sm text-muted-foreground">No indicators found.</div>
         ) : (
@@ -113,13 +116,14 @@ export function RightAssessorPanel({ assessment, form, setField }: RightAssessor
             const errorsFor = (formState.errors as AnyRecord)?.[key]?.publicComment;
 
             return (
-              <div key={r.id ?? idx} className="rounded-md border">
-                <div className="px-3 py-2 border-b bg-muted/50 text-sm font-medium">
+              <div key={r.id ?? idx} className="rounded-sm bg-card shadow-md border border-black/5 overflow-hidden">
+                <div className="px-3 py-2 border-b text-sm font-medium rounded-t-sm"
+                  style={{ background: 'var(--cityscape-yellow)', color: 'var(--cityscape-accent-foreground)' }}>
                   {indicatorLabel}
                 </div>
-                <div className="p-3 space-y-3">
+                <div className="p-3 space-y-4">
                   {techNotes ? (
-                    <div className="text-xs text-muted-foreground bg-muted/30 rounded p-2">
+                    <div className="text-xs text-muted-foreground bg-muted/30 rounded-sm p-2">
                       <div className="font-medium mb-1">Technical Notes</div>
                       <div className="whitespace-pre-wrap">{String(techNotes)}</div>
                     </div>
@@ -127,17 +131,21 @@ export function RightAssessorPanel({ assessment, form, setField }: RightAssessor
 
                   <div className="space-y-2">
                     <div className="text-xs uppercase tracking-wide text-muted-foreground">Validation Status</div>
-                    <div className="flex gap-4 text-sm">
-                      {(['Pass', 'Fail', 'Conditional'] as LocalStatus[]).map((s) => (
-                        <label key={s} className="inline-flex items-center gap-2">
-                          <input
-                            type="radio"
-                            value={s}
-                            {...register(`${key}.status` as const)}
-                          />
-                          {s}
-                        </label>
-                      ))}
+                    <div className="flex items-center gap-2">
+                      {(['Pass', 'Fail', 'Conditional'] as LocalStatus[]).map((s) => {
+                        const active = form[r.id]?.status === s;
+                        return (
+                          <Button
+                            key={s}
+                            type="button"
+                            variant={active ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setField(r.id, 'status', s as string)}
+                          >
+                            {s}
+                          </Button>
+                        );
+                      })}
                     </div>
                   </div>
 

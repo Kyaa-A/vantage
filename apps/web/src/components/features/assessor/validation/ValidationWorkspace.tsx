@@ -1,15 +1,16 @@
 "use client";
 
-import type { AssessmentDetailsResponse } from '@vantage/shared';
-import { LeftSubmissionView } from './LeftSubmissionView';
-import { RightAssessorPanel } from './RightAssessorPanel';
-import * as React from 'react';
+import { Button } from '@/components/ui/button';
 import { useQueryClient } from '@tanstack/react-query';
+import type { AssessmentDetailsResponse } from '@vantage/shared';
 import {
   usePostAssessorAssessmentResponsesResponseIdValidate,
-  usePostAssessorAssessmentsAssessmentIdRework,
   usePostAssessorAssessmentsAssessmentIdFinalize,
+  usePostAssessorAssessmentsAssessmentIdRework,
 } from '@vantage/shared';
+import * as React from 'react';
+import { LeftSubmissionView } from './LeftSubmissionView';
+import { RightAssessorPanel } from './RightAssessorPanel';
 
 interface ValidationWorkspaceProps {
   assessment: AssessmentDetailsResponse;
@@ -36,6 +37,7 @@ export function ValidationWorkspace({ assessment }: ValidationWorkspaceProps) {
   const allReviewed = total > 0 && reviewed === total;
   const anyFail = responses.some((r) => form[r.id]?.status === 'Fail');
   const dirty = Object.keys(form).length > 0;
+  const progressPct = total > 0 ? Math.round((reviewed / total) * 100) : 0;
 
   const onSaveDraft = async () => {
     const payloads = responses
@@ -71,11 +73,11 @@ export function ValidationWorkspace({ assessment }: ValidationWorkspaceProps) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-md border">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="rounded-sm shadow-md border border-black/5">
           <LeftSubmissionView assessment={assessment} />
         </div>
-        <div className="rounded-md border">
+        <div className="rounded-sm shadow-md border border-black/5">
           <RightAssessorPanel assessment={assessment} form={form} setField={(id, field, value) => {
             setForm((prev) => ({
               ...prev,
@@ -88,34 +90,47 @@ export function ValidationWorkspace({ assessment }: ValidationWorkspaceProps) {
         </div>
       </div>
 
-      <div className="sticky bottom-0 z-10 border-t bg-white/80 backdrop-blur">
-        <div className="mx-auto max-w-7xl px-6 py-3 flex items-center gap-3 justify-between">
+      <div className="sticky bottom-0 z-10 border-t border-black/5 bg-card/80 backdrop-blur">
+        <div className="relative mx-auto max-w-7xl px-4 md:px-6 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="absolute inset-x-0 -top-[3px] h-[3px] bg-black/5">
+            <div
+              className="h-full bg-[var(--cityscape-yellow)] transition-all"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
           <div className="text-xs text-muted-foreground">Indicators Reviewed: {reviewed}/{total}</div>
-          <div className="flex items-center gap-3">
-            <button
-              className="inline-flex items-center rounded-md border px-4 py-2 text-sm disabled:opacity-50"
+          <div className="flex flex-col sm:flex-row w-full sm:w-auto items-stretch sm:items-center gap-2 sm:gap-3">
+            <Button
+              variant="outline"
+              size="default"
               type="button"
               onClick={onSaveDraft}
               disabled={!dirty || validateMut.isPending}
+              className="w-full sm:w-auto"
             >
               Save as Draft
-            </button>
-            <button
-              className="inline-flex items-center rounded-md bg-orange-500 text-white px-4 py-2 text-sm disabled:opacity-50"
+            </Button>
+            <Button
+              variant="secondary"
+              size="default"
               type="button"
               onClick={onSendRework}
               disabled={!allReviewed || reworkCount > 0 || reworkMut.isPending}
+              className="w-full sm:w-auto text-[var(--cityscape-accent-foreground)] hover:opacity-90"
+              style={{ background: 'var(--cityscape-yellow)' }}
             >
               Compile and Send for Rework
-            </button>
-            <button
-              className="inline-flex items-center rounded-md bg-green-600 text-white px-4 py-2 text-sm disabled:opacity-50"
+            </Button>
+            <Button
+              size="default"
               type="button"
               onClick={onFinalize}
               disabled={!allReviewed || anyFail || finalizeMut.isPending}
+              className="w-full sm:w-auto text-white hover:opacity-90"
+              style={{ background: 'var(--success)' }}
             >
               Finalize Validation
-            </button>
+            </Button>
           </div>
         </div>
       </div>

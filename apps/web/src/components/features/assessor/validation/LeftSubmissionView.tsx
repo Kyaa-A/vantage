@@ -29,7 +29,7 @@ export function LeftSubmissionView({ assessment }: LeftSubmissionViewProps) {
   return (
     <div className="p-4">
       <div className="text-sm text-muted-foreground mb-3">BLGU Submission</div>
-      <div className="space-y-3">
+      <div className="space-y-4">
         {responses.length === 0 ? (
           <div className="text-sm text-muted-foreground">No submitted responses.</div>
         ) : (
@@ -40,8 +40,9 @@ export function LeftSubmissionView({ assessment }: LeftSubmissionViewProps) {
             const movs: AnyRecord[] = (r.movs as AnyRecord[]) ?? [];
 
             return (
-              <div key={r.id ?? idx} className="rounded-md border">
-                <div className="px-3 py-2 border-b bg-muted/50 text-sm font-medium">
+              <div key={r.id ?? idx} className="rounded-sm bg-card shadow-md border border-black/5 overflow-hidden">
+                <div className="px-3 py-2 border-b text-sm font-medium rounded-t-sm"
+                  style={{ background: 'var(--cityscape-yellow)', color: 'var(--cityscape-accent-foreground)' }}>
                   {indicatorLabel}
                 </div>
                 <div className="p-3 text-sm">
@@ -61,7 +62,7 @@ export function LeftSubmissionView({ assessment }: LeftSubmissionViewProps) {
                           <li key={m.id ?? mi}>
                             <button
                               type="button"
-                              className="text-blue-600 underline hover:opacity-80"
+                              className="text-primary underline hover:opacity-80"
                               onClick={() => handleOpenMov(m)}
                             >
                               {m.original_filename || m.filename || 'MOV'}

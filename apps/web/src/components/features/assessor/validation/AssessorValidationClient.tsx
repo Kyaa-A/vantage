@@ -35,16 +35,25 @@ export function AssessorValidationClient({ assessmentId }: AssessorValidationCli
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b">
-        <div className="mx-auto max-w-7xl px-6 py-4">
-          <h1 className="text-xl font-semibold">
+      <div className="sticky top-0 z-10 bg-card/80 backdrop-blur border-b">
+        <div className="mx-auto max-w-7xl px-4 md:px-6 py-4">
+          <h1 className="text-xl md:text-2xl font-semibold">
             {barangayName} - {governanceArea} Assessment Validation (CY {cyYear})
           </h1>
-          <div className="mt-1 text-sm text-muted-foreground">Status: Submitted for Review</div>
+          <div className="mt-2 flex items-center gap-2 text-xs">
+            <span
+              className="inline-flex items-center rounded-full px-2 py-0.5"
+              style={{ background: 'var(--cityscape-yellow)', color: 'var(--cityscape-accent-foreground)' }}
+            >
+              Submitted for Review
+            </span>
+            <span className="text-muted-foreground">•</span>
+            <span className="text-muted-foreground">Use the panel on the right to validate responses</span>
+          </div>
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-6">
+      <div className="mx-auto max-w-7xl px-4 md:px-6">
         <ValidationWorkspace assessment={data} />
       </div>
     </div>
