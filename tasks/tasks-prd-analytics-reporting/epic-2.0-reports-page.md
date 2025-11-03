@@ -22,7 +22,7 @@
 
 ---
 
-  - [ ] **2.1 Story: Backend Reports Service with Filtering**
+  - [x] **2.1 Story: Backend Reports Service with Filtering**
 
     - **Scope:** Implement service layer for reports data aggregation with flexible filtering (cycle, area, barangay, status)
     - **Duration:** 2-3 days
