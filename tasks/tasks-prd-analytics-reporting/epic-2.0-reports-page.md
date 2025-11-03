@@ -88,7 +88,7 @@
         - Returns total count for pagination UI
       - **Tech:** SQLAlchemy joins, pagination with `limit()` and `offset()`
 
-  - [ ] **2.2 Story: Backend API Endpoints for Reports**
+  - [x] **2.2 Story: Backend API Endpoints for Reports**
 
     - **Scope:** Create FastAPI endpoints for reports data with role-based filtering
     - **Duration:** 1-2 days
@@ -102,7 +102,7 @@
       - Response includes data for charts, map coordinates, and tabular data
       - RBAC enforced based on user role
 
-    - [ ] **2.2.1 Atomic:** Create reports endpoint with query parameters
+    - [x] **2.2.1 Atomic:** Create reports endpoint with query parameters
       - **Files:** `apps/api/app/api/v1/analytics.py` (extend)
       - **Dependencies:** 2.1.4 (reports service complete)
       - **Acceptance:**
