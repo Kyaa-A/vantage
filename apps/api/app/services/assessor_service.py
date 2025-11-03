@@ -36,6 +36,8 @@ class AssessorService:
             .options(joinedload(Assessment.blgu_user).joinedload(User.barangay))
             .filter(
                 Indicator.governance_area_id == assessor.governance_area_id,
+                # Only include true submissions (must have been submitted)
+                Assessment.submitted_at.isnot(None),
                 Assessment.status.in_(
                     [
                         AssessmentStatus.SUBMITTED_FOR_REVIEW,
@@ -428,8 +430,10 @@ class AssessorService:
             },
         }
 
-        # Process each response with its related data
+        # Process only responses within the assessor's governance area
         for response in assessment.responses:
+            if response.indicator.governance_area_id != assessor.governance_area_id:
+                continue
             response_data = {
                 "id": response.id,
                 "is_completed": response.is_completed,

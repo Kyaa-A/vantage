@@ -99,7 +99,7 @@ export function SubmissionsQueue({ items = [] }: SubmissionsQueueProps) {
                       <TableCell>{row.status}</TableCell>
                       <TableCell className="text-right">
                         <Button asChild size="sm">
-                          <Link href={`/assessor/assessments/${row.assessment_id}`}>Review</Link>
+                          <Link href={`/assessor/submissions/${row.assessment_id}/validation`}>Review</Link>
                         </Button>
                       </TableCell>
                     </TableRow>
