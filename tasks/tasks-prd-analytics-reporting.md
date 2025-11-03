@@ -304,7 +304,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
         - Test with `curl http://localhost:8000/api/v1/analytics/dashboard` (should return 401 without auth)
       - **Tech:** FastAPI router composition
 
-  - [ ] **1.3 Story: Type Generation for Dashboard**
+  - [x] **1.3 Story: Type Generation for Dashboard**
     - **Scope:** Run Orval to generate TypeScript types and React Query hooks for dashboard endpoints
     - **Duration:** 1 hour
     - **Dependencies:** 1.2 (API endpoints exist)
@@ -315,7 +315,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
       - React Query hooks generated (e.g., `useGetAnalyticsDashboard`)
       - TypeScript types generated for all request/response schemas
 
-    - [ ] **1.3.1 Atomic:** Generate TypeScript types from OpenAPI spec
+    - [x] **1.3.1 Atomic:** Generate TypeScript types from OpenAPI spec
       - **Files:** Run from repository root
       - **Dependencies:** 1.2.2 (endpoint registered and backend running)
       - **Acceptance:**
