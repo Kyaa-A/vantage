@@ -4,6 +4,27 @@
 // 🏷️  Based on FastAPI tag: "common"
 
 /**
+ * AreaBreakdown
+ */
+export interface AreaBreakdown {
+  /** Governance area code */
+  area_code: string;
+  /** Governance area name */
+  area_name: string;
+  /** Number of barangays that passed this area */
+  passed: number;
+  /** Number of barangays that failed this area */
+  failed: number;
+  /**
+   * Pass percentage for this area
+   * @minimum 0
+   * @maximum 100
+   */
+  percentage: number;
+}
+
+
+/**
  * AreaType
  */
 export type AreaType = typeof AreaType[keyof typeof AreaType];
@@ -26,11 +47,71 @@ export interface Barangay {
 
 
 /**
+ * BarangayRanking
+ */
+export interface BarangayRanking {
+  /** Unique identifier for the barangay */
+  barangay_id: number;
+  /** Name of the barangay */
+  barangay_name: string;
+  /**
+   * Compliance score (0-100)
+   * @minimum 0
+   * @maximum 100
+   */
+  score: number;
+  /**
+   * Ranking position
+   * @minimum 1
+   */
+  rank: number;
+}
+
+
+/**
  * ChangePasswordRequest
  */
 export interface ChangePasswordRequest {
   current_password: string;
   new_password: string;
+}
+
+
+/**
+ * ComplianceRate
+ */
+export interface ComplianceRate {
+  /** Total number of barangays assessed */
+  total_barangays: number;
+  /** Number of barangays that passed */
+  passed: number;
+  /** Number of barangays that failed */
+  failed: number;
+  /**
+   * Percentage of barangays that passed
+   * @minimum 0
+   * @maximum 100
+   */
+  pass_percentage: number;
+}
+
+
+/**
+ * FailedIndicator
+ */
+export interface FailedIndicator {
+  /** Unique identifier for the indicator */
+  indicator_id: number;
+  /** Name of the indicator */
+  indicator_name: string;
+  /** Number of times this indicator failed */
+  failure_count: number;
+  /**
+   * Failure rate as percentage
+   * @minimum 0
+   * @maximum 100
+   */
+  percentage: number;
 }
 
 
@@ -97,6 +178,25 @@ export interface ProgressSummary {
   current: number;
   total: number;
   percentage: number;
+}
+
+
+/**
+ * TrendData
+ */
+export interface TrendData {
+  /** Assessment cycle identifier */
+  cycle_id: number;
+  /** Name of the assessment cycle */
+  cycle_name: string;
+  /**
+   * Pass rate for this cycle
+   * @minimum 0
+   * @maximum 100
+   */
+  pass_rate: number;
+  /** Date of the cycle */
+  date: string;
 }
 
 

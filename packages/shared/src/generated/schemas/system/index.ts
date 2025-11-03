@@ -3,6 +3,12 @@
 // 📁 System-related types
 // 🏷️  Based on FastAPI tag: "system"
 
+import type { ComplianceRate } from '../common';
+import type { AreaBreakdown } from '../common';
+import type { FailedIndicator } from '../common';
+import type { BarangayRanking } from '../common';
+import type { TrendData } from '../common';
+
 /**
  * SystemicWeakness
  */
@@ -32,6 +38,31 @@ export type SystemicWeaknessReason = string | null;
  */
 export interface ApiResponse {
   message: string;
+}
+
+
+/**
+ * DashboardKPIResponse
+ */
+export interface DashboardKPIResponse {
+  /** Overall pass/fail statistics */
+  overall_compliance_rate: ComplianceRate;
+  /** Completion status of assessments */
+  completion_status: ComplianceRate;
+  /** Compliance breakdown by governance area */
+  area_breakdown?: AreaBreakdown[];
+  /**
+   * Top 5 most frequently failed indicators
+   * @maxItems 5
+   */
+  top_failed_indicators?: FailedIndicator[];
+  /** Barangays ranked by compliance score */
+  barangay_rankings?: BarangayRanking[];
+  /**
+   * Historical trend data across cycles
+   * @maxItems 3
+   */
+  trends?: TrendData[];
 }
 
 
@@ -80,13 +111,7 @@ export interface MOVUploadResponse {
 /**
  * MOVUploadResponseMov
  */
-export type MOVUploadResponseMov = MOVUploadResponseMovAnyOf | null;
-
-
-/**
- * MOVUploadResponseMovAnyOf
- */
-export type MOVUploadResponseMovAnyOf = { [key: string]: unknown };
+export type MOVUploadResponseMov = unknown | null;
 
 
 /**
