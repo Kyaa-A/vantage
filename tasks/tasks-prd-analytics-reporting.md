@@ -201,7 +201,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
 
 - [ ] **1.0 Epic: MLGOO-DILG Dashboard** _(FR-1 to FR-6)_
 
-  - [ ] **1.1 Story: Backend Analytics Service for Dashboard KPIs**
+  - [x] **1.1 Story: Backend Analytics Service for Dashboard KPIs**
     - **Scope:** Implement business logic for calculating all dashboard KPIs (pass/fail rates, compliance by area, top failed indicators, barangay rankings, trends)
     - **Duration:** 2-3 days
     - **Dependencies:** Epic 6.0 (database schema must exist)
