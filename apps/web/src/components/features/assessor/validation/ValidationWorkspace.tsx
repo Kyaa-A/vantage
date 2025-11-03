@@ -73,6 +73,30 @@ export function ValidationWorkspace({ assessment }: ValidationWorkspaceProps) {
     rightEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [expandedId]);
 
+  // Helpers for grouped navigation
+  const getSectionKey = React.useCallback((label: string): string => {
+    // Extract leading number(s) like "1." or "2.3" → "1" or "2"
+    const match = label.match(/^(\d+)/);
+    return match ? match[1] : 'Other';
+  }, []);
+
+  const sections = React.useMemo(() => {
+    const map = new Map<string, { label: string; ids: number[] }>();
+    for (const r of responses) {
+      const ind = (r.indicator as AnyRecord) ?? {};
+      const label = ind?.name || `#${r.indicator_id ?? r.id}`;
+      const key = getSectionKey(String(label));
+      if (!map.has(key)) map.set(key, { label: key, ids: [] });
+      map.get(key)!.ids.push(r.id);
+    }
+    return Array.from(map.values());
+  }, [responses, getSectionKey]);
+
+  const jumpToFirstUnreviewed = () => {
+    const target = responses.find((r) => !form[r.id]?.status);
+    if (target) setExpandedId(target.id);
+  };
+
   const onSaveDraft = async () => {
     const payloads = responses
       .map((r) => ({ id: r.id as number, v: form[r.id] }))
@@ -144,6 +168,33 @@ export function ValidationWorkspace({ assessment }: ValidationWorkspaceProps) {
         <div className="sticky top-[52px] z-10 bg-card/80 backdrop-blur">
           <div className="mx-auto max-w-7xl px-4 md:px-6 py-2 overflow-x-auto">
             <div className="flex items-center gap-2 min-w-max">
+              <select
+                className="text-xs border rounded px-2 py-1 bg-white"
+                onChange={(e) => {
+                  const sec = e.target.value;
+                  const section = sections.find((s) => s.label === sec);
+                  if (section && section.ids.length > 0) setExpandedId(section.ids[0]);
+                }}
+                defaultValue=""
+              >
+                <option value="" disabled>
+                  Jump to section
+                </option>
+                {sections.map((s) => (
+                  <option key={s.label} value={s.label}>
+                    Section {s.label}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                className="text-xs px-2 py-1 rounded border border-black/10 bg-white hover:bg-black/5"
+                onClick={jumpToFirstUnreviewed}
+                disabled={responses.every((r) => !!form[r.id]?.status)}
+                title="Jump to first unreviewed indicator"
+              >
+                First Unreviewed
+              </button>
               {responses.map((r) => {
                 const indicator = (r.indicator as AnyRecord) ?? {};
                 const label = indicator?.name || `#${r.indicator_id ?? r.id}`;
