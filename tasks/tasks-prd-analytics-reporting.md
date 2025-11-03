@@ -269,7 +269,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
         - Export singleton: `analytics_service = AnalyticsService()` at module level
       - **Tech:** SQLAlchemy window functions for ranking, date filtering
 
-  - [ ] **1.2 Story: Backend API Endpoints for Dashboard**
+  - [x] **1.2 Story: Backend API Endpoints for Dashboard**
     - **Scope:** Create FastAPI endpoints to serve dashboard data with RBAC enforcement
     - **Duration:** 1-2 days
     - **Dependencies:** 1.1 (analytics service implemented)
