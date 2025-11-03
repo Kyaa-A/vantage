@@ -18,7 +18,9 @@ import type {
 import type {
   DashboardKPIResponse,
   GetAnalyticsDashboardParams,
-  HTTPValidationError
+  GetAnalyticsReportsParams,
+  HTTPValidationError,
+  ReportsDataResponse
 } from '../../schemas';
 
 import { mutator } from '../../../../../../apps/web/src/lib/api';
@@ -97,6 +99,92 @@ export function useGetAnalyticsDashboard<TData = Awaited<ReturnType<typeof getAn
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetAnalyticsDashboardQueryOptions(params,options)
+
+  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+/**
+ * Retrieve comprehensive reports data with flexible filtering and role-based access.
+
+**Data included:**
+- Chart data (bar chart, pie chart, line chart)
+- Geographic map data with barangay coordinates
+- Paginated table data for assessments
+- Report metadata (generation timestamp, applied filters)
+
+**Filters:**
+- `cycle_id`: Filter by assessment cycle
+- `start_date`, `end_date`: Filter by date range
+- `governance_area`: Filter by governance area codes (can specify multiple)
+- `barangay_id`: Filter by barangay IDs (can specify multiple)
+- `status`: Filter by assessment status (Pass/Fail/In Progress)
+- `page`, `page_size`: Pagination controls for table data
+
+**RBAC:**
+- MLGOO_DILG/SUPERADMIN: See all data
+- AREA_ASSESSOR: See only assigned governance area
+- BLGU_USER: See only own barangay
+
+**Access:** Requires authentication.
+ * @summary Get Reports Data with Filters
+ */
+export const getAnalyticsReports = (
+    params?: GetAnalyticsReportsParams,
+ options?: SecondParameter<typeof mutator>,signal?: AbortSignal
+) => {
+      
+      
+      return mutator<ReportsDataResponse>(
+      {url: `http://localhost:8000/api/v1/analytics/reports`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getGetAnalyticsReportsQueryKey = (params?: GetAnalyticsReportsParams,) => {
+    return [`http://localhost:8000/api/v1/analytics/reports`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getGetAnalyticsReportsQueryOptions = <TData = Awaited<ReturnType<typeof getAnalyticsReports>>, TError = void | HTTPValidationError>(params?: GetAnalyticsReportsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAnalyticsReports>>, TError, TData>, request?: SecondParameter<typeof mutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAnalyticsReportsQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAnalyticsReports>>> = ({ signal }) => getAnalyticsReports(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn,   staleTime: 300000, refetchOnWindowFocus: false,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAnalyticsReports>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAnalyticsReportsQueryResult = NonNullable<Awaited<ReturnType<typeof getAnalyticsReports>>>
+export type GetAnalyticsReportsQueryError = void | HTTPValidationError
+
+
+/**
+ * @summary Get Reports Data with Filters
+ */
+
+export function useGetAnalyticsReports<TData = Awaited<ReturnType<typeof getAnalyticsReports>>, TError = void | HTTPValidationError>(
+ params?: GetAnalyticsReportsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAnalyticsReports>>, TError, TData>, request?: SecondParameter<typeof mutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAnalyticsReportsQueryOptions(params,options)
 
   const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

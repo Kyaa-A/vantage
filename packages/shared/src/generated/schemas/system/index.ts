@@ -8,6 +8,9 @@ import type { AreaBreakdown } from '../common';
 import type { FailedIndicator } from '../common';
 import type { BarangayRanking } from '../common';
 import type { TrendData } from '../common';
+import type { ChartData } from '../common';
+import type { MapData } from '../common';
+import type { TableData } from '../common';
 
 /**
  * SystemicWeakness
@@ -124,3 +127,75 @@ export type MOVUploadResponseMovId = number | null;
  * MOVUploadResponseStoragePath
  */
 export type MOVUploadResponseStoragePath = string | null;
+
+
+/**
+ * ReportMetadata
+ */
+export interface ReportMetadata {
+  /** Timestamp when the report was generated */
+  generated_at: string;
+  /** Filter: Assessment cycle ID */
+  cycle_id?: ReportMetadataCycleId;
+  /** Filter: Start date */
+  start_date?: ReportMetadataStartDate;
+  /** Filter: End date */
+  end_date?: ReportMetadataEndDate;
+  /** Filter: Governance area codes */
+  governance_areas?: ReportMetadataGovernanceAreas;
+  /** Filter: Barangay IDs */
+  barangay_ids?: ReportMetadataBarangayIds;
+  /** Filter: Status filter */
+  status?: ReportMetadataStatus;
+}
+
+
+/**
+ * ReportMetadataBarangayIds
+ */
+export type ReportMetadataBarangayIds = number[] | null;
+
+
+/**
+ * ReportMetadataCycleId
+ */
+export type ReportMetadataCycleId = number | null;
+
+
+/**
+ * ReportMetadataEndDate
+ */
+export type ReportMetadataEndDate = string | null;
+
+
+/**
+ * ReportMetadataGovernanceAreas
+ */
+export type ReportMetadataGovernanceAreas = string[] | null;
+
+
+/**
+ * ReportMetadataStartDate
+ */
+export type ReportMetadataStartDate = string | null;
+
+
+/**
+ * ReportMetadataStatus
+ */
+export type ReportMetadataStatus = string | null;
+
+
+/**
+ * ReportsDataResponse
+ */
+export interface ReportsDataResponse {
+  /** Data for bar, pie, and line charts */
+  chart_data: ChartData;
+  /** Geographic map data for barangays */
+  map_data: MapData;
+  /** Paginated table data for assessments */
+  table_data: TableData;
+  /** Report generation metadata and applied filters */
+  metadata: ReportMetadata;
+}

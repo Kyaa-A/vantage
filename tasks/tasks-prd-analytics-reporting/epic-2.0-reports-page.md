@@ -139,7 +139,7 @@
         - Test import in a component to ensure no errors
       - **Tech:** pnpm, npm package management
 
-  - [ ] **2.4 Story: Type Generation for Reports**
+  - [x] **2.4 Story: Type Generation for Reports**
 
     - **Scope:** Generate TypeScript types for reports endpoints
     - **Duration:** 1 hour
@@ -150,7 +150,7 @@
 
       - `pnpm generate-types` generates reports hooks and types
 
-    - [ ] **2.4.1 Atomic:** Generate TypeScript types for reports endpoint
+    - [x] **2.4.1 Atomic:** Generate TypeScript types for reports endpoint
       - **Files:** Run from repository root
       - **Dependencies:** 2.2.1 (reports endpoint exists)
       - **Acceptance:**
