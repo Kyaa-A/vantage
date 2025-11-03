@@ -29,7 +29,8 @@ export function FilePreviewerModal({
     if (fileType) {
       setDetectedFileType(fileType);
     } else {
-      const extension = fileUrl.split('.').pop()?.toLowerCase();
+      const clean = fileUrl.split('#')[0].split('?')[0];
+      const extension = clean.split('.').pop()?.toLowerCase();
       setDetectedFileType(extension || "");
     }
     setIsLoading(false);

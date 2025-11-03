@@ -2,7 +2,8 @@
 
 import * as React from 'react';
 import type { AssessmentDetailsResponse } from '@vantage/shared';
-import { MovPreviewer } from '@/components/shared/MovPreviewer';
+import { resolveMovUrl } from '@/lib/utils';
+import { getSignedUrl } from '@/lib/uploadMov';
 
 interface LeftSubmissionViewProps {
   assessment: AssessmentDetailsResponse;
@@ -13,41 +14,26 @@ interface LeftSubmissionViewProps {
 type AnyRecord = Record<string, any>;
 
 export function LeftSubmissionView({ assessment, expandedId, onToggle }: LeftSubmissionViewProps) {
-  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
-  const [previewTitle, setPreviewTitle] = React.useState<string | undefined>();
-  const [gallery, setGallery] = React.useState<Array<{ title?: string; url?: string | null }> | undefined>();
-  const [galleryIndex, setGalleryIndex] = React.useState<number>(0);
-  const [open, setOpen] = React.useState(false);
+  // Clicking a MOV opens it in a new tab; no modal state needed
 
   const data: AnyRecord = (assessment as unknown as AnyRecord) ?? {};
   const core = (data.assessment as AnyRecord) ?? data;
   const responses: AnyRecord[] = (core.responses as AnyRecord[]) ?? [];
 
-  const handleOpenMov = (movs: AnyRecord[], targetIndex: number) => {
-    const resolveUrl = (u?: string | null): string | null => {
-      if (!u) return null;
-      if (/^https?:\/\//i.test(u)) return u;
-      // If it looks like a Supabase storage path (assessment-.../response-.../file)
-      if (/^assessment-\d+\/response-\d+\//.test(u)) {
-        const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        if (supabase) {
-          return `${supabase.replace(/\/$/, '')}/storage/v1/object/public/movs/${u}`;
-        }
+  const openMovInNewTab = async (mov: AnyRecord) => {
+    const key: string | null = mov?.storage_path || mov?.url || null;
+    if (!key) return;
+    try {
+      const signed = await getSignedUrl(key, 300);
+      if (signed) {
+        window.open(signed, '_blank', 'noopener');
+        return;
       }
-      // Fallback: treat as API-served relative path
-      const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
-      return `${base}${u.startsWith('/') ? u : `/${u}`}`;
-    };
-    const items = movs.map((m) => ({
-      title: m?.original_filename || m?.filename || 'MOV',
-      url: resolveUrl(m?.storage_path || m?.url || null),
-    }));
-    setGallery(items);
-    const target = items[targetIndex];
-    setPreviewUrl(target?.url || null);
-    setPreviewTitle(target?.title);
-    setGalleryIndex(targetIndex);
-    setOpen(true);
+    } catch {
+      // fall through
+    }
+    const fallback = resolveMovUrl(key) || key;
+    window.open(fallback, '_blank', 'noopener');
   };
 
   const formatPrimitive = (val: unknown): string => {
@@ -153,7 +139,7 @@ export function LeftSubmissionView({ assessment, expandedId, onToggle }: LeftSub
                               <button
                                 type="button"
                                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-black/10 bg-white text-foreground shadow-sm hover:bg-black/5"
-                                onClick={() => handleOpenMov(movs, mi)}
+                                onClick={() => openMovInNewTab(m)}
                                 title={name}
                               >
                                 <span className="truncate max-w-[220px] text-sm">{name}</span>
@@ -177,7 +163,7 @@ export function LeftSubmissionView({ assessment, expandedId, onToggle }: LeftSub
         )}
       </div>
 
-      <MovPreviewer open={open} onOpenChange={setOpen} title={previewTitle} url={previewUrl} items={gallery} startIndex={galleryIndex} />
+      {/* MOVs are opened in a new tab; no inline preview here. */}
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import { StatusBadge } from '@/components/shared';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useQueryClient } from '@tanstack/react-query';
 import type { AssessmentDetailsResponse } from '@vantage/shared';
 import {
@@ -33,10 +33,19 @@ export function ValidationWorkspace({ assessment }: ValidationWorkspaceProps) {
   const responses: AnyRecord[] = (core.responses as AnyRecord[]) ?? [];
   const assessmentId: number = data.assessment_id ?? core.id ?? 0;
   const reworkCount: number = core.rework_count ?? 0;
-  const barangayName: string = core?.barangay?.name ?? core?.barangay_name ?? 'Barangay';
-  const governanceArea: string = core?.governance_area?.name ?? core?.governance_area_name ?? 'Governance Area';
+  // Prefer assessor payload structure: assessment.blgu_user.barangay.name
+  const barangayName: string = (core?.blgu_user?.barangay?.name
+    ?? core?.barangay?.name
+    ?? core?.barangay_name
+    ?? '') as string;
+  // Governance area name can be derived from the first response's indicator
+  const governanceArea: string = (responses[0]?.indicator?.governance_area?.name
+    ?? core?.governance_area?.name
+    ?? core?.governance_area_name
+    ?? '') as string;
   const cycleYear: string = String(core?.cycle_year ?? core?.year ?? '');
   const statusText: string = core?.status ?? core?.assessment_status ?? '';
+  const normalizedStatus = String(statusText || '').toLowerCase();
 
   const [form, setForm] = React.useState<Record<number, { status?: 'Pass' | 'Fail' | 'Conditional'; publicComment?: string; internalNote?: string }>>({});
 
@@ -142,7 +151,12 @@ export function ValidationWorkspace({ assessment }: ValidationWorkspaceProps) {
               </Link>
             </Button>
             <div className="min-w-0">
-              <div className="text-sm font-medium truncate">Barangay: {barangayName} — Governance Area: {governanceArea} {cycleYear ? `(CY ${cycleYear})` : ''}</div>
+              <div className="text-sm font-medium truncate">
+                {barangayName ? `Barangay: ${barangayName}` : ''}
+                {barangayName && governanceArea ? ' — ' : ''}
+                {governanceArea ? `Governance Area: ${governanceArea}` : ''}
+                {cycleYear ? ` ${barangayName || governanceArea ? '' : ''}(CY ${cycleYear})` : ''}
+              </div>
               <div className="text-xs text-muted-foreground truncate">Barangay - Governance Area Assessment Validation</div>
             </div>
           </div>
@@ -274,7 +288,15 @@ export function ValidationWorkspace({ assessment }: ValidationWorkspaceProps) {
               size="default"
               type="button"
               onClick={onSendRework}
-              disabled={!allReviewed || reworkCount > 0 || missingRequiredComments > 0 || reworkMut.isPending}
+              disabled={
+                // PRD: rework only when all indicators reviewed, at least one Fail, and rework_count == 0, and in Submitted for Review
+                !allReviewed ||
+                !anyFail ||
+                reworkCount > 0 ||
+                missingRequiredComments > 0 ||
+                reworkMut.isPending ||
+                normalizedStatus !== 'submitted_for_review'
+              }
               className="w-full sm:w-auto text-[var(--cityscape-accent-foreground)] hover:opacity-90"
               style={{ background: 'var(--cityscape-yellow)' }}
             >
@@ -284,7 +306,13 @@ export function ValidationWorkspace({ assessment }: ValidationWorkspaceProps) {
               size="default"
               type="button"
               onClick={onFinalize}
-              disabled={!allReviewed || anyFail || missingRequiredComments > 0 || finalizeMut.isPending}
+              disabled={
+                // PRD: must review all; comments required; block Fail only for first submission
+                !allReviewed ||
+                missingRequiredComments > 0 ||
+                finalizeMut.isPending ||
+                (normalizedStatus === 'submitted_for_review' && anyFail)
+              }
               className="w-full sm:w-auto text-white hover:opacity-90"
               style={{ background: 'var(--success)' }}
             >
@@ -296,18 +324,18 @@ export function ValidationWorkspace({ assessment }: ValidationWorkspaceProps) {
 
       {/* Progress Summary */}
       <Dialog open={progressOpen} onOpenChange={setProgressOpen}>
-        <DialogContent className="max-w-md">
-          <div className="space-y-2">
-            <div className="text-base font-semibold">Review Progress</div>
-            <div className="text-sm text-muted-foreground">Quick summary before taking final actions.</div>
-            <ul className="mt-2 text-sm space-y-1">
-              <li>Total indicators: {total}</li>
-              <li>Reviewed: {reviewed}</li>
-              <li>Unreviewed: {Math.max(0, total - reviewed)}</li>
-              <li>Marked Fail: {responses.filter((r) => form[r.id]?.status === 'Fail').length}</li>
-              <li>Missing required comments: {missingRequiredComments}</li>
-            </ul>
-          </div>
+        <DialogContent className="max-w-md bg-white border-0 outline-none focus:outline-none focus-visible:ring-0">
+          <DialogHeader>
+            <DialogTitle>Review Progress</DialogTitle>
+            <DialogDescription>Quick summary before taking final actions.</DialogDescription>
+          </DialogHeader>
+          <ul className="mt-2 text-sm space-y-1">
+            <li>Total indicators: {total}</li>
+            <li>Reviewed: {reviewed}</li>
+            <li>Unreviewed: {Math.max(0, total - reviewed)}</li>
+            <li>Marked Fail: {responses.filter((r) => form[r.id]?.status === 'Fail').length}</li>
+            <li>Missing required comments: {missingRequiredComments}</li>
+          </ul>
         </DialogContent>
       </Dialog>
     </div>

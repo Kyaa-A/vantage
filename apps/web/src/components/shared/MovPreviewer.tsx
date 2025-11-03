@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 interface MovPreviewItem {
   title?: string;
@@ -31,6 +31,7 @@ export function MovPreviewer({ open, onOpenChange, title, url, items, startIndex
   const activeTitle = active?.title || title;
 
   const [blobUrl, setBlobUrl] = React.useState<string | null>(null);
+  const [blobMime, setBlobMime] = React.useState<string | null>(null);
   const token = useAuthStore((s) => s.token);
 
   React.useEffect(() => {
@@ -47,6 +48,7 @@ export function MovPreviewer({ open, onOpenChange, title, url, items, startIndex
         const url = URL.createObjectURL(blob);
         revoke = url;
         setBlobUrl(url);
+        setBlobMime(res.headers.get('content-type'));
       } catch {
         // ignore and fallback
       }
@@ -59,38 +61,44 @@ export function MovPreviewer({ open, onOpenChange, title, url, items, startIndex
 
   const previewUrl = blobUrl || activeUrl;
 
-  const isPdf = typeof previewUrl === 'string' && previewUrl.toLowerCase().endsWith('.pdf');
-  const isImage = typeof previewUrl === 'string' && /(png|jpe?g|gif|webp|svg)$/i.test(previewUrl);
+  const stripQuery = (u: string) => u.split('#')[0].split('?')[0];
+  const isPdf =
+    (blobMime?.includes('application/pdf')) ||
+    (typeof previewUrl === 'string' && stripQuery(previewUrl).toLowerCase().endsWith('.pdf'));
+  const isImage =
+    (blobMime?.startsWith('image/')) ||
+    (typeof previewUrl === 'string' && /(png|jpe?g|gif|webp|svg)$/i.test(stripQuery(previewUrl || '')));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl">
-        <div className="mb-2 flex items-center justify-between gap-3">
-          <div className="text-sm font-medium truncate">{activeTitle || 'MOV Preview'}</div>
-          {hasGallery ? (
-            <div className="flex items-center gap-2 text-xs">
-              <button
-                type="button"
-                className="px-2 py-1 rounded border border-black/10 hover:bg-black/5"
-                onClick={() => setIndex((i) => Math.max(0, i - 1))}
-                disabled={index <= 0}
-              >
-                Prev
-              </button>
-              <div>
-                {index + 1} / {items!.length}
-              </div>
-              <button
-                type="button"
-                className="px-2 py-1 rounded border border-black/10 hover:bg-black/5"
-                onClick={() => setIndex((i) => Math.min(items!.length - 1, i + 1))}
-                disabled={index >= items!.length - 1}
-              >
-                Next
-              </button>
+        <DialogHeader>
+          <DialogTitle className="truncate">{activeTitle || 'MOV Preview'}</DialogTitle>
+          <DialogDescription>Viewing uploaded Means of Verification.</DialogDescription>
+        </DialogHeader>
+        {hasGallery ? (
+          <div className="mb-2 flex items-center justify-end gap-2 text-xs">
+            <button
+              type="button"
+              className="px-2 py-1 rounded border border-black/10 hover:bg-black/5"
+              onClick={() => setIndex((i) => Math.max(0, i - 1))}
+              disabled={index <= 0}
+            >
+              Prev
+            </button>
+            <div>
+              {index + 1} / {items!.length}
             </div>
-          ) : null}
-        </div>
+            <button
+              type="button"
+              className="px-2 py-1 rounded border border-black/10 hover:bg-black/5"
+              onClick={() => setIndex((i) => Math.min(items!.length - 1, i + 1))}
+              disabled={index >= items!.length - 1}
+            >
+              Next
+            </button>
+          </div>
+        ) : null}
         {!previewUrl ? (
           <div className="text-sm text-muted-foreground">No preview available.</div>
         ) : isPdf ? (

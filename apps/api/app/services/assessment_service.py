@@ -210,6 +210,7 @@ class AssessmentService:
                         "created_at": c.created_at.isoformat() if c.created_at else None,
                     }
                     for c in (response.feedback_comments if response else [])
+                    if not getattr(c, "is_internal_note", False)
                 ],
                 "children": [],
             }
@@ -1827,7 +1828,7 @@ class AssessmentService:
         Returns:
             List of dictionaries with formatted feedback comments
         """
-        # Get all feedback comments for the assessment
+        # Get all feedback comments for the assessment (exclude internal notes for BLGU)
         feedback_comments = (
             db.query(FeedbackComment)
             .join(AssessmentResponse)
@@ -1838,6 +1839,7 @@ class AssessmentService:
                 ),
             )
             .filter(AssessmentResponse.assessment_id == assessment_id)
+            .filter(FeedbackComment.is_internal_note == False)
             .order_by(FeedbackComment.created_at.desc())
             .all()
         )
@@ -1930,7 +1932,7 @@ class AssessmentService:
         Returns:
             List of dictionaries with recent feedback and timestamp details
         """
-        # Get recent feedback comments
+        # Get recent public feedback comments (exclude internal notes for BLGU)
         recent_feedback = (
             db.query(FeedbackComment)
             .join(AssessmentResponse)
@@ -1941,6 +1943,7 @@ class AssessmentService:
                 ),
             )
             .filter(AssessmentResponse.assessment_id == assessment_id)
+            .filter(FeedbackComment.is_internal_note == False)
             .order_by(FeedbackComment.created_at.desc())
             .limit(limit)
             .all()

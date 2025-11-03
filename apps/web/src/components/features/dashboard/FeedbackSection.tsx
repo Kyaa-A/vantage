@@ -47,15 +47,17 @@ export function FeedbackSection({ feedback }: FeedbackSectionProps) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-2 flex-wrap">
                     <span className="inline-flex items-center px-2 py-1 rounded-sm bg-[var(--cityscape-yellow)]/20 text-[var(--cityscape-yellow)] text-xs font-medium font-mono border border-[var(--cityscape-yellow)]/30">
-                      {String(item.indicator)}
+                      {typeof (item as any).indicator === 'string'
+                        ? String((item as any).indicator)
+                        : String((item as any).indicator?.name ?? 'Indicator')}
                     </span>
                     <span className="text-xs text-[var(--text-secondary)]">•</span>
                     <span className="text-xs text-[var(--text-secondary)] font-medium">
-                      {String(item.governance_area)}
+                      {String((item as any).governance_area)}
                     </span>
                   </div>
                   <p className="text-sm text-[var(--foreground)] leading-relaxed">
-                    {truncateComment(String(item.comment))}
+                    {truncateComment(String((item as any).comment))}
                   </p>
                 </div>
               </div>
