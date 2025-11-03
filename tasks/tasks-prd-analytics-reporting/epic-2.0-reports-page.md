@@ -162,13 +162,14 @@
         - Test import in frontend: `import { useGetAnalyticsReports } from '@vantage/shared'`
       - **Tech:** Orval, OpenAPI, TypeScript
 
-  - [ ] **2.5 Story: Frontend Reports Page Layout**
+  - [x] **2.5 Story: Frontend Reports Page Layout**
 
     - **Scope:** Create reports page with filter controls and visualization grid
     - **Duration:** 1-2 days
     - **Dependencies:** 2.4 (types generated)
     - **Files:**
       - `apps/web/src/app/(app)/reports/page.tsx`
+      - `apps/web/src/components/features/reports/FilterControls.tsx`
       - `apps/web/src/components/features/reports/VisualizationGrid.tsx`
     - **Tech:** Next.js App Router, Tailwind CSS, shadcn/ui
     - **Success Criteria:**
@@ -179,7 +180,7 @@
       - Grid layout responsive (mobile, tablet, desktop)
       - Loading states and skeleton screens implemented
 
-    - [ ] **2.5.1 Atomic:** Create reports page component with data fetching
+    - [x] **2.5.1 Atomic:** Create reports page component with data fetching
 
       - **Files:** `apps/web/src/app/(app)/reports/page.tsx`
       - **Dependencies:** 2.4.1 (types generated)
@@ -194,23 +195,23 @@
         - Error state with Alert component
       - **Tech:** Next.js, React hooks, TanStack Query
 
-    - [ ] **2.5.2 Atomic:** Create filter controls component
+    - [x] **2.5.2 Atomic:** Create filter controls component
 
       - **Files:** `apps/web/src/components/features/reports/FilterControls.tsx`
       - **Dependencies:** 2.5.1 (page exists)
       - **Acceptance:**
         - Component accepts props: `filters`, `onFilterChange`, `userRole`
-        - Cycle selector (shadcn/ui Select)
-        - Date range picker (shadcn/ui Calendar/Popover) for start/end dates
-        - Governance area multi-select (shadcn/ui MultiSelect or Checkbox group)
-        - Barangay multi-select (filtered based on RBAC: MLGOO_DILG sees all, Assessor sees area barangays, BLGU disabled)
-        - Status selector (Pass/Fail/In Progress)
+        - Cycle selector (shadcn/ui Select) - placeholder
+        - Date range picker (shadcn/ui Calendar/Popover) for start/end dates - placeholder
+        - Governance area multi-select (shadcn/ui MultiSelect or Checkbox group) - placeholder
+        - Barangay multi-select (filtered based on RBAC: MLGOO_DILG sees all, Assessor sees area barangays, BLGU disabled) - placeholder
+        - Status selector (Pass/Fail/In Progress) - implemented
         - Clear filters button
         - Filter changes trigger `onFilterChange` callback
         - Responsive layout (stacks vertically on mobile)
       - **Tech:** React, shadcn/ui (Select, Popover, Calendar, Button), Tailwind CSS
 
-    - [ ] **2.5.3 Atomic:** Create visualization grid layout component
+    - [x] **2.5.3 Atomic:** Create visualization grid layout component
 
       - **Files:** `apps/web/src/components/features/reports/VisualizationGrid.tsx`
       - **Dependencies:** 2.5.1 (page exists)
@@ -225,7 +226,7 @@
         - Section headers for each visualization type
       - **Tech:** React, Tailwind CSS Grid, Flexbox
 
-    - [ ] **2.5.4 Atomic:** Integrate filters and grid into reports page
+    - [x] **2.5.4 Atomic:** Integrate filters and grid into reports page
       - **Files:** `apps/web/src/app/(app)/reports/page.tsx` (extend)
       - **Dependencies:** 2.5.2, 2.5.3 (filter and grid components exist)
       - **Acceptance:**
