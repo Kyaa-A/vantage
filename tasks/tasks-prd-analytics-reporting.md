@@ -282,7 +282,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
       - Returns all KPIs in structured JSON format
       - Handles 401/403 errors for unauthorized access
 
-    - [ ] **1.2.1 Atomic:** Create analytics router and dashboard endpoint
+    - [x] **1.2.1 Atomic:** Create analytics router and dashboard endpoint
       - **Files:** `apps/api/app/api/v1/analytics.py`
       - **Dependencies:** 1.1.5 (analytics service complete)
       - **Acceptance:**
@@ -294,7 +294,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
         - Include OpenAPI docs: summary, description, response examples
       - **Tech:** FastAPI, Pydantic, dependency injection
 
-    - [ ] **1.2.2 Atomic:** Register analytics router in API initialization
+    - [x] **1.2.2 Atomic:** Register analytics router in API initialization
       - **Files:** `apps/api/app/api/v1/__init__.py`
       - **Dependencies:** 1.2.1 (router created)
       - **Acceptance:**
