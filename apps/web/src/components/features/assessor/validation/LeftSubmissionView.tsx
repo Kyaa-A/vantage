@@ -1,9 +1,11 @@
 "use client";
 
-import * as React from 'react';
-import type { AssessmentDetailsResponse } from '@vantage/shared';
-import { resolveMovUrl } from '@/lib/utils';
 import { getSignedUrl } from '@/lib/uploadMov';
+import { resolveMovUrl } from '@/lib/utils';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import type { AssessmentDetailsResponse } from '@vantage/shared';
+import * as React from 'react';
 
 interface LeftSubmissionViewProps {
   assessment: AssessmentDetailsResponse;
@@ -14,27 +16,55 @@ interface LeftSubmissionViewProps {
 type AnyRecord = Record<string, any>;
 
 export function LeftSubmissionView({ assessment, expandedId, onToggle }: LeftSubmissionViewProps) {
-  // Clicking a MOV opens it in a new tab; no modal state needed
+  // Modal state for in-app MOV preview with next/prev
+  const [modalOpen, setModalOpen] = React.useState(false);
+  const [modalIndicatorTitle, setModalIndicatorTitle] = React.useState<string>('');
+  const [modalMovs, setModalMovs] = React.useState<AnyRecord[]>([]);
+  const [modalIndex, setModalIndex] = React.useState<number>(0);
+  const [currentUrl, setCurrentUrl] = React.useState<string>('');
+  const [currentExt, setCurrentExt] = React.useState<string>('');
+  const [isLoading, setIsLoading] = React.useState<boolean>(false);
 
   const data: AnyRecord = (assessment as unknown as AnyRecord) ?? {};
   const core = (data.assessment as AnyRecord) ?? data;
   const responses: AnyRecord[] = (core.responses as AnyRecord[]) ?? [];
 
-  const openMovInNewTab = async (mov: AnyRecord) => {
+  const resolveMov = async (mov: AnyRecord): Promise<string> => {
     const key: string | null = mov?.storage_path || mov?.url || null;
     if (!key) return;
     try {
       const signed = await getSignedUrl(key, 300);
       if (signed) {
-        window.open(signed, '_blank', 'noopener');
-        return;
+        return signed;
       }
     } catch {
       // fall through
     }
     const fallback = resolveMovUrl(key) || key;
-    window.open(fallback, '_blank', 'noopener');
+    return fallback as string;
   };
+
+  const openMovModal = async (indicatorTitle: string, movs: AnyRecord[], startIndex: number) => {
+    if (!movs || movs.length === 0) return;
+    setModalIndicatorTitle(indicatorTitle);
+    setModalMovs(movs);
+    setModalIndex(Math.max(0, Math.min(startIndex, movs.length - 1)));
+    setModalOpen(true);
+  };
+
+  // Load current URL whenever modalIndex/movs change
+  React.useEffect(() => {
+    if (!modalOpen || !modalMovs.length) return;
+    const mov = modalMovs[modalIndex];
+    if (!mov) return;
+    const name: string = mov.original_filename || mov.filename || '';
+    const ext = typeof name === 'string' && name.includes('.') ? String(name.split('.').pop() || '').toLowerCase() : '';
+    setCurrentExt(ext);
+    setIsLoading(true);
+    resolveMov(mov)
+      .then((url) => setCurrentUrl(url))
+      .finally(() => setIsLoading(false));
+  }, [modalOpen, modalMovs, modalIndex]);
 
   const formatPrimitive = (val: unknown): string => {
     if (typeof val === 'boolean') return val ? 'Yes' : 'No';
@@ -139,7 +169,7 @@ export function LeftSubmissionView({ assessment, expandedId, onToggle }: LeftSub
                               <button
                                 type="button"
                                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-black/10 bg-white text-foreground shadow-sm hover:bg-black/5"
-                                onClick={() => openMovInNewTab(m)}
+                                onClick={() => openMovModal(indicatorLabel, movs, mi)}
                                 title={name}
                               >
                                 <span className="truncate max-w-[220px] text-sm">{name}</span>
@@ -163,7 +193,54 @@ export function LeftSubmissionView({ assessment, expandedId, onToggle }: LeftSub
         )}
       </div>
 
-      {/* MOVs are opened in a new tab; no inline preview here. */}
+      {/* MOV Previewer Modal */}
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent className="max-w-5xl bg-white border-0 outline-none focus:outline-none focus-visible:ring-0">
+          <DialogHeader>
+            <DialogTitle>MOV Preview</DialogTitle>
+            <DialogDescription>
+              {modalIndicatorTitle} — File {modalIndex + 1} of {modalMovs.length}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center justify-between gap-3 mb-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setModalIndex((i) => Math.max(0, i - 1))}
+              disabled={modalIndex <= 0}
+            >
+              Previous
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setModalIndex((i) => Math.min(modalMovs.length - 1, i + 1))}
+              disabled={modalIndex >= modalMovs.length - 1}
+            >
+              Next
+            </Button>
+          </div>
+          <div className="h-[70vh] w-full border border-black/10 rounded bg-muted/20 overflow-hidden flex items-center justify-center">
+            {isLoading ? (
+              <div className="text-sm text-muted-foreground">Loading…</div>
+            ) : currentUrl ? (
+              currentExt === 'pdf' ? (
+                <iframe src={currentUrl} className="w-full h-full" title="PDF preview" />
+              ) : currentExt === 'png' || currentExt === 'jpg' || currentExt === 'jpeg' || currentExt === 'webp' ? (
+                <img src={currentUrl} alt="MOV preview" className="max-h-full max-w-full object-contain" />
+              ) : (
+                <div className="p-4 text-sm text-center">
+                  Preview not available. <a href={currentUrl} target="_blank" rel="noreferrer" className="underline">Open in new tab</a>
+                </div>
+              )
+            ) : (
+              <div className="text-sm text-muted-foreground">No preview available.</div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

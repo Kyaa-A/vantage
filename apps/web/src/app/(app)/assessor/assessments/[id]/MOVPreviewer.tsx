@@ -2,10 +2,10 @@
 
 import { FilePreviewerModal } from "@/components/shared";
 import { Button } from "@/components/ui/button";
+import { getSignedUrl } from "@/lib/uploadMov";
+import { resolveMovUrl } from "@/lib/utils";
 import { Eye } from "lucide-react";
 import { useState } from "react";
-import { resolveMovUrl } from "@/lib/utils";
-import { getSignedUrl } from "@/lib/uploadMov";
 
 interface MOVPreviewerProps {
   mov: {

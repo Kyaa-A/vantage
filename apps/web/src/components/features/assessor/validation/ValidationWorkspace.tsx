@@ -167,7 +167,7 @@ export function ValidationWorkspace({ assessment }: ValidationWorkspaceProps) {
               size="sm"
               type="button"
               onClick={onSaveDraft}
-              disabled={!dirty || validateMut.isPending}
+              disabled={validateMut.isPending}
             >
               Save as Draft
             </Button>
@@ -278,7 +278,7 @@ export function ValidationWorkspace({ assessment }: ValidationWorkspaceProps) {
               size="default"
               type="button"
               onClick={onSaveDraft}
-              disabled={!dirty || validateMut.isPending}
+              disabled={validateMut.isPending}
               className="w-full sm:w-auto"
             >
               Save as Draft
@@ -289,13 +289,12 @@ export function ValidationWorkspace({ assessment }: ValidationWorkspaceProps) {
               type="button"
               onClick={onSendRework}
               disabled={
-                // PRD: rework only when all indicators reviewed, at least one Fail, and rework_count == 0, and in Submitted for Review
+                // Enabled if: all reviewed AND reworkCount == 0 AND any Fail AND no missing required comments
                 !allReviewed ||
+                reworkCount !== 0 ||
                 !anyFail ||
-                reworkCount > 0 ||
                 missingRequiredComments > 0 ||
-                reworkMut.isPending ||
-                normalizedStatus !== 'submitted_for_review'
+                reworkMut.isPending
               }
               className="w-full sm:w-auto text-[var(--cityscape-accent-foreground)] hover:opacity-90"
               style={{ background: 'var(--cityscape-yellow)' }}
@@ -307,11 +306,11 @@ export function ValidationWorkspace({ assessment }: ValidationWorkspaceProps) {
               type="button"
               onClick={onFinalize}
               disabled={
-                // PRD: must review all; comments required; block Fail only for first submission
+                // Enabled if: all reviewed AND (no Fail OR reworkCount == 1) AND no missing required comments
                 !allReviewed ||
                 missingRequiredComments > 0 ||
                 finalizeMut.isPending ||
-                (normalizedStatus === 'submitted_for_review' && anyFail)
+                (reworkCount === 0 && anyFail)
               }
               className="w-full sm:w-auto text-white hover:opacity-90"
               style={{ background: 'var(--success)' }}
