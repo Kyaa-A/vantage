@@ -328,7 +328,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
         - No TypeScript errors in generated files
       - **Tech:** Orval, OpenAPI, shell commands
 
-  - [ ] **1.4 Story: Frontend Dashboard Page**
+  - [x] **1.4 Story: Frontend Dashboard Page**
     - **Scope:** Create MLGOO-DILG dashboard page with layout and routing
     - **Duration:** 1 day
     - **Dependencies:** 1.3 (types generated)
@@ -341,7 +341,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
       - Page layout includes header, cycle selector, and grid for KPI cards
       - Loading states and error handling implemented
 
-    - [ ] **1.4.1 Atomic:** Create analytics dashboard page component
+    - [x] **1.4.1 Atomic:** Create analytics dashboard page component
       - **Files:** `apps/web/src/app/(app)/analytics/page.tsx`
       - **Dependencies:** 1.3.1 (types generated)
       - **Acceptance:**
@@ -354,7 +354,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
         - Export default function `AnalyticsPage`
       - **Tech:** Next.js 15, React 19, TypeScript, TanStack Query
 
-    - [ ] **1.4.2 Atomic:** Implement cycle selector and data fetching
+    - [x] **1.4.2 Atomic:** Implement cycle selector and data fetching
       - **Files:** `apps/web/src/app/(app)/analytics/page.tsx` (extend)
       - **Dependencies:** 1.4.1 (page component exists)
       - **Acceptance:**
