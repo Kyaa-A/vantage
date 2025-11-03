@@ -6,24 +6,106 @@ import { MovPreviewer } from '@/components/shared/MovPreviewer';
 
 interface LeftSubmissionViewProps {
   assessment: AssessmentDetailsResponse;
+  expandedId?: number | null;
+  onToggle?: (responseId: number) => void;
 }
 
 type AnyRecord = Record<string, any>;
 
-export function LeftSubmissionView({ assessment }: LeftSubmissionViewProps) {
+export function LeftSubmissionView({ assessment, expandedId, onToggle }: LeftSubmissionViewProps) {
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
   const [previewTitle, setPreviewTitle] = React.useState<string | undefined>();
+  const [gallery, setGallery] = React.useState<Array<{ title?: string; url?: string | null }> | undefined>();
+  const [galleryIndex, setGalleryIndex] = React.useState<number>(0);
   const [open, setOpen] = React.useState(false);
 
   const data: AnyRecord = (assessment as unknown as AnyRecord) ?? {};
   const core = (data.assessment as AnyRecord) ?? data;
   const responses: AnyRecord[] = (core.responses as AnyRecord[]) ?? [];
 
-  const handleOpenMov = (mov: AnyRecord) => {
-    const url: string | null = mov?.storage_path || mov?.url || null;
-    setPreviewUrl(url);
-    setPreviewTitle(mov?.original_filename || mov?.filename || 'MOV');
+  const handleOpenMov = (movs: AnyRecord[], targetIndex: number) => {
+    const resolveUrl = (u?: string | null): string | null => {
+      if (!u) return null;
+      if (/^https?:\/\//i.test(u)) return u;
+      // If it looks like a Supabase storage path (assessment-.../response-.../file)
+      if (/^assessment-\d+\/response-\d+\//.test(u)) {
+        const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        if (supabase) {
+          return `${supabase.replace(/\/$/, '')}/storage/v1/object/public/movs/${u}`;
+        }
+      }
+      // Fallback: treat as API-served relative path
+      const base = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+      return `${base}${u.startsWith('/') ? u : `/${u}`}`;
+    };
+    const items = movs.map((m) => ({
+      title: m?.original_filename || m?.filename || 'MOV',
+      url: resolveUrl(m?.storage_path || m?.url || null),
+    }));
+    setGallery(items);
+    const target = items[targetIndex];
+    setPreviewUrl(target?.url || null);
+    setPreviewTitle(target?.title);
+    setGalleryIndex(targetIndex);
     setOpen(true);
+  };
+
+  const formatPrimitive = (val: unknown): string => {
+    if (typeof val === 'boolean') return val ? 'Yes' : 'No';
+    if (val === null || val === undefined) return '';
+    if (val instanceof Date) return val.toLocaleString();
+    return String(val);
+  };
+
+  const humanizeKey = (key: string): string => {
+    try {
+      const spaced = key.replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
+      return spaced
+        .toLowerCase()
+        .split(' ')
+        .map((w) => (w.length ? w[0].toUpperCase() + w.slice(1) : w))
+        .join(' ');
+    } catch {
+      return key;
+    }
+  };
+
+  const renderValue = (val: unknown, depth = 0): React.ReactNode => {
+    if (Array.isArray(val)) {
+      if (val.length === 0) return <span className="text-muted-foreground">None</span>;
+      return (
+        <ul className="list-disc pl-5 space-y-1">
+          {val.map((item, i) => (
+            <li key={i}>{typeof item === 'object' ? renderValue(item, depth + 1) : formatPrimitive(item)}</li>
+          ))}
+        </ul>
+      );
+    }
+    if (val && typeof val === 'object') {
+      const entries = Object.entries(val as Record<string, unknown>);
+      if (entries.length === 0) return <span className="text-muted-foreground">Empty</span>;
+      return (
+        <dl className="grid grid-cols-1 gap-y-2">
+          {entries.map(([k, v]) => (
+            <div key={k} className="grid grid-cols-[240px_1fr] items-start gap-4">
+              <dt className="text-[12px] font-medium tracking-wide text-muted-foreground break-words">{humanizeKey(k)}</dt>
+              <dd className="text-[13px] leading-5 break-words">{renderValue(v, depth + 1)}</dd>
+            </div>
+          ))}
+        </dl>
+      );
+    }
+    if (typeof val === 'boolean') {
+      return (
+        <span
+          className={val ? 'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium text-white' : 'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium text-white'}
+          style={{ background: val ? 'var(--success)' : 'var(--destructive, #ef4444)' }}
+        >
+          {formatPrimitive(val)}
+        </span>
+      );
+    }
+    return <span>{formatPrimitive(val)}</span>;
   };
 
   return (
@@ -38,48 +120,64 @@ export function LeftSubmissionView({ assessment }: LeftSubmissionViewProps) {
             const indicatorLabel = indicator?.name || `Indicator #${r.indicator_id ?? idx + 1}`;
             const blguAnswer = r.response_data ?? r.answer ?? null;
             const movs: AnyRecord[] = (r.movs as AnyRecord[]) ?? [];
+            const isOpen = expandedId == null ? true : expandedId === r.id;
 
             return (
-              <div key={r.id ?? idx} className="rounded-sm bg-card shadow-md border border-black/5 overflow-hidden">
-                <div className="px-3 py-2 border-b text-sm font-medium rounded-t-sm"
+              <div key={r.id ?? idx} className="rounded-sm bg-card shadow-md border border-black/5 overflow-hidden" data-left-item-id={r.id}>
+                <button type="button" onClick={() => onToggle?.(r.id)} className="w-full text-left">
+                <div className="px-3 py-3 text-lg font-semibold rounded-t-sm flex items-center justify-between gap-2"
                   style={{ background: 'var(--cityscape-yellow)', color: 'var(--cityscape-accent-foreground)' }}>
-                  {indicatorLabel}
+                  <span>{indicatorLabel}</span>
+                  <span className="text-xs bg-white/70 text-black rounded px-2 py-0.5">{movs.length} MOV file{movs.length === 1 ? '' : 's'}</span>
                 </div>
+                </button>
+                {isOpen ? (
                 <div className="p-3 text-sm">
                   <div className="mb-2">
                     <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">BLGU Answer</div>
-                    <pre className="whitespace-pre-wrap break-words text-[13px] leading-5 bg-muted/30 rounded p-2">
-{JSON.stringify(blguAnswer, null, 2)}
-                    </pre>
+                    <div className="text-[13px] leading-5 bg-muted/30 rounded p-2">
+                      {renderValue(blguAnswer)}
+                    </div>
                   </div>
                   <div>
                     <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Uploaded MOVs</div>
                     {movs.length === 0 ? (
                       <div className="text-muted-foreground">None</div>
                     ) : (
-                      <ul className="list-disc pl-5 space-y-1">
-                        {movs.map((m, mi) => (
-                          <li key={m.id ?? mi}>
-                            <button
-                              type="button"
-                              className="text-primary underline hover:opacity-80"
-                              onClick={() => handleOpenMov(m)}
-                            >
-                              {m.original_filename || m.filename || 'MOV'}
-                            </button>
-                          </li>
-                        ))}
+                      <ul className="pl-0 space-y-2">
+                        {movs.map((m, mi) => {
+                          const name = m.original_filename || m.filename || 'MOV';
+                          const ext = typeof name === 'string' && name.includes('.') ? name.split('.').pop()?.toUpperCase() : '';
+                          return (
+                            <li key={m.id ?? mi} className="list-none">
+                              <button
+                                type="button"
+                                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-black/10 bg-white text-foreground shadow-sm hover:bg-black/5"
+                                onClick={() => handleOpenMov(movs, mi)}
+                                title={name}
+                              >
+                                <span className="truncate max-w-[220px] text-sm">{name}</span>
+                                {ext ? (
+                                  <span className="text-[10px] uppercase rounded px-1.5 py-0.5 bg-muted/60 text-muted-foreground border border-black/10">
+                                    {ext}
+                                  </span>
+                                ) : null}
+                              </button>
+                            </li>
+                          );
+                        })}
                       </ul>
                     )}
                   </div>
                 </div>
+                ) : null}
               </div>
             );
           })
         )}
       </div>
 
-      <MovPreviewer open={open} onOpenChange={setOpen} title={previewTitle} url={previewUrl} />
+      <MovPreviewer open={open} onOpenChange={setOpen} title={previewTitle} url={previewUrl} items={gallery} startIndex={galleryIndex} />
     </div>
   );
 }

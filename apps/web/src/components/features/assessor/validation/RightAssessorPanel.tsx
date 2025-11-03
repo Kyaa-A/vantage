@@ -16,13 +16,15 @@ interface RightAssessorPanelProps {
   assessment: AssessmentDetailsResponse;
   form: Record<number, { status?: LocalStatus; publicComment?: string; internalNote?: string }>;
   setField: (responseId: number, field: 'status' | 'publicComment' | 'internalNote', value: string) => void;
+  expandedId?: number | null;
+  onToggle?: (responseId: number) => void;
 }
 
 type AnyRecord = Record<string, any>;
 
 type LocalStatus = 'Pass' | 'Fail' | 'Conditional' | undefined;
 
-export function RightAssessorPanel({ assessment, form, setField }: RightAssessorPanelProps) {
+export function RightAssessorPanel({ assessment, form, setField, expandedId, onToggle }: RightAssessorPanelProps) {
   const data: AnyRecord = (assessment as unknown as AnyRecord) ?? {};
   const core = (data.assessment as AnyRecord) ?? data;
   const responses: AnyRecord[] = (core.responses as AnyRecord[]) ?? [];
@@ -114,13 +116,17 @@ export function RightAssessorPanel({ assessment, form, setField }: RightAssessor
             const techNotes = indicator?.technical_notes || indicator?.notes || null;
             const key = String(r.id);
             const errorsFor = (formState.errors as AnyRecord)?.[key]?.publicComment;
+            const isOpen = expandedId == null ? true : expandedId === r.id;
 
             return (
-              <div key={r.id ?? idx} className="rounded-sm bg-card shadow-md border border-black/5 overflow-hidden">
-                <div className="px-3 py-2 border-b text-sm font-medium rounded-t-sm"
+              <div key={r.id ?? idx} className="rounded-sm bg-card shadow-md border border-black/5 overflow-hidden" data-right-item-id={r.id}>
+                <button type="button" onClick={() => onToggle?.(r.id)} className="w-full text-left">
+                <div className="px-3 py-3 text-lg font-semibold rounded-t-sm"
                   style={{ background: 'var(--cityscape-yellow)', color: 'var(--cityscape-accent-foreground)' }}>
                   {indicatorLabel}
                 </div>
+                </button>
+                {isOpen ? (
                 <div className="p-3 space-y-4">
                   {techNotes ? (
                     <div className="text-xs text-muted-foreground bg-muted/30 rounded-sm p-2">
@@ -134,12 +140,29 @@ export function RightAssessorPanel({ assessment, form, setField }: RightAssessor
                     <div className="flex items-center gap-2">
                       {(['Pass', 'Fail', 'Conditional'] as LocalStatus[]).map((s) => {
                         const active = form[r.id]?.status === s;
+                        const base = 'size-sm';
+                        const cls = active
+                          ? s === 'Pass'
+                            ? 'text-white hover:opacity-90'
+                            : s === 'Fail'
+                              ? 'text-white hover:opacity-90'
+                              : 'text-[var(--cityscape-accent-foreground)] hover:opacity-90'
+                          : '';
+                        const style = active
+                          ? s === 'Pass'
+                            ? { background: 'var(--success)' }
+                            : s === 'Fail'
+                              ? { background: 'var(--destructive, #ef4444)' }
+                              : { background: 'var(--cityscape-yellow)' }
+                          : undefined;
                         return (
                           <Button
                             key={s}
                             type="button"
                             variant={active ? 'default' : 'outline'}
                             size="sm"
+                            className={cls}
+                            style={style}
                             onClick={() => setField(r.id, 'status', s as string)}
                           >
                             {s}
@@ -173,7 +196,35 @@ export function RightAssessorPanel({ assessment, form, setField }: RightAssessor
                     <div className="text-xs uppercase tracking-wide text-muted-foreground">Upload "Pahabol" Documents (by Assessor)</div>
                     <Input type="file" onChange={(e) => handleUpload(r.id, e)} />
                   </div>
+
+                  <div className="pt-2 flex items-center justify-between">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const prev = responses[idx - 1];
+                        if (prev) onToggle?.(prev.id);
+                      }}
+                      disabled={idx === 0}
+                    >
+                      Previous Indicator
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const next = responses[idx + 1];
+                        if (next) onToggle?.(next.id);
+                      }}
+                      disabled={idx === responses.length - 1}
+                    >
+                      Next Indicator
+                    </Button>
+                  </div>
                 </div>
+                ) : null}
               </div>
             );
           })

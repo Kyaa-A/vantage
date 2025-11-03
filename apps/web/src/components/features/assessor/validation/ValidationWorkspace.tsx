@@ -1,6 +1,8 @@
 "use client";
 
+import { StatusBadge } from '@/components/shared';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useQueryClient } from '@tanstack/react-query';
 import type { AssessmentDetailsResponse } from '@vantage/shared';
 import {
@@ -8,6 +10,8 @@ import {
   usePostAssessorAssessmentsAssessmentIdFinalize,
   usePostAssessorAssessmentsAssessmentIdRework,
 } from '@vantage/shared';
+import { ChevronLeft } from 'lucide-react';
+import Link from 'next/link';
 import * as React from 'react';
 import { LeftSubmissionView } from './LeftSubmissionView';
 import { RightAssessorPanel } from './RightAssessorPanel';
@@ -29,6 +33,10 @@ export function ValidationWorkspace({ assessment }: ValidationWorkspaceProps) {
   const responses: AnyRecord[] = (core.responses as AnyRecord[]) ?? [];
   const assessmentId: number = data.assessment_id ?? core.id ?? 0;
   const reworkCount: number = core.rework_count ?? 0;
+  const barangayName: string = core?.barangay?.name ?? core?.barangay_name ?? 'Barangay';
+  const governanceArea: string = core?.governance_area?.name ?? core?.governance_area_name ?? 'Governance Area';
+  const cycleYear: string = String(core?.cycle_year ?? core?.year ?? '');
+  const statusText: string = core?.status ?? core?.assessment_status ?? '';
 
   const [form, setForm] = React.useState<Record<number, { status?: 'Pass' | 'Fail' | 'Conditional'; publicComment?: string; internalNote?: string }>>({});
 
@@ -38,6 +46,32 @@ export function ValidationWorkspace({ assessment }: ValidationWorkspaceProps) {
   const anyFail = responses.some((r) => form[r.id]?.status === 'Fail');
   const dirty = Object.keys(form).length > 0;
   const progressPct = total > 0 ? Math.round((reviewed / total) * 100) : 0;
+
+  const missingRequiredComments = responses.filter((r) => {
+    const v = form[r.id];
+    if (!v?.status) return false;
+    if (v.status === 'Fail' || v.status === 'Conditional') {
+      return !(v.publicComment && v.publicComment.trim().length > 0);
+    }
+    return false;
+  }).length;
+
+  const [progressOpen, setProgressOpen] = React.useState(false);
+  const [expandedId, setExpandedId] = React.useState<number | null>(responses[0]?.id ?? null);
+
+  // Keep expanded id stable if responses change
+  React.useEffect(() => {
+    if (expandedId == null && responses.length > 0) setExpandedId(responses[0].id);
+  }, [responses, expandedId]);
+
+  // Smooth scroll both panels to the active item when expanded changes
+  React.useEffect(() => {
+    if (!expandedId) return;
+    const leftEl = document.querySelector(`[data-left-item-id="${expandedId}"]`);
+    const rightEl = document.querySelector(`[data-right-item-id="${expandedId}"]`);
+    leftEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    rightEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [expandedId]);
 
   const onSaveDraft = async () => {
     const payloads = responses
@@ -73,12 +107,77 @@ export function ValidationWorkspace({ assessment }: ValidationWorkspaceProps) {
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Persistent Header */}
+      <div className="sticky top-0 z-20 bg-card/80 backdrop-blur">
+        <div className="mx-auto max-w-7xl px-4 md:px-6 py-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <Button asChild variant="ghost" size="sm" className="shrink-0">
+              <Link href="/assessor/submissions" className="flex items-center gap-1">
+                <ChevronLeft className="h-4 w-4" />
+                <span>Submissions Queue</span>
+              </Link>
+            </Button>
+            <div className="min-w-0">
+              <div className="text-sm font-medium truncate">Barangay: {barangayName} — Governance Area: {governanceArea} {cycleYear ? `(CY ${cycleYear})` : ''}</div>
+              <div className="text-xs text-muted-foreground truncate">Barangay - Governance Area Assessment Validation</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {statusText ? <StatusBadge status={statusText} /> : null}
+            <Button
+              variant="outline"
+              size="sm"
+              type="button"
+              onClick={onSaveDraft}
+              disabled={!dirty || validateMut.isPending}
+            >
+              Save as Draft
+            </Button>
+          </div>
+        </div>
+        <div className="mx-auto max-w-7xl px-4 md:px-6">
+          <div className="h-px bg-gradient-to-r from-transparent via-black/10 to-transparent" />
+        </div>
+      </div>
+      {/* Sticky Jump-to Indicator Nav (only if multiple indicators) */}
+      {responses.length > 1 ? (
+        <div className="sticky top-[52px] z-10 bg-card/80 backdrop-blur">
+          <div className="mx-auto max-w-7xl px-4 md:px-6 py-2 overflow-x-auto">
+            <div className="flex items-center gap-2 min-w-max">
+              {responses.map((r) => {
+                const indicator = (r.indicator as AnyRecord) ?? {};
+                const label = indicator?.name || `#${r.indicator_id ?? r.id}`;
+                const active = expandedId === r.id;
+                return (
+                  <button
+                    key={r.id}
+                    type="button"
+                    onClick={() => setExpandedId(r.id)}
+                    className={
+                      `text-xs px-2 py-1 rounded border transition-colors ` +
+                      (active
+                        ? 'border-transparent'
+                        : 'text-foreground border-black/10 hover:bg-black/5')
+                    }
+                    title={label}
+                  >
+                    <span className={active ? 'text-[var(--cityscape-accent-foreground)]' : ''} style={active ? { background: 'var(--cityscape-yellow)', borderRadius: 4, padding: '2px 6px' } : undefined}>
+                      {label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <div className="rounded-sm shadow-md border border-black/5">
-          <LeftSubmissionView assessment={assessment} />
+          <LeftSubmissionView assessment={assessment} expandedId={expandedId ?? undefined} onToggle={(id) => setExpandedId((curr) => (curr === id ? null : id))} />
         </div>
         <div className="rounded-sm shadow-md border border-black/5">
-          <RightAssessorPanel assessment={assessment} form={form} setField={(id, field, value) => {
+          <RightAssessorPanel assessment={assessment} form={form} expandedId={expandedId ?? undefined} onToggle={(id) => setExpandedId((curr) => (curr === id ? null : id))} setField={(id, field, value) => {
             setForm((prev) => ({
               ...prev,
               [id]: {
@@ -98,8 +197,17 @@ export function ValidationWorkspace({ assessment }: ValidationWorkspaceProps) {
               style={{ width: `${progressPct}%` }}
             />
           </div>
-          <div className="text-xs text-muted-foreground">Indicators Reviewed: {reviewed}/{total}</div>
+          <div className="text-xs text-muted-foreground">Indicators Reviewed: {reviewed}/{total} {missingRequiredComments > 0 ? `• Missing required comments: ${missingRequiredComments}` : ''}</div>
           <div className="flex flex-col sm:flex-row w-full sm:w-auto items-stretch sm:items-center gap-2 sm:gap-3">
+            <Button
+              variant="ghost"
+              size="default"
+              type="button"
+              onClick={() => setProgressOpen(true)}
+              className="w-full sm:w-auto"
+            >
+              Review Progress
+            </Button>
             <Button
               variant="outline"
               size="default"
@@ -115,7 +223,7 @@ export function ValidationWorkspace({ assessment }: ValidationWorkspaceProps) {
               size="default"
               type="button"
               onClick={onSendRework}
-              disabled={!allReviewed || reworkCount > 0 || reworkMut.isPending}
+              disabled={!allReviewed || reworkCount > 0 || missingRequiredComments > 0 || reworkMut.isPending}
               className="w-full sm:w-auto text-[var(--cityscape-accent-foreground)] hover:opacity-90"
               style={{ background: 'var(--cityscape-yellow)' }}
             >
@@ -125,7 +233,7 @@ export function ValidationWorkspace({ assessment }: ValidationWorkspaceProps) {
               size="default"
               type="button"
               onClick={onFinalize}
-              disabled={!allReviewed || anyFail || finalizeMut.isPending}
+              disabled={!allReviewed || anyFail || missingRequiredComments > 0 || finalizeMut.isPending}
               className="w-full sm:w-auto text-white hover:opacity-90"
               style={{ background: 'var(--success)' }}
             >
@@ -134,6 +242,23 @@ export function ValidationWorkspace({ assessment }: ValidationWorkspaceProps) {
           </div>
         </div>
       </div>
+
+      {/* Progress Summary */}
+      <Dialog open={progressOpen} onOpenChange={setProgressOpen}>
+        <DialogContent className="max-w-md">
+          <div className="space-y-2">
+            <div className="text-base font-semibold">Review Progress</div>
+            <div className="text-sm text-muted-foreground">Quick summary before taking final actions.</div>
+            <ul className="mt-2 text-sm space-y-1">
+              <li>Total indicators: {total}</li>
+              <li>Reviewed: {reviewed}</li>
+              <li>Unreviewed: {Math.max(0, total - reviewed)}</li>
+              <li>Marked Fail: {responses.filter((r) => form[r.id]?.status === 'Fail').length}</li>
+              <li>Missing required comments: {missingRequiredComments}</li>
+            </ul>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
