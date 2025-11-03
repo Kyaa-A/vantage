@@ -114,7 +114,7 @@
         - OpenAPI docs include parameter descriptions and examples
       - **Tech:** FastAPI, Query parameters, Pydantic
 
-  - [ ] **2.3 Story: Install and Configure Visualization Dependencies**
+  - [x] **2.3 Story: Install and Configure Visualization Dependencies**
 
     - **Scope:** Add Recharts, Leaflet, and table libraries to frontend
     - **Duration:** 1 hour
@@ -127,7 +127,7 @@
       - Verify no version conflicts with existing dependencies
       - `pnpm install` runs successfully
 
-    - [ ] **2.3.1 Atomic:** Install visualization libraries
+    - [x] **2.3.1 Atomic:** Install visualization libraries
       - **Files:** `apps/web/package.json`
       - **Dependencies:** None
       - **Acceptance:**
