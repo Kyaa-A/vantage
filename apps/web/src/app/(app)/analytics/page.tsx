@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
-import { useGetAnalyticsDashboard, useGetUsersMe } from '@vantage/shared';
+import { useGetUsersMe } from '@vantage/shared';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/Skeleton';
 import {
@@ -14,6 +14,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { AlertCircle, RefreshCw } from 'lucide-react';
+import { useDashboardAnalytics } from '@/hooks/useDashboardAnalytics';
+import {
+  ComplianceRateCard,
+  CompletionStatusCard,
+  AreaBreakdownCard,
+  TopFailedIndicatorsCard,
+  BarangayRankingsCard,
+} from '@/components/features/dashboard-analytics';
+import { TrendChart } from '@/components/features/dashboard-analytics';
 
 export default function AnalyticsPage() {
   const router = useRouter();
@@ -23,10 +32,8 @@ export default function AnalyticsPage() {
   // Auto-generated hook to fetch current user data
   const userQuery = useGetUsersMe();
 
-  // Analytics dashboard data hook
-  const { data, isLoading, error, refetch } = useGetAnalyticsDashboard({
-    cycle_id: selectedCycle,
-  });
+  // Analytics dashboard data hook with error handling
+  const { data, isLoading, error, refetch } = useDashboardAnalytics(selectedCycle);
 
   // Redirect unauthenticated users to login
   useEffect(() => {
@@ -154,76 +161,25 @@ export default function AnalyticsPage() {
             </div>
           )}
 
-          {/* KPI Cards Grid - Placeholder for now */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* These will be replaced with actual KPI components in Story 1.5 */}
-            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-              <h3 className="text-sm font-medium text-gray-500 mb-2">
-                Overall Compliance Rate
-              </h3>
-              <div className="text-2xl font-bold text-gray-900">
-                {data?.overall_compliance_rate.pass_percentage.toFixed(1)}%
-              </div>
-              <p className="text-xs text-gray-600 mt-1">
-                {data?.overall_compliance_rate.passed} of{' '}
-                {data?.overall_compliance_rate.total_barangays} passed
-              </p>
+          {/* Main KPI Cards */}
+          {data && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <ComplianceRateCard data={data.overall_compliance_rate} />
+              <CompletionStatusCard data={data.completion_status} />
+              <TopFailedIndicatorsCard data={data.top_failed_indicators || []} />
             </div>
+          )}
 
-            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-              <h3 className="text-sm font-medium text-gray-500 mb-2">Completion Status</h3>
-              <div className="text-2xl font-bold text-gray-900">
-                {data?.completion_status.pass_percentage.toFixed(1)}%
-              </div>
-              <p className="text-xs text-gray-600 mt-1">
-                {data?.completion_status.passed} validated, {data?.completion_status.failed}{' '}
-                in progress
-              </p>
+          {/* Detailed Analytics Sections */}
+          {data && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <AreaBreakdownCard data={data.area_breakdown || []} />
+              <BarangayRankingsCard data={data.barangay_rankings || []} />
             </div>
+          )}
 
-            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-              <h3 className="text-sm font-medium text-gray-500 mb-2">Governance Areas</h3>
-              <div className="text-2xl font-bold text-gray-900">
-                {data?.area_breakdown?.length || 0}
-              </div>
-              <p className="text-xs text-gray-600 mt-1">Areas tracked</p>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-              <h3 className="text-sm font-medium text-gray-500 mb-2">Top Failed Indicators</h3>
-              <div className="text-2xl font-bold text-gray-900">
-                {data?.top_failed_indicators?.length || 0}
-              </div>
-              <p className="text-xs text-gray-600 mt-1">Critical issues identified</p>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-              <h3 className="text-sm font-medium text-gray-500 mb-2">Barangay Rankings</h3>
-              <div className="text-2xl font-bold text-gray-900">
-                {data?.barangay_rankings?.length || 0}
-              </div>
-              <p className="text-xs text-gray-600 mt-1">Ranked barangays</p>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-              <h3 className="text-sm font-medium text-gray-500 mb-2">Historical Trends</h3>
-              <div className="text-2xl font-bold text-gray-900">
-                {data?.trends?.length || 0}
-              </div>
-              <p className="text-xs text-gray-600 mt-1">Cycles analyzed</p>
-            </div>
-          </div>
-
-          {/* Placeholder for detailed KPI components */}
-          <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-            <div className="text-center text-gray-500">
-              <p className="mb-2">Detailed KPI visualizations will be added in Story 1.5</p>
-              <p className="text-xs">
-                This includes area breakdown charts, failed indicators list, barangay rankings
-                table, and trend charts
-              </p>
-            </div>
-          </div>
+          {/* Trend Chart */}
+          {data && <TrendChart data={data.trends || []} />}
         </div>
       </div>
     </div>

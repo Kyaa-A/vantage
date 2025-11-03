@@ -367,7 +367,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
         - Display last updated timestamp from response
       - **Tech:** React state, TanStack Query, shadcn/ui Select
 
-  - [ ] **1.5 Story: Frontend Dashboard KPI Components**
+  - [x] **1.5 Story: Frontend Dashboard KPI Components**
     - **Scope:** Build reusable KPI card components and trend chart visualizations
     - **Duration:** 2-3 days
     - **Dependencies:** 1.4 (dashboard page exists)
@@ -384,7 +384,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
       - Components use shadcn/ui Card, Badge, and Select components
       - Color coding: green (pass), red (fail), yellow (in progress)
 
-    - [ ] **1.5.1 Atomic:** Create custom analytics hook wrapper
+    - [x] **1.5.1 Atomic:** Create custom analytics hook wrapper
       - **Files:** `apps/web/src/hooks/useAnalytics.ts`
       - **Dependencies:** 1.3.1 (Orval hooks generated)
       - **Acceptance:**
@@ -397,7 +397,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
         - Export hook as default
       - **Tech:** React hooks, TypeScript, TanStack Query
 
-    - [ ] **1.5.2 Atomic:** Create KPI card components for overall compliance and completion
+    - [x] **1.5.2 Atomic:** Create KPI card components for overall compliance and completion
       - **Files:** `apps/web/src/components/features/analytics/DashboardKPIs.tsx`
       - **Dependencies:** 1.5.1 (custom hook exists)
       - **Acceptance:**
@@ -410,7 +410,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
         - Components export individually
       - **Tech:** React, shadcn/ui (Card, Badge, Progress), Tailwind CSS
 
-    - [ ] **1.5.3 Atomic:** Create KPI cards for area breakdown and top failed indicators
+    - [x] **1.5.3 Atomic:** Create KPI cards for area breakdown and top failed indicators
       - **Files:** `apps/web/src/components/features/analytics/DashboardKPIs.tsx` (extend)
       - **Dependencies:** 1.5.2 (basic KPI cards exist)
       - **Acceptance:**
@@ -422,7 +422,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
         - Handle empty data gracefully ("No data available")
       - **Tech:** React, shadcn/ui components, Tailwind CSS
 
-    - [ ] **1.5.4 Atomic:** Create barangay rankings card and trend chart component
+    - [x] **1.5.4 Atomic:** Create barangay rankings card and trend chart component
       - **Files:** `apps/web/src/components/features/analytics/DashboardKPIs.tsx` (extend), `apps/web/src/components/features/analytics/TrendChart.tsx`
       - **Dependencies:** 1.5.3 (other KPI cards exist), Recharts installed
       - **Acceptance:**
@@ -435,7 +435,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
         - Both handle loading and empty states
       - **Tech:** React, Recharts (LineChart, XAxis, YAxis, Tooltip, ResponsiveContainer), shadcn/ui
 
-    - [ ] **1.5.5 Atomic:** Integrate all KPI components into dashboard page
+    - [x] **1.5.5 Atomic:** Integrate all KPI components into dashboard page
       - **Files:** `apps/web/src/app/(app)/analytics/page.tsx` (extend)
       - **Dependencies:** 1.5.4 (all KPI components created)
       - **Acceptance:**
