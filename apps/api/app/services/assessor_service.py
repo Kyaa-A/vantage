@@ -36,6 +36,8 @@ class AssessorService:
             .options(joinedload(Assessment.blgu_user).joinedload(User.barangay))
             .filter(
                 Indicator.governance_area_id == assessor.governance_area_id,
+                # Only include true submissions (must have been submitted)
+                Assessment.submitted_at.isnot(None),
                 Assessment.status.in_(
                     [
                         AssessmentStatus.SUBMITTED_FOR_REVIEW,
@@ -428,8 +430,10 @@ class AssessorService:
             },
         }
 
-        # Process each response with its related data
+        # Process only responses within the assessor's governance area
         for response in assessment.responses:
+            if response.indicator.governance_area_id != assessor.governance_area_id:
+                continue
             response_data = {
                 "id": response.id,
                 "is_completed": response.is_completed,
@@ -524,6 +528,19 @@ class AssessorService:
                 "Assessment has already been sent for rework. Cannot send again."
             )
 
+        # Enforce PRD: Only allow rework from Submitted for Review
+        if assessment.status != AssessmentStatus.SUBMITTED_FOR_REVIEW:
+            raise ValueError("Rework is only allowed when assessment is Submitted for Review")
+
+        # Enforce PRD: All responses must be reviewed before sending rework
+        if any(r.validation_status is None for r in assessment.responses):
+            raise ValueError("All indicators must be reviewed before sending for rework")
+
+        # Enforce PRD: At least one indicator must be marked as Fail to send rework
+        has_fail = any(r.validation_status == ValidationStatus.FAIL for r in assessment.responses)
+        if not has_fail:
+            raise ValueError("At least one indicator must be marked as Fail to send for rework")
+
         # Check assessor permission (assessor must be assigned to the governance area)
         # For now, we'll allow any assessor to send for rework
         # In a more sophisticated system, we'd check specific permissions
@@ -601,6 +618,10 @@ class AssessorService:
         if assessment.status == AssessmentStatus.DRAFT:
             raise ValueError("Cannot finalize a draft assessment")
 
+        # Only allow finalize from Submitted for Review or Needs Rework
+        if assessment.status not in (AssessmentStatus.SUBMITTED_FOR_REVIEW, AssessmentStatus.NEEDS_REWORK):
+            raise ValueError("Cannot finalize assessment in its current status")
+
         # Check that all responses have been reviewed (have validation status)
         unreviewed_responses = [
             response
@@ -612,6 +633,12 @@ class AssessorService:
             raise ValueError(
                 f"Cannot finalize assessment. {len(unreviewed_responses)} responses have not been reviewed."
             )
+
+        # If first submission: do not allow finalize if there are Fail indicators (must use rework)
+        if assessment.status == AssessmentStatus.SUBMITTED_FOR_REVIEW:
+            has_fail = any(r.validation_status == ValidationStatus.FAIL for r in assessment.responses)
+            if has_fail:
+                raise ValueError("Cannot finalize with Fail indicators on first submission; send for rework")
 
         # Update assessment status
         assessment.status = AssessmentStatus.VALIDATED

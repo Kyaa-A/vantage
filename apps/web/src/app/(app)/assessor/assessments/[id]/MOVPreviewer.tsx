@@ -2,6 +2,8 @@
 
 import { FilePreviewerModal } from "@/components/shared";
 import { Button } from "@/components/ui/button";
+import { getSignedUrl } from "@/lib/uploadMov";
+import { resolveMovUrl } from "@/lib/utils";
 import { Eye } from "lucide-react";
 import { useState } from "react";
 
@@ -49,13 +51,38 @@ export function MOVPreviewer({ mov }: MOVPreviewerProps) {
         Preview
       </Button>
 
-      <FilePreviewerModal
-        isOpen={isPreviewOpen}
+      <SignedPreview
+        open={isPreviewOpen}
         onClose={() => setIsPreviewOpen(false)}
-        fileUrl={mov.storage_path}
+        storagePath={mov.storage_path}
         fileName={mov.original_filename}
         fileType={getFileType()}
       />
     </>
+  );
+}
+
+function SignedPreview({ open, onClose, storagePath, fileName, fileType }: { open: boolean; onClose: () => void; storagePath: string; fileName: string; fileType: string; }) {
+  const [url, setUrl] = useState<string>(resolveMovUrl(storagePath) || "");
+  useState(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const signed = await getSignedUrl(storagePath, 300);
+        if (mounted && signed) setUrl(signed);
+      } catch {
+        // fallback keeps public URL if available
+      }
+    })();
+    return () => { mounted = false; };
+  });
+  return (
+    <FilePreviewerModal
+      isOpen={open}
+      onClose={onClose}
+      fileUrl={url || storagePath}
+      fileName={fileName}
+      fileType={fileType}
+    />
   );
 }

@@ -1,0 +1,344 @@
+"use client";
+
+import { StatusBadge } from '@/components/shared';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useQueryClient } from '@tanstack/react-query';
+import type { AssessmentDetailsResponse } from '@vantage/shared';
+import {
+  usePostAssessorAssessmentResponsesResponseIdValidate,
+  usePostAssessorAssessmentsAssessmentIdFinalize,
+  usePostAssessorAssessmentsAssessmentIdRework,
+} from '@vantage/shared';
+import { ChevronLeft } from 'lucide-react';
+import Link from 'next/link';
+import * as React from 'react';
+import { LeftSubmissionView } from './LeftSubmissionView';
+import { RightAssessorPanel } from './RightAssessorPanel';
+
+interface ValidationWorkspaceProps {
+  assessment: AssessmentDetailsResponse;
+}
+
+type AnyRecord = Record<string, any>;
+
+export function ValidationWorkspace({ assessment }: ValidationWorkspaceProps) {
+  const qc = useQueryClient();
+  const validateMut = usePostAssessorAssessmentResponsesResponseIdValidate();
+  const reworkMut = usePostAssessorAssessmentsAssessmentIdRework();
+  const finalizeMut = usePostAssessorAssessmentsAssessmentIdFinalize();
+
+  const data: AnyRecord = (assessment as unknown as AnyRecord) ?? {};
+  const core = (data.assessment as AnyRecord) ?? data;
+  const responses: AnyRecord[] = (core.responses as AnyRecord[]) ?? [];
+  const assessmentId: number = data.assessment_id ?? core.id ?? 0;
+  const reworkCount: number = core.rework_count ?? 0;
+  // Prefer assessor payload structure: assessment.blgu_user.barangay.name
+  const barangayName: string = (core?.blgu_user?.barangay?.name
+    ?? core?.barangay?.name
+    ?? core?.barangay_name
+    ?? '') as string;
+  // Governance area name can be derived from the first response's indicator
+  const governanceArea: string = (responses[0]?.indicator?.governance_area?.name
+    ?? core?.governance_area?.name
+    ?? core?.governance_area_name
+    ?? '') as string;
+  const cycleYear: string = String(core?.cycle_year ?? core?.year ?? '');
+  const statusText: string = core?.status ?? core?.assessment_status ?? '';
+  const normalizedStatus = String(statusText || '').toLowerCase();
+
+  const [form, setForm] = React.useState<Record<number, { status?: 'Pass' | 'Fail' | 'Conditional'; publicComment?: string; internalNote?: string }>>({});
+
+  const total = responses.length;
+  const reviewed = responses.filter((r) => !!form[r.id]?.status).length;
+  const allReviewed = total > 0 && reviewed === total;
+  const anyFail = responses.some((r) => form[r.id]?.status === 'Fail');
+  const dirty = Object.keys(form).length > 0;
+  const progressPct = total > 0 ? Math.round((reviewed / total) * 100) : 0;
+
+  const missingRequiredComments = responses.filter((r) => {
+    const v = form[r.id];
+    if (!v?.status) return false;
+    if (v.status === 'Fail' || v.status === 'Conditional') {
+      return !(v.publicComment && v.publicComment.trim().length > 0);
+    }
+    return false;
+  }).length;
+
+  const [progressOpen, setProgressOpen] = React.useState(false);
+  const [expandedId, setExpandedId] = React.useState<number | null>(responses[0]?.id ?? null);
+
+  // Keep expanded id stable if responses change
+  React.useEffect(() => {
+    if (expandedId == null && responses.length > 0) setExpandedId(responses[0].id);
+  }, [responses, expandedId]);
+
+  // Smooth scroll both panels to the active item when expanded changes
+  React.useEffect(() => {
+    if (!expandedId) return;
+    const leftEl = document.querySelector(`[data-left-item-id="${expandedId}"]`);
+    const rightEl = document.querySelector(`[data-right-item-id="${expandedId}"]`);
+    leftEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    rightEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [expandedId]);
+
+  // Helpers for grouped navigation
+  const getSectionKey = React.useCallback((label: string): string => {
+    // Extract leading number(s) like "1." or "2.3" → "1" or "2"
+    const match = label.match(/^(\d+)/);
+    return match ? match[1] : 'Other';
+  }, []);
+
+  const sections = React.useMemo(() => {
+    const map = new Map<string, { label: string; ids: number[] }>();
+    for (const r of responses) {
+      const ind = (r.indicator as AnyRecord) ?? {};
+      const label = ind?.name || `#${r.indicator_id ?? r.id}`;
+      const key = getSectionKey(String(label));
+      if (!map.has(key)) map.set(key, { label: key, ids: [] });
+      map.get(key)!.ids.push(r.id);
+    }
+    return Array.from(map.values());
+  }, [responses, getSectionKey]);
+
+  const jumpToFirstUnreviewed = () => {
+    const target = responses.find((r) => !form[r.id]?.status);
+    if (target) setExpandedId(target.id);
+  };
+
+  const onSaveDraft = async () => {
+    const payloads = responses
+      .map((r) => ({ id: r.id as number, v: form[r.id] }))
+      .filter((x) => x.v && x.v.status) as { id: number; v: { status: 'Pass' | 'Fail' | 'Conditional'; publicComment?: string; internalNote?: string } }[];
+    if (payloads.length === 0) return;
+    await Promise.all(
+      payloads.map((p) =>
+        validateMut.mutateAsync({
+          responseId: p.id,
+          data: {
+            validation_status: p.v.status!,
+            public_comment: p.v.publicComment ?? null,
+            internal_note: p.v.internalNote ?? null,
+          },
+        })
+      )
+    );
+    await qc.invalidateQueries();
+  };
+
+  const onSendRework = async () => {
+    await onSaveDraft();
+    await reworkMut.mutateAsync({ assessmentId });
+    await qc.invalidateQueries();
+  };
+
+  const onFinalize = async () => {
+    await onSaveDraft();
+    await finalizeMut.mutateAsync({ assessmentId });
+    await qc.invalidateQueries();
+  };
+
+  return (
+    <div className="flex flex-col gap-6">
+      {/* Persistent Header */}
+      <div className="sticky top-0 z-20 bg-card/80 backdrop-blur">
+        <div className="mx-auto max-w-7xl px-4 md:px-6 py-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <Button asChild variant="ghost" size="sm" className="shrink-0">
+              <Link href="/assessor/submissions" className="flex items-center gap-1">
+                <ChevronLeft className="h-4 w-4" />
+                <span>Submissions Queue</span>
+              </Link>
+            </Button>
+            <div className="min-w-0">
+              <div className="text-sm font-medium truncate">
+                {barangayName ? `Barangay: ${barangayName}` : ''}
+                {barangayName && governanceArea ? ' — ' : ''}
+                {governanceArea ? `Governance Area: ${governanceArea}` : ''}
+                {cycleYear ? ` ${barangayName || governanceArea ? '' : ''}(CY ${cycleYear})` : ''}
+              </div>
+              <div className="text-xs text-muted-foreground truncate">Barangay - Governance Area Assessment Validation</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {statusText ? <StatusBadge status={statusText} /> : null}
+            <Button
+              variant="outline"
+              size="sm"
+              type="button"
+              onClick={onSaveDraft}
+              disabled={validateMut.isPending}
+            >
+              Save as Draft
+            </Button>
+          </div>
+        </div>
+        <div className="mx-auto max-w-7xl px-4 md:px-6">
+          <div className="h-px bg-gradient-to-r from-transparent via-black/10 to-transparent" />
+        </div>
+      </div>
+      {/* Sticky Jump-to Indicator Nav (only if multiple indicators) */}
+      {responses.length > 1 ? (
+        <div className="sticky top-[52px] z-10 bg-card/80 backdrop-blur">
+          <div className="mx-auto max-w-7xl px-4 md:px-6 py-2 overflow-x-auto">
+            <div className="flex items-center gap-2 min-w-max">
+              <select
+                className="text-xs border rounded px-2 py-1 bg-white"
+                onChange={(e) => {
+                  const sec = e.target.value;
+                  const section = sections.find((s) => s.label === sec);
+                  if (section && section.ids.length > 0) setExpandedId(section.ids[0]);
+                }}
+                defaultValue=""
+              >
+                <option value="" disabled>
+                  Jump to section
+                </option>
+                {sections.map((s) => (
+                  <option key={s.label} value={s.label}>
+                    Section {s.label}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                className="text-xs px-2 py-1 rounded border border-black/10 bg-white hover:bg-black/5"
+                onClick={jumpToFirstUnreviewed}
+                disabled={responses.every((r) => !!form[r.id]?.status)}
+                title="Jump to first unreviewed indicator"
+              >
+                First Unreviewed
+              </button>
+              {responses.map((r) => {
+                const indicator = (r.indicator as AnyRecord) ?? {};
+                const label = indicator?.name || `#${r.indicator_id ?? r.id}`;
+                const active = expandedId === r.id;
+                return (
+                  <button
+                    key={r.id}
+                    type="button"
+                    onClick={() => setExpandedId(r.id)}
+                    className={
+                      `text-xs px-2 py-1 rounded border transition-colors ` +
+                      (active
+                        ? 'border-transparent'
+                        : 'text-foreground border-black/10 hover:bg-black/5')
+                    }
+                    title={label}
+                  >
+                    <span className={active ? 'text-[var(--cityscape-accent-foreground)]' : ''} style={active ? { background: 'var(--cityscape-yellow)', borderRadius: 4, padding: '2px 6px' } : undefined}>
+                      {label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="rounded-sm shadow-md border border-black/5">
+          <LeftSubmissionView assessment={assessment} expandedId={expandedId ?? undefined} onToggle={(id) => setExpandedId((curr) => (curr === id ? null : id))} />
+        </div>
+        <div className="rounded-sm shadow-md border border-black/5">
+          <RightAssessorPanel assessment={assessment} form={form} expandedId={expandedId ?? undefined} onToggle={(id) => setExpandedId((curr) => (curr === id ? null : id))} setField={(id, field, value) => {
+            setForm((prev) => ({
+              ...prev,
+              [id]: {
+                ...prev[id],
+                [field]: value,
+              },
+            }));
+          }} />
+        </div>
+      </div>
+
+      <div className="sticky bottom-0 z-10 border-t border-black/5 bg-card/80 backdrop-blur">
+        <div className="relative mx-auto max-w-7xl px-4 md:px-6 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="absolute inset-x-0 -top-[3px] h-[3px] bg-black/5">
+            <div
+              className="h-full bg-[var(--cityscape-yellow)] transition-all"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+          <div className="text-xs text-muted-foreground">Indicators Reviewed: {reviewed}/{total} {missingRequiredComments > 0 ? `• Missing required comments: ${missingRequiredComments}` : ''}</div>
+          <div className="flex flex-col sm:flex-row w-full sm:w-auto items-stretch sm:items-center gap-2 sm:gap-3">
+            <Button
+              variant="ghost"
+              size="default"
+              type="button"
+              onClick={() => setProgressOpen(true)}
+              className="w-full sm:w-auto"
+            >
+              Review Progress
+            </Button>
+            <Button
+              variant="outline"
+              size="default"
+              type="button"
+              onClick={onSaveDraft}
+              disabled={validateMut.isPending}
+              className="w-full sm:w-auto"
+            >
+              Save as Draft
+            </Button>
+            <Button
+              variant="secondary"
+              size="default"
+              type="button"
+              onClick={onSendRework}
+              disabled={
+                // Enabled if: all reviewed AND reworkCount == 0 AND any Fail AND no missing required comments
+                !allReviewed ||
+                reworkCount !== 0 ||
+                !anyFail ||
+                missingRequiredComments > 0 ||
+                reworkMut.isPending
+              }
+              className="w-full sm:w-auto text-[var(--cityscape-accent-foreground)] hover:opacity-90"
+              style={{ background: 'var(--cityscape-yellow)' }}
+            >
+              Compile and Send for Rework
+            </Button>
+            <Button
+              size="default"
+              type="button"
+              onClick={onFinalize}
+              disabled={
+                // Enabled if: all reviewed AND (no Fail OR reworkCount == 1) AND no missing required comments
+                !allReviewed ||
+                missingRequiredComments > 0 ||
+                finalizeMut.isPending ||
+                (reworkCount === 0 && anyFail)
+              }
+              className="w-full sm:w-auto text-white hover:opacity-90"
+              style={{ background: 'var(--success)' }}
+            >
+              Finalize Validation
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Progress Summary */}
+      <Dialog open={progressOpen} onOpenChange={setProgressOpen}>
+        <DialogContent className="max-w-md bg-white border-0 outline-none focus:outline-none focus-visible:ring-0">
+          <DialogHeader>
+            <DialogTitle>Review Progress</DialogTitle>
+            <DialogDescription>Quick summary before taking final actions.</DialogDescription>
+          </DialogHeader>
+          <ul className="mt-2 text-sm space-y-1">
+            <li>Total indicators: {total}</li>
+            <li>Reviewed: {reviewed}</li>
+            <li>Unreviewed: {Math.max(0, total - reviewed)}</li>
+            <li>Marked Fail: {responses.filter((r) => form[r.id]?.status === 'Fail').length}</li>
+            <li>Missing required comments: {missingRequiredComments}</li>
+          </ul>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+

@@ -531,6 +531,236 @@ class IndicatorService:
         db.add(env)
         db.commit()
 
+    def seed_areas_2_to_6_indicators(self, db: Session) -> None:
+        """
+        Seed indicators for governance areas 2-6 following the same pattern as Area 1.
+        Each area gets a SINGLE indicator with nested form_schema containing sections.
+        
+        - Area 2 (Disaster Preparedness): 2.1 -> 2.1.1 - Organized BDRRMC
+        - Area 3 (Safety, Peace and Order): 3.1 -> 3.1.1 - Organized BPOC
+        - Area 4 (Social Protection): 4.1 -> 4.1.1 - Social Welfare Programs Implementation
+        - Area 5 (Business-Friendliness): 5.1 -> 5.1.1 - Business Registration Process Efficiency
+        - Area 6 (Environmental Management): 6.1 -> 6.1.1 - Organized BESWMC
+        """
+        # First, delete ALL existing indicators for areas 2-6
+        any_deleted = False
+        for area_id in range(2, 7):  # Areas 2-6
+            existing_indicators = (
+                db.query(Indicator)
+                .filter(Indicator.governance_area_id == area_id)
+                .all()
+            )
+            if existing_indicators:
+                any_deleted = True
+                for ind in existing_indicators:
+                    db.delete(ind)
+        
+        if any_deleted:
+            db.commit()
+
+        # Area 2: Disaster Preparedness
+        area2_indicator = Indicator(
+            name="Disaster Preparedness",
+            description="Disaster risk reduction and management capabilities",
+            form_schema={
+                "type": "object",
+                "title": "Disaster Preparedness (2.1)",
+                "properties": {
+                    "section_2_1": {
+                        "type": "object",
+                        "title": "2.1 Disaster Preparedness",
+                        "properties": {
+                            "section_2_1_1": {
+                                "type": "object",
+                                "title": "2.1.1 Organized Barangay Disaster Risk Reduction and Management Council (BDRRMC)",
+                                "properties": {
+                                    "bdrrmc_organized": {
+                                        "type": "boolean",
+                                        "title": "BDRRMC is organized with proper documentation and regular meetings",
+                                    },
+                                },
+                            },
+                            "movs_2_1_1": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "default": [
+                                    "Barangay Resolution establishing BDRRMC",
+                                    "Minutes of BDRRMC meetings (at least quarterly)",
+                                    "Documentation of BDRRMC composition with representatives from key sectors",
+                                ],
+                                "readOnly": True,
+                            },
+                        },
+                    },
+                },
+            },
+            governance_area_id=2,
+        )
+
+        # Area 3: Safety, Peace and Order
+        area3_indicator = Indicator(
+            name="Safety, Peace and Order",
+            description="Public safety and peace maintenance",
+            form_schema={
+                "type": "object",
+                "title": "Safety, Peace and Order (3.1)",
+                "properties": {
+                    "section_3_1": {
+                        "type": "object",
+                        "title": "3.1 Safety, Peace and Order",
+                        "properties": {
+                            "section_3_1_1": {
+                                "type": "object",
+                                "title": "3.1.1 Organized Barangay Peace and Order Council (BPOC)",
+                                "properties": {
+                                    "bpoc_organized": {
+                                        "type": "boolean",
+                                        "title": "BPOC is organized with proper documentation and functional activities",
+                                    },
+                                },
+                            },
+                            "movs_3_1_1": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "default": [
+                                    "Barangay Resolution establishing BPOC",
+                                    "Minutes of BPOC meetings (at least quarterly)",
+                                    "Documentation of peace and order programs and activities",
+                                ],
+                                "readOnly": True,
+                            },
+                        },
+                    },
+                },
+            },
+            governance_area_id=3,
+        )
+
+        # Area 4: Social Protection and Sensitivity
+        area4_indicator = Indicator(
+            name="Social Protection and Sensitivity",
+            description="Social welfare and community sensitivity programs",
+            form_schema={
+                "type": "object",
+                "title": "Social Protection and Sensitivity (4.1)",
+                "properties": {
+                    "section_4_1": {
+                        "type": "object",
+                        "title": "4.1 Social Protection and Sensitivity",
+                        "properties": {
+                            "section_4_1_1": {
+                                "type": "object",
+                                "title": "4.1.1 Social Welfare Programs Implementation",
+                                "properties": {
+                                    "programs_implemented": {
+                                        "type": "boolean",
+                                        "title": "Comprehensive social welfare programs are implemented for vulnerable sectors",
+                                    },
+                                },
+                            },
+                            "movs_4_1_1": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "default": [
+                                    "Documentation of social welfare programs (senior citizens, PWDs, indigent families)",
+                                    "Beneficiary lists and registration records",
+                                    "Implementation reports and impact assessments",
+                                ],
+                                "readOnly": True,
+                            },
+                        },
+                    },
+                },
+            },
+            governance_area_id=4,
+        )
+
+        # Area 5: Business-Friendliness and Competitiveness
+        area5_indicator = Indicator(
+            name="Business-Friendliness and Competitiveness",
+            description="Support for local business development",
+            form_schema={
+                "type": "object",
+                "title": "Business-Friendliness and Competitiveness (5.1)",
+                "properties": {
+                    "section_5_1": {
+                        "type": "object",
+                        "title": "5.1 Business-Friendliness and Competitiveness",
+                        "properties": {
+                            "section_5_1_1": {
+                                "type": "object",
+                                "title": "5.1.1 Business Registration Process Efficiency",
+                                "properties": {
+                                    "efficient_process": {
+                                        "type": "boolean",
+                                        "title": "Efficient and streamlined business registration process exists",
+                                    },
+                                },
+                            },
+                            "movs_5_1_1": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "default": [
+                                    "Documented step-by-step business registration procedures",
+                                    "Published processing timeframes",
+                                    "Evidence of efficient service delivery (processing logs, feedback forms)",
+                                ],
+                                "readOnly": True,
+                            },
+                        },
+                    },
+                },
+            },
+            governance_area_id=5,
+        )
+
+        # Area 6: Environmental Management
+        area6_indicator = Indicator(
+            name="Environmental Management",
+            description="Environmental protection and sustainability",
+            form_schema={
+                "type": "object",
+                "title": "Environmental Management (6.1)",
+                "properties": {
+                    "section_6_1": {
+                        "type": "object",
+                        "title": "6.1 Environmental Management",
+                        "properties": {
+                            "section_6_1_1": {
+                                "type": "object",
+                                "title": "6.1.1 Organized Barangay Environmental and Solid Waste Management Committee (BESWMC)",
+                                "properties": {
+                                    "beswmc_organized": {
+                                        "type": "boolean",
+                                        "title": "BESWMC is organized with proper documentation and active programs",
+                                    },
+                                },
+                            },
+                            "movs_6_1_1": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "default": [
+                                    "Barangay Resolution establishing BESWMC",
+                                    "Minutes of BESWMC meetings (at least quarterly)",
+                                    "Documentation of solid waste management and environmental protection programs",
+                                ],
+                                "readOnly": True,
+                            },
+                        },
+                    },
+                },
+            },
+            governance_area_id=6,
+        )
+
+        # Add all indicators
+        db.add(area2_indicator)
+        db.add(area3_indicator)
+        db.add(area4_indicator)
+        db.add(area5_indicator)
+        db.add(area6_indicator)
+        db.commit()
+
 
 indicator_service = IndicatorService()
 

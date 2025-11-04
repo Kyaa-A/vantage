@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAssessorGovernanceArea } from '@/hooks/useAssessorGovernanceArea';
-import { useAssessorQueue } from '@/hooks/useAssessor';
 import { KPICards, SubmissionsFilters, SubmissionsTable } from '@/components/features/submissions';
-import { SubmissionsFilter, BarangaySubmission, SubmissionsKPI, SubmissionsData } from '@/types/submissions';
+import { useAssessorQueue } from '@/hooks/useAssessor';
+import { useAssessorGovernanceArea } from '@/hooks/useAssessorGovernanceArea';
+import { BarangaySubmission, SubmissionsData, SubmissionsFilter, SubmissionsKPI } from '@/types/submissions';
+import { useRouter } from 'next/navigation';
+import { useMemo, useState } from 'react';
 
 // Map API status to UI areaStatus
 function mapStatusToAreaStatus(status: string): BarangaySubmission['areaStatus'] {
@@ -103,8 +103,8 @@ export default function AssessorSubmissionsPage() {
   }, [submissionsData, filters]);
 
   const handleSubmissionClick = (submission: BarangaySubmission) => {
-    // Navigate to the assessment validation page
-    router.push(`/assessor/assessments/${submission.id}`);
+    // Navigate to the assessment validation page (new path)
+    router.push(`/assessor/submissions/${submission.id}/validation`);
   };
 
   const handleFiltersChange = (newFilters: SubmissionsFilter) => {

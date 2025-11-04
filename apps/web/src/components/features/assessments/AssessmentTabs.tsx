@@ -46,7 +46,103 @@ export function AssessmentTabs({
       if (children.length > 0) {
         return count + countCompletedIndicators(children);
       }
-      return count + (indicator.status === "completed" ? 1 : 0);
+      // Use the same detailed completion logic as validation and counting
+      // Check if indicator has responseData with compliance answers
+      const responseData = indicator.responseData || {};
+      let complianceAnswer: string | undefined;
+      
+      // Extract compliance answer from response_data
+      const complianceFields: string[] = [];
+      for (const key in responseData) {
+        if (key.endsWith("_compliance") && typeof responseData[key] === "string") {
+          const val = String(responseData[key]).toLowerCase();
+          if (val === "yes" || val === "no" || val === "na") {
+            complianceFields.push(val);
+          }
+        }
+      }
+      
+      if (complianceFields.length > 0) {
+        const formSchema = indicator.formSchema || {};
+        const requiredFields = formSchema.required || [];
+        const complianceRequiredFields = requiredFields.filter((f: string) => 
+          f.endsWith("_compliance")
+        );
+        
+        if (complianceFields.length >= complianceRequiredFields.length || complianceRequiredFields.length === 0) {
+          if (complianceFields.some(v => v === "yes")) {
+            complianceAnswer = "yes";
+          } else {
+            complianceAnswer = complianceFields[0];
+          }
+        }
+      } else {
+        // Fall back to status or complianceAnswer
+        if (indicator.status === "completed") {
+          return count + 1;
+        }
+        if (indicator.complianceAnswer) {
+          complianceAnswer = String(indicator.complianceAnswer).toLowerCase();
+        }
+      }
+      
+      // If we have a compliance answer, check completion based on it
+      if (complianceAnswer === "yes") {
+        // Check MOVs only for sections with "yes" answers
+        const props = (indicator.formSchema as any)?.properties || {};
+        const fieldToSection: Record<string, string> = {};
+        for (const [fieldName, fieldProps] of Object.entries(props)) {
+          const section = (fieldProps as any)?.mov_upload_section;
+          if (typeof section === 'string') {
+            fieldToSection[fieldName] = section;
+          }
+        }
+        
+        const requiredSectionsWithYes = new Set<string>();
+        for (const [fieldName, section] of Object.entries(fieldToSection)) {
+          const value = responseData[fieldName];
+          if (typeof value === 'string' && value.toLowerCase() === 'yes') {
+            requiredSectionsWithYes.add(section);
+          }
+        }
+        
+        if (requiredSectionsWithYes.size > 0) {
+          const present = new Set<string>();
+          for (const mov of (indicator.movFiles || [])) {
+            const sp = (mov as any).storagePath || (mov as any).storage_path || (mov as any).url || '';
+            const movSection = (mov as any).section;
+            for (const rs of requiredSectionsWithYes) {
+              if (movSection === rs) {
+                present.add(rs);
+              } else if (typeof sp === 'string' && sp.length > 0) {
+                const pathOnly = sp.split('?')[0];
+                const hasSection = 
+                  pathOnly.includes(`/${rs}/`) ||
+                  pathOnly.endsWith(`/${rs}`) ||
+                  pathOnly.includes(`/${rs}-`) ||
+                  pathOnly.includes(`${rs}/`) ||
+                  new RegExp(`[/_-]${rs.replace(/_/g, '[_/]')}[_/-]`).test(pathOnly);
+                if (hasSection) {
+                  present.add(rs);
+                }
+              }
+            }
+          }
+          const allSectionsHaveMOVs = Array.from(requiredSectionsWithYes).every((s) => present.has(s));
+          return count + (allSectionsHaveMOVs ? 1 : 0);
+        } else {
+          const hasMOVs = (indicator.movFiles || []).length > 0;
+          return count + (hasMOVs ? 1 : 0);
+        }
+      } else if (complianceAnswer === "no" || complianceAnswer === "na") {
+        // "no" or "na" - no MOVs needed, completed
+        return count + 1;
+      } else if (indicator.status === "completed") {
+        // Fallback to status if no compliance answer found
+        return count + 1;
+      }
+      
+      return count;
     }, 0);
   };
 

@@ -28,6 +28,8 @@
   "license": "ISC",
   "packageManager": "pnpm@10.11.0",
   "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "@types/node": "^20.19.0",
     "lodash-es": "^4.17.21",
     "orval": "^7.10.0",
     "tree-node-cli": "^1.6.0",

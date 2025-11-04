@@ -56,8 +56,13 @@ export function IndicatorAccordion({
     const existing = (indicator as any).responseId as number | null | undefined;
     if (existing) return existing;
 
+    // For synthetic child indicators (areas 2-6), use responseIndicatorId to create response for the parent
+    const indicatorIdToUse = (indicator as any).responseIndicatorId 
+      ? (indicator as any).responseIndicatorId 
+      : parseInt(indicator.id);
+    
     const created = await postAssessmentsResponses({
-      indicator_id: parseInt(((indicator as any).responseIndicatorId ?? indicator.id) as string),
+      indicator_id: typeof indicatorIdToUse === 'number' ? indicatorIdToUse : parseInt(String(indicatorIdToUse)),
       assessment_id: assessment ? parseInt(assessment.id) : 1,
       response_data: {},
     });
@@ -179,8 +184,11 @@ export function IndicatorAccordion({
                 isDisabled={isLocked}
                 indicatorId={indicator.id}
                 responseId={indicator.responseId}
+                assessmentId={assessment?.id}
+                responseIndicatorId={(indicator as any).responseIndicatorId}
                 movFiles={indicator.movFiles || []}
                 updateAssessmentData={updateAssessmentData}
+                ensureResponseId={ensureResponseId}
                 onChange={(data: Record<string, any>) => {
                   if (!isLocked && indicator.id && updateAssessmentData) {
                     // Determine completion locally based on required answers
@@ -188,9 +196,59 @@ export function IndicatorAccordion({
                     const allAnswered = required.every((f: string) =>
                       typeof data[f] === 'string' && ['yes','no','na'].includes(String(data[f]))
                     );
-                    const hasYes = required.some((f: string) => data[f] === 'yes');
-                    const movCount = (indicator.movFiles?.length as number) || 0;
-                    const newStatus = allAnswered && (!hasYes || movCount > 0) ? 'completed' : 'not_started';
+                    const props = (indicator.formSchema as any)?.properties || {};
+                    
+                    // Build map of field_name -> section for fields with mov_upload_section
+                    const fieldToSection: Record<string, string> = {};
+                    for (const [fieldName, fieldProps] of Object.entries(props)) {
+                      const section = (fieldProps as any)?.mov_upload_section;
+                      if (typeof section === 'string') {
+                        fieldToSection[fieldName] = section;
+                      }
+                    }
+                    
+                    // Only require MOVs for sections where the answer is "yes"
+                    const requiredSectionsWithYes = new Set<string>();
+                    for (const field of required) {
+                      const value = data[field];
+                      if (typeof value === 'string' && value.toLowerCase() === 'yes' && field in fieldToSection) {
+                        requiredSectionsWithYes.add(fieldToSection[field]);
+                      }
+                    }
+                    
+                    // Check if all required sections (with "yes" answers) have MOVs
+                    let allSectionsSatisfied = false;
+                    if (requiredSectionsWithYes.size > 0) {
+                      const present = new Set<string>();
+                      for (const m of (indicator.movFiles || [])) {
+                        const sp = (m as any).storagePath || (m as any).url || '';
+                        const movSection = (m as any).section;
+                        for (const rs of requiredSectionsWithYes) {
+                          if (movSection === rs) {
+                            present.add(rs);
+                          } else if (typeof sp === 'string' && sp.includes(rs)) {
+                            present.add(rs);
+                          }
+                        }
+                      }
+                      allSectionsSatisfied = Array.from(requiredSectionsWithYes).every((s) => present.has(s));
+                    } else {
+                      // No sections require MOVs (all "no" or "na"), so it's complete
+                      allSectionsSatisfied = true;
+                    }
+                    
+                    // Status logic: completed only if:
+                    // - All answered AND
+                    // - (No "yes" answers OR all "yes" sections have MOVs)
+                    const hasYes = requiredSectionsWithYes.size > 0;
+                    const newStatus = allAnswered && (!hasYes || allSectionsSatisfied)
+                      ? 'completed'
+                      : (allAnswered && hasYes && !allSectionsSatisfied)
+                        ? 'in_progress'
+                        : 'not_started';
+
+                    // Areas 2-6 now use the same flat structure as Area 1, no nested wrapping needed
+                    const dataToSave = data;
 
                     // Optimistically update the assessment data tree
                     updateAssessmentData((prevData) => {
@@ -209,49 +267,52 @@ export function IndicatorAccordion({
                           }
                         }
                       };
-                      const updateInTree = (nodes: any[]): boolean => {
-                        for (let i = 0; i < nodes.length; i++) {
-                          if (nodes[i].id === indicator.id) {
-                            const current = nodes[i];
-                            nodes[i] = {
-                              ...current,
-                              responseData: data,
+                      const updateInTree = (nodes: any[]): any[] => {
+                        return nodes.map((node) => {
+                          if (node.id === indicator.id) {
+                            // Create a new node object to ensure React detects the change
+                            return {
+                              ...node,
+                              responseData: data, // Keep flat for frontend
                               status: newStatus,
                             };
-                            // After updating the leaf, recompute container statuses above
-                            return true;
                           }
-                          if (
-                            nodes[i].children &&
-                            updateInTree(nodes[i].children)
-                          ) {
-                            // We updated a descendant; recompute this container
-                            const container = nodes[i];
-                            if (Array.isArray(container.children) && container.children.length > 0) {
-                              const allCompleted = container.children.every(
-                                (c: any) => c.status === 'completed'
-                              );
-                              container.status = allCompleted ? 'completed' : container.status;
-                            }
-                            return true;
+                          if (node.children && node.children.length > 0) {
+                            // Recursively update children
+                            const updatedChildren = updateInTree(node.children);
+                            const allCompleted = updatedChildren.every(
+                              (c: any) => c.status === 'completed'
+                            );
+                            // Create a new container object with updated children
+                            return {
+                              ...node,
+                              children: updatedChildren,
+                              status: allCompleted ? 'completed' : node.status,
+                            };
                           }
-                        }
-                        return false;
+                          return node;
+                        });
                       };
-                      for (const area of updatedData.governanceAreas) {
-                        if (area.indicators && updateInTree(area.indicators))
-                          break;
-                      }
+                      // Create new area objects to ensure React detects changes
+                      updatedData.governanceAreas = updatedData.governanceAreas.map((area: any) => {
+                        if (area.indicators && area.indicators.length > 0) {
+                          const updatedIndicators = updateInTree(area.indicators);
+                          return { ...area, indicators: updatedIndicators }; // Create new area object
+                        }
+                        return area;
+                      });
                       // Global pass to ensure all containers reflect latest children state
                       for (const area of updatedData.governanceAreas) {
                         if (area.indicators) recomputeContainerStatuses(area.indicators);
                       }
+                      
+                      // Return updated data - updateAssessmentData will recompute counts automatically
                       return updatedData;
                     });
 
-                    // Ensure a real response exists, then save
+                    // Ensure a real response exists, then save with nested structure
                     ensureResponseId().then((responseId) =>
-                      updateResponse(responseId, { response_data: data })
+                      updateResponse(responseId, { response_data: dataToSave })
                     );
                   }
                 }}
