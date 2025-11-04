@@ -146,4 +146,4 @@ dmypy.json
 # ===========================
 # Database files
 # ===========================
-apps/api/test.db apps/api/test.db
+apps/api/test.db
