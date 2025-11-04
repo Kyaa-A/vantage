@@ -7,6 +7,7 @@ import {
   ComplianceStatusPieChart,
   TrendLineChart,
 } from "./ChartComponents";
+import { BarangayMap } from "@/components/features/analytics";
 
 interface VisualizationGridProps {
   data?: ReportsDataResponse;
@@ -84,19 +85,10 @@ export function VisualizationGrid({ data, isLoading }: VisualizationGridProps) {
         <h2 className="text-2xl font-semibold">Geographic Distribution</h2>
         <Card>
           <CardHeader>
-            <CardTitle>Barangay Assessment Map</CardTitle>
+            <CardTitle>Barangay Performance Map</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[450px] flex items-center justify-center bg-muted/30 rounded-md border border-dashed">
-              <p className="text-sm text-muted-foreground">
-                Interactive Map Component (Coming in Task 2.7.1)
-              </p>
-            </div>
-            {data.map_data.barangays.length > 0 && (
-              <p className="text-xs text-muted-foreground mt-2">
-                {data.map_data.barangays.length} barangays on map
-              </p>
-            )}
+            <BarangayMap barangays={data.map_data.barangays} />
           </CardContent>
         </Card>
       </section>

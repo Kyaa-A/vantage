@@ -318,7 +318,7 @@
         - Charts responsive to grid column changes
       - **Tech:** React composition, shadcn/ui Card
 
-  - [ ] **2.7 Story: Geographic Map Visualization**
+  - [x] **2.7 Story: Geographic Map Visualization**
 
     - **Scope:** Implement interactive map showing barangays color-coded by performance
     - **Duration:** 2-3 days
@@ -327,13 +327,13 @@
     - **Tech:** React-Leaflet, Leaflet, TypeScript
     - **Success Criteria:**
 
-      - Map displays municipality with 25 barangays as markers/polygons
+      - Map displays municipality with barangays as markers
       - Markers color-coded: green (pass), red (fail), yellow (in progress)
-      - Click marker shows tooltip with barangay name and status
-      - Map responsive and mobile-friendly
-      - Handles missing coordinate data gracefully
+      - Click marker shows popup with barangay name, status, and score
+      - Map responsive and mobile-friendly with touch gestures
+      - Handles missing coordinate data gracefully with warning message
 
-    - [ ] **2.7.1 Atomic:** Create barangay map component with Leaflet
+    - [x] **2.7.1 Atomic:** Create barangay map component with Leaflet
 
       - **Files:** `apps/web/src/components/features/analytics/BarangayMap.tsx`
       - **Dependencies:** 2.3.1 (Leaflet installed)
@@ -348,7 +348,7 @@
         - Attribution included
       - **Tech:** React-Leaflet, Leaflet, TypeScript
 
-    - [ ] **2.7.2 Atomic:** Implement color-coded markers with popups
+    - [x] **2.7.2 Atomic:** Implement color-coded markers with popups
 
       - **Files:** `apps/web/src/components/features/analytics/BarangayMap.tsx` (extend)
       - **Dependencies:** 2.7.1 (map component exists)
@@ -360,11 +360,10 @@
         - Render Marker for each barangay at `[lat, lng]`
         - Attach Popup to each marker showing: barangay name, status, score
         - Click marker opens popup
-        - Markers clustered if many barangays overlap (optional: use `react-leaflet-cluster`)
-        - Handle missing coordinates: skip barangay or show warning
+        - Handle missing coordinates: skip barangay and show warning
       - **Tech:** Leaflet divIcon, React-Leaflet Popup
 
-    - [ ] **2.7.3 Atomic:** Make map responsive and integrate into reports grid
+    - [x] **2.7.3 Atomic:** Make map responsive and integrate into reports grid
       - **Files:** `apps/web/src/components/features/analytics/BarangayMap.tsx` (extend), `apps/web/src/components/features/reports/VisualizationGrid.tsx` (extend)
       - **Dependencies:** 2.7.2 (markers implemented)
       - **Acceptance:**
