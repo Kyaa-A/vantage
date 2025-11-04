@@ -34,8 +34,9 @@ export default function PdfAnnotator({ url, annotateEnabled, annotations, onAdd,
   // The highlight plugin provides selection -> trigger UI -> save data
   const highlightPluginInstance = highlightPlugin({
     renderHighlightTarget: (props: RenderHighlightTargetProps) => {
-      if (!annotateEnabled) return null;
-      const baseStyle = props.getCssProperties ? props.getCssProperties(props.selectionRegion) : {
+      const anyProps: any = props as any;
+      const cssProps = anyProps?.getCssProperties;
+      const baseStyle = cssProps ? cssProps(props.selectionRegion) : {
         left: `${props.selectionRegion.left}%`,
         top: `${props.selectionRegion.top}%`,
         width: `${props.selectionRegion.width}%`,
@@ -50,6 +51,7 @@ export default function PdfAnnotator({ url, annotateEnabled, annotations, onAdd,
             width: 'auto',
             height: 'auto',
             zIndex: 10,
+            display: annotateEnabled ? 'block' : 'none',
           }}
         >
           <button
@@ -58,32 +60,154 @@ export default function PdfAnnotator({ url, annotateEnabled, annotations, onAdd,
             onClick={() => {
             const comment = window.prompt('Add a comment for this highlight (optional):', '') || '';
             const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-            // Prefer the page index provided by the renderer for this selection; fall back safely
+            // Prefer page index from selectedText.position.pageIndex, then other fallbacks
             const resolvedPageIndex =
-              typeof (props as any).pageIndex === 'number'
-                ? (props as any).pageIndex
-                : (props as any).selectedText?.pageIndex ?? (props as any).selectionRegion?.pageIndex ?? (props as any).page?.index ?? 0;
-            // Capture multi-line rects if provided by the plugin
-            const rawRects: any[] = (props as any)?.selectedText?.position?.rects || [];
-            const rects: PdfRect[] = Array.isArray(rawRects)
-              ? rawRects.map((r: any) => ({ x: r.left, y: r.top, w: r.width, h: r.height }))
-              : [];
+              (anyProps?.selectedText?.position?.pageIndex)
+              ?? (typeof anyProps?.pageIndex === 'number' ? anyProps.pageIndex : undefined)
+              ?? anyProps?.selectedText?.pageIndex
+              ?? anyProps?.selectionRegion?.pageIndex
+              ?? anyProps?.page?.index
+              ?? 0;
+            // Try to derive rects from DOM selection client rects (covers multi-line reliably)
+            const collectRectsFromSelection = (): { rects: PdfRect[]; pageIndexOverride?: number } => {
+              try {
+                const sel = window.getSelection();
+                if (!sel || sel.rangeCount === 0) return { rects: [] };
+                const findPageEl = (node: Node | null): HTMLElement | null => {
+                  let el: HTMLElement | null = (node as HTMLElement) && (node as HTMLElement).nodeType === 1 ? (node as HTMLElement) : (node?.parentElement ?? null);
+                  while (el) {
+                    if (el.getAttribute && el.getAttribute('data-page-number')) return el;
+                    if (el.classList && el.classList.contains('rpv-core__page-layer')) return el;
+                    el = el.parentElement;
+                  }
+                  return null;
+                };
+                const pageEl = findPageEl(sel.anchorNode) || findPageEl(sel.focusNode);
+                if (!pageEl) return { rects: [] };
+                const pageBox = pageEl.getBoundingClientRect();
+                const toPct = (r: DOMRect): PdfRect => ({
+                  x: ((r.left - pageBox.left) / pageBox.width) * 100,
+                  y: ((r.top - pageBox.top) / pageBox.height) * 100,
+                  w: (r.width / pageBox.width) * 100,
+                  h: (r.height / pageBox.height) * 100,
+                });
+                const rects: PdfRect[] = [];
+                for (let i = 0; i < sel.rangeCount; i++) {
+                  const range = sel.getRangeAt(i);
+                  const crs = range.getClientRects();
+                  for (let j = 0; j < crs.length; j++) {
+                    const cr = crs.item(j)!;
+                    if (cr.width < 1 || cr.height < 1) continue;
+                    rects.push(toPct(cr));
+                  }
+                }
+                // Merge contiguous word boxes on the same line into a single line rect
+                const mergeToleranceY = 1.0; // percent
+                const mergeToleranceH = 1.0; // percent
+                const sorted = rects.slice().sort((a, b) => (a.y === b.y ? a.x - b.x : a.y - b.y));
+                const merged: PdfRect[] = [];
+                let lineGroup: PdfRect[] = [];
+                const flushLine = () => {
+                  if (lineGroup.length === 0) return;
+                  const minX = Math.min(...lineGroup.map(r => r.x));
+                  const maxX = Math.max(...lineGroup.map(r => r.x + r.w));
+                  const base = lineGroup[0];
+                  const height = Math.max(...lineGroup.map(r => r.h));
+                  merged.push({ x: minX, y: base.y, w: Math.max(0, maxX - minX), h: height });
+                  lineGroup = [];
+                };
+                for (const r of sorted) {
+                  if (lineGroup.length === 0) {
+                    lineGroup.push(r);
+                    continue;
+                  }
+                  const ref = lineGroup[0];
+                  const sameLine = Math.abs(r.y - ref.y) <= mergeToleranceY && Math.abs(r.h - ref.h) <= mergeToleranceH;
+                  if (sameLine) lineGroup.push(r); else { flushLine(); lineGroup.push(r); }
+                }
+                flushLine();
+                const pn = pageEl.getAttribute('data-page-number');
+                const pageIndexOverride = pn ? Math.max(0, parseInt(pn, 10) - 1) : undefined;
+                return { rects: merged, pageIndexOverride };
+              } catch {
+                return { rects: [] };
+              }
+            };
+            const selInfo = collectRectsFromSelection();
+            // Capture multi-line rects from multiple possible locations and shapes
+            const collectRects = (): PdfRect[] => {
+              const results: PdfRect[] = [];
+              const pushMapped = (arr: any[]) => {
+                for (const r of arr) {
+                  if (r == null) continue;
+                  const left = r.left ?? r.x;
+                  const top = r.top ?? r.y;
+                  const width = r.width ?? r.w;
+                  const height = r.height ?? r.h;
+                  if (
+                    typeof left === 'number' && typeof top === 'number' &&
+                    typeof width === 'number' && typeof height === 'number'
+                  ) {
+                    results.push({ x: left, y: top, w: width, h: height });
+                  }
+                }
+              };
+              // Common paths
+              if (Array.isArray(anyProps?.selectedText)) {
+                for (const item of anyProps.selectedText) {
+                  const rects = item?.position?.rects || item?.rects || item?.selectionRects || [];
+                  if (Array.isArray(rects)) pushMapped(rects);
+                }
+              } else if (anyProps?.selectedText) {
+                const rects = anyProps?.selectedText?.position?.rects
+                  || anyProps?.selectedText?.rects
+                  || anyProps?.selectedText?.selectionRects
+                  || [];
+                if (Array.isArray(rects)) pushMapped(rects);
+              }
+              // Alternative props names seen across versions
+              if (Array.isArray(anyProps?.selectedTextPosition?.rects)) pushMapped(anyProps.selectedTextPosition.rects);
+              if (Array.isArray(anyProps?.selectionData?.rects)) pushMapped(anyProps.selectionData.rects);
+              if (Array.isArray(anyProps?.selectionRegion?.rects)) pushMapped(anyProps.selectionRegion.rects);
+              if (selInfo.rects.length > 0) return selInfo.rects;
+              return results;
+            };
+            let rects: PdfRect[] = collectRects();
+            if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
+              try {
+                // eslint-disable-next-line no-console
+                console.log('[PdfAnnotator] collected rects (pre-normalize)', rects);
+              } catch {}
+            }
+            // Normalize if values look like 0..1 by converting to percentages
+            if (rects.length > 0) {
+              const looksUnit = (v: number) => v <= 1 && v >= 0;
+              const needsScale = rects.some((r) => looksUnit(r.x) && looksUnit(r.y) && looksUnit(r.w) && looksUnit(r.h));
+              if (needsScale) {
+                rects = rects.map((r) => ({ x: r.x * 100, y: r.y * 100, w: r.w * 100, h: r.h * 100 }));
+              }
+            }
+            if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
+              try {
+                // eslint-disable-next-line no-console
+                console.log('[PdfAnnotator] rects (final)', rects);
+              } catch {}
+            }
+            const pageIndexFinal = (selInfo.pageIndexOverride ?? resolvedPageIndex);
             const primaryRect: PdfRect = rects.length > 0
               ? rects[0]
               : { x: props.selectionRegion.left, y: props.selectionRegion.top, w: props.selectionRegion.width, h: props.selectionRegion.height };
             onAdd({
               id,
               type: 'pdfRect',
-              page: resolvedPageIndex,
+              page: pageIndexFinal,
               rect: primaryRect,
               rects: rects.length > 0 ? rects : undefined,
               comment,
               createdAt: new Date().toISOString(),
             });
               // Clear selection if API provides a cancel function
-              const anyProps: any = props as any;
-              if (typeof props.onCancel === 'function') props.onCancel();
-              else if (typeof anyProps.cancel === 'function') anyProps.cancel();
+              if (typeof anyProps.cancel === 'function') anyProps.cancel();
             }}
           >
             Add comment
@@ -91,7 +215,7 @@ export default function PdfAnnotator({ url, annotateEnabled, annotations, onAdd,
         </div>
       );
     },
-    renderHighlightContent: (_props: RenderHighlightContentProps) => null,
+    renderHighlightContent: (_props: RenderHighlightContentProps) => <></>,
     renderHighlights: (props: RenderHighlightsProps) => {
       const pageAnns = annotations.filter((a) => a.page === props.pageIndex);
       return (
@@ -101,13 +225,14 @@ export default function PdfAnnotator({ url, annotateEnabled, annotations, onAdd,
               {(() => {
                 const sourceRects = Array.isArray(a.rects) && a.rects.length > 0 ? a.rects : [a.rect];
                 const first = sourceRects[0];
+                const anyRProps: any = props as any;
                 const rectCssFrom = (r: PdfRect) => (
-                  props.getCssProperties
-                    ? props.getCssProperties({ left: r.x, top: r.y, width: r.w, height: r.h })
+                  anyRProps?.getCssProperties
+                    ? anyRProps.getCssProperties({ left: r.x, top: r.y, width: r.w, height: r.h })
                     : { left: `${r.x}%`, top: `${r.y}%`, width: `${r.w}%`, height: `${r.h}%` }
                 );
-                const badgeCss = props.getCssProperties
-                  ? props.getCssProperties({ left: first.x, top: first.y, width: 0, height: 0 })
+                const badgeCss = anyRProps?.getCssProperties
+                  ? anyRProps.getCssProperties({ left: first.x, top: first.y, width: 0, height: 0 })
                   : { left: `${first.x}%`, top: `${first.y}%` };
                 return (
                   <>
