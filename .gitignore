@@ -141,4 +141,4 @@ dmypy.json
 *.key
 *.crt
 *.p12
-*.pfx 
+*.pfx apps/api/test.db

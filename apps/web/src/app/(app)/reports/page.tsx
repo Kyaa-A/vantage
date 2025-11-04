@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { PageHeader } from "@/components/shared";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { FilterControls, VisualizationGrid } from "@/components/features/reports";
+import {
+  FilterControls,
+  VisualizationGrid,
+  ExportControls,
+} from "@/components/features/reports";
 import { useGetAnalyticsReports } from "@vantage/shared";
 
 export default function ReportsPage() {
@@ -56,19 +60,43 @@ export default function ReportsPage() {
     );
   }
 
+  // Get user role (TODO: Get from actual auth context)
+  const userRole = "MLGOO_DILG";
+
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto space-y-6">
-        <PageHeader
-          title="Reports & Visualizations"
-          description="Analytics and reporting dashboard with interactive visualizations"
-        />
+        {/* Page Header with Export Controls */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <PageHeader
+            title="Reports & Visualizations"
+            description="Analytics and reporting dashboard with interactive visualizations"
+          />
+
+          {/* Export Controls - Only for MLGOO_DILG */}
+          {userRole === "MLGOO_DILG" && data && (
+            <div className="flex-shrink-0">
+              <ExportControls
+                tableData={data.table_data.rows}
+                currentFilters={{
+                  cycle_id: filters.cycle_id,
+                  start_date: filters.start_date,
+                  end_date: filters.end_date,
+                  governance_area: filters.governance_area,
+                  barangay_id: filters.barangay_id,
+                  status: filters.status,
+                }}
+                reportsData={data}
+              />
+            </div>
+          )}
+        </div>
 
         {/* Filter Controls */}
         <FilterControls
           filters={filters}
           onFilterChange={handleFilterChange}
-          userRole="MLGOO_DILG" // TODO: Get actual user role from auth context
+          userRole={userRole}
         />
 
         {/* Visualization Grid */}

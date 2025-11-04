@@ -26,3 +26,17 @@ vi.mock('@/store/useAuthStore', () => ({
     setUser: vi.fn(),
   })),
 }));
+
+// Mock ResizeObserver for Recharts
+global.ResizeObserver = class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+
+// Mock pointer capture API for Radix UI
+if (typeof HTMLElement !== 'undefined') {
+  HTMLElement.prototype.hasPointerCapture = vi.fn();
+  HTMLElement.prototype.setPointerCapture = vi.fn();
+  HTMLElement.prototype.releasePointerCapture = vi.fn();
+}
