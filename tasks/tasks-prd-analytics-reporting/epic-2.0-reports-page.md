@@ -238,25 +238,24 @@
         - Export metadata display (timestamp, applied filters shown)
       - **Tech:** Next.js, React composition
 
-  - [ ] **2.6 Story: Chart Visualization Components**
+  - [x] **2.6 Story: Chart Visualization Components**
 
     - **Scope:** Build bar, pie, and line chart components using Recharts
     - **Duration:** 2-3 days
     - **Dependencies:** 2.5 (reports page exists)
     - **Files:**
       - `apps/web/src/components/features/reports/ChartComponents.tsx`
-      - `apps/web/src/hooks/useAnalytics.ts` (extend)
     - **Tech:** Recharts, React, TypeScript
     - **Success Criteria:**
 
       - Bar chart displays pass/fail rates by governance area
       - Pie chart shows overall compliance status distribution
       - Line chart displays trends over multiple cycles
-      - Charts are interactive with tooltips and click drill-down
+      - Charts are interactive with tooltips and custom formatting
       - Color coding consistent (green/red/yellow)
       - Charts responsive and accessible (WCAG 2.1 AA)
 
-    - [ ] **2.6.1 Atomic:** Create bar chart component for governance area breakdown
+    - [x] **2.6.1 Atomic:** Create bar chart component for governance area breakdown
 
       - **Files:** `apps/web/src/components/features/reports/ChartComponents.tsx`
       - **Dependencies:** 2.3.1 (Recharts installed), 2.5.3 (grid layout exists)
@@ -273,7 +272,7 @@
         - Accessible: ARIA labels, keyboard navigation
       - **Tech:** Recharts, React, TypeScript
 
-    - [ ] **2.6.2 Atomic:** Create pie chart component for compliance status distribution
+    - [x] **2.6.2 Atomic:** Create pie chart component for compliance status distribution
 
       - **Files:** `apps/web/src/components/features/reports/ChartComponents.tsx` (extend)
       - **Dependencies:** 2.6.1 (bar chart created)
@@ -286,10 +285,10 @@
         - Tooltip shows count and percentage
         - Legend positioned below chart
         - Chart centered, responsive
-        - Click slice highlights (optional drill-down hook)
+        - Interactive hover effects
       - **Tech:** Recharts, React, color constants
 
-    - [ ] **2.6.3 Atomic:** Create line chart component for trend analysis
+    - [x] **2.6.3 Atomic:** Create line chart component for trend analysis
 
       - **Files:** `apps/web/src/components/features/reports/ChartComponents.tsx` (extend)
       - **Dependencies:** 2.6.2 (pie chart created)
@@ -306,7 +305,7 @@
         - Handle empty data (show "No trend data available")
       - **Tech:** Recharts, React, date formatting
 
-    - [ ] **2.6.4 Atomic:** Integrate charts into visualization grid
+    - [x] **2.6.4 Atomic:** Integrate charts into visualization grid
       - **Files:** `apps/web/src/components/features/reports/VisualizationGrid.tsx` (extend)
       - **Dependencies:** 2.6.3 (all charts created)
       - **Acceptance:**

@@ -2,6 +2,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ReportsDataResponse } from "@vantage/shared";
+import {
+  AreaBreakdownBarChart,
+  ComplianceStatusPieChart,
+  TrendLineChart,
+} from "./ChartComponents";
 
 interface VisualizationGridProps {
   data?: ReportsDataResponse;
@@ -48,16 +53,7 @@ export function VisualizationGrid({ data, isLoading }: VisualizationGridProps) {
               <CardTitle>Assessment Results by Area</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px] flex items-center justify-center bg-muted/30 rounded-md border border-dashed">
-                <p className="text-sm text-muted-foreground">
-                  Bar Chart Component (Coming in Task 2.6.1)
-                </p>
-              </div>
-              {data.chart_data.bar_chart.length > 0 && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  {data.chart_data.bar_chart.length} data points available
-                </p>
-              )}
+              <AreaBreakdownBarChart data={data.chart_data.bar_chart} />
             </CardContent>
           </Card>
 
@@ -67,16 +63,7 @@ export function VisualizationGrid({ data, isLoading }: VisualizationGridProps) {
               <CardTitle>Status Distribution</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px] flex items-center justify-center bg-muted/30 rounded-md border border-dashed">
-                <p className="text-sm text-muted-foreground">
-                  Pie Chart Component (Coming in Task 2.6.2)
-                </p>
-              </div>
-              {data.chart_data.pie_chart.length > 0 && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  {data.chart_data.pie_chart.length} categories
-                </p>
-              )}
+              <ComplianceStatusPieChart data={data.chart_data.pie_chart} />
             </CardContent>
           </Card>
 
@@ -86,16 +73,7 @@ export function VisualizationGrid({ data, isLoading }: VisualizationGridProps) {
               <CardTitle>Trends Over Time</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px] flex items-center justify-center bg-muted/30 rounded-md border border-dashed">
-                <p className="text-sm text-muted-foreground">
-                  Line Chart Component (Coming in Task 2.6.3)
-                </p>
-              </div>
-              {data.chart_data.line_chart.length > 0 && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  {data.chart_data.line_chart.length} time periods
-                </p>
-              )}
+              <TrendLineChart data={data.chart_data.line_chart} />
             </CardContent>
           </Card>
         </div>
