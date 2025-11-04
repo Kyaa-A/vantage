@@ -181,6 +181,11 @@ export function LeftSubmissionView({ assessment, expandedId, onToggle }: LeftSub
     setPreviewRect({ x, y, w, h });
   };
 
+  const onImageContextMenu = (e: React.MouseEvent<HTMLDivElement | HTMLImageElement>) => {
+    // Prevent browser's default context menu from appearing
+    e.preventDefault();
+  };
+
   const onDeleteAnnotation = (id: string) => {
     setAnnotations((prev) => prev.filter((a) => a.id !== id));
   };
@@ -354,9 +359,10 @@ export function LeftSubmissionView({ assessment, expandedId, onToggle }: LeftSub
                   onMouseDown={onImageMouseDown}
                   onMouseUp={onImageMouseUp}
                   onMouseMove={onImageMouseMove}
+                  onContextMenu={onImageContextMenu}
                   style={{ cursor: annotateMode ? 'crosshair' : 'default' }}
                 >
-                  <img ref={imgRef} src={currentUrl} alt="MOV preview" className="max-h-full max-w-full object-contain" onLoad={() => setImageReady(true)} />
+                  <img ref={imgRef} src={currentUrl} alt="MOV preview" className="max-h-full max-w-full object-contain" onLoad={() => setImageReady(true)} onContextMenu={onImageContextMenu} />
                   {/* Render annotation rectangles */}
                   {(() => {
                     const img = imgRef.current;
