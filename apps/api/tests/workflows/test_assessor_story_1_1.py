@@ -1,4 +1,5 @@
 import pytest
+from datetime import datetime
 from app.api import deps
 from app.db.enums import AreaType, AssessmentStatus, UserRole
 from app.db.models.assessment import Assessment, AssessmentResponse
@@ -34,7 +35,7 @@ def create_user(
 def create_assessment_with_indicator(
     db, *, blgu_user: User, indicator: Indicator, status: AssessmentStatus
 ):
-    a = Assessment(blgu_user_id=blgu_user.id)
+    a = Assessment(blgu_user_id=blgu_user.id, submitted_at=datetime.utcnow())
     db.add(a)
     db.commit()
     db.refresh(a)

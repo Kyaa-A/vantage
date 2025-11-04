@@ -3,7 +3,7 @@
 
 import pytest
 from app.api import deps
-from app.db.enums import AreaType, AssessmentStatus, UserRole
+from app.db.enums import AreaType, AssessmentStatus, UserRole, ValidationStatus
 from app.db.models import (
     Assessment,
     AssessmentResponse,
@@ -84,13 +84,14 @@ def create_test_data_for_rework(db_session: Session) -> dict:
     db_session.commit()
     db_session.refresh(assessment)
 
-    # Create assessment response
+    # Create assessment response with FAIL status (required for rework)
     response = AssessmentResponse(
         assessment_id=assessment.id,
         indicator_id=indicator.id,
         response_data={"test": "data"},
         is_completed=True,
         requires_rework=False,
+        validation_status=ValidationStatus.FAIL,  # Required for rework to be allowed
     )
     db_session.add(response)
     db_session.commit()

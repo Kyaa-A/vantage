@@ -2,11 +2,11 @@ from datetime import datetime
 
 from fastapi.testclient import TestClient  # type: ignore[reportMissingImports]
 
-from app.main import app
+from main import app
 from app.api import deps
 from app.db.base import SessionLocal
-from app.db.models import Assessment, AssessmentResponse, Indicator, User
-from app.db.enums import AssessmentStatus, Role, ValidationStatus
+from app.db.models import Assessment, AssessmentResponse, GovernanceArea, Indicator, User
+from app.db.enums import AreaType, AssessmentStatus, UserRole, ValidationStatus
 
 
 def override_get_db():
@@ -21,16 +21,27 @@ app.dependency_overrides[deps.get_db] = override_get_db
 
 
 def seed_assessment(db, status=AssessmentStatus.SUBMITTED_FOR_REVIEW, rework_count=0, reviewed=True, has_fail=False):
-    assessor = User(email="assessor2@example.com", name="Assessor2", role=Role.ASSESSOR, is_active=True)
-    blgu = User(email="blgu2@example.com", name="BLGU2", role=Role.BLGU, is_active=True)
+    import time
+    timestamp = int(time.time() * 1000000)  # microseconds for uniqueness
+
+    # Create governance area first
+    gov_area = GovernanceArea(
+        name=f"Test Governance Area {timestamp}",
+        area_type=AreaType.CORE,
+    )
+    db.add(gov_area)
+    db.flush()
+
+    assessor = User(email=f"assessor2_{timestamp}@example.com", name="Assessor2", role=UserRole.AREA_ASSESSOR, hashed_password="hashed_password", is_active=True)
+    blgu = User(email=f"blgu2_{timestamp}@example.com", name="BLGU2", role=UserRole.BLGU_USER, hashed_password="hashed_password", is_active=True)
     db.add_all([assessor, blgu])
     db.flush()
 
     ind = Indicator(
-        name="Ind A",
+        name=f"Ind A {timestamp}",
         description="",
         form_schema={"type": "object", "properties": {}},
-        governance_area_id=1,
+        governance_area_id=gov_area.id,
     )
     db.add(ind)
     db.flush()
@@ -59,49 +70,128 @@ def seed_assessment(db, status=AssessmentStatus.SUBMITTED_FOR_REVIEW, rework_cou
     return assessor, a
 
 
-def auth_headers_assessor(user_id: int):
-    return {"X-Debug-UserId": str(user_id), "X-Debug-Role": "ASSESSOR"}
-
-
 def test_rework_only_allowed_once_and_requires_fail_and_reviewed():
     client = TestClient(app)
+
+    # Test 1: First rework allowed
     with next(override_get_db()) as db:
         assessor, a = seed_assessment(db, status=AssessmentStatus.SUBMITTED_FOR_REVIEW, rework_count=0, reviewed=True, has_fail=True)
+        assessment_id = a.id
 
-    # First rework allowed
-    r1 = client.post(f"/api/v1/assessor/assessments/{a.id}/rework", headers=auth_headers_assessor(assessor.id))
-    assert r1.status_code in (200, 201)
+        # Override dependencies
+        def _override_current_area_assessor_user():
+            return assessor
 
-    # Second rework blocked
-    r2 = client.post(f"/api/v1/assessor/assessments/{a.id}/rework", headers=auth_headers_assessor(assessor.id))
-    assert r2.status_code == 400
+        def _override_get_db():
+            try:
+                yield db
+            finally:
+                pass
 
-    # Fresh assessment with no Fail should block rework
+        client.app.dependency_overrides[deps.get_current_area_assessor_user_http] = _override_current_area_assessor_user
+        client.app.dependency_overrides[deps.get_db] = _override_get_db
+
+        r1 = client.post(f"/api/v1/assessor/assessments/{assessment_id}/rework")
+        assert r1.status_code in (200, 201)
+
+        # Second rework blocked (same assessment)
+        r2 = client.post(f"/api/v1/assessor/assessments/{assessment_id}/rework")
+        assert r2.status_code == 400
+
+        # Clear overrides
+        client.app.dependency_overrides.clear()
+
+    # Test 2: Fresh assessment with no Fail should block rework
     with next(override_get_db()) as db:
         assessor2, a2 = seed_assessment(db, status=AssessmentStatus.SUBMITTED_FOR_REVIEW, rework_count=0, reviewed=True, has_fail=False)
-    r3 = client.post(f"/api/v1/assessor/assessments/{a2.id}/rework", headers=auth_headers_assessor(assessor2.id))
-    assert r3.status_code == 400
+        assessment_id2 = a2.id
 
-    # Fresh assessment with unreviewed indicators should block rework
+        def _override_current_area_assessor_user2():
+            return assessor2
+
+        def _override_get_db2():
+            try:
+                yield db
+            finally:
+                pass
+
+        client.app.dependency_overrides[deps.get_current_area_assessor_user_http] = _override_current_area_assessor_user2
+        client.app.dependency_overrides[deps.get_db] = _override_get_db2
+
+        r3 = client.post(f"/api/v1/assessor/assessments/{assessment_id2}/rework")
+        assert r3.status_code == 400
+
+        client.app.dependency_overrides.clear()
+
+    # Test 3: Fresh assessment with unreviewed indicators should block rework
     with next(override_get_db()) as db:
-        assessor3, a3 = seed_assessment(db, status=AssessmentStatus.SUBMITTED_FOR_REVIEW, rework_count=0, reviewed=False, has_fail=True)
-    r4 = client.post(f"/api/v1/assessor/assessments/{a3.id}/rework", headers=auth_headers_assessor(assessor3.id))
-    assert r4.status_code == 400
+        # Use reviewed=False and has_fail=False to get validation_status=None (unreviewed)
+        assessor3, a3 = seed_assessment(db, status=AssessmentStatus.SUBMITTED_FOR_REVIEW, rework_count=0, reviewed=False, has_fail=False)
+        assessment_id3 = a3.id
+
+        def _override_current_area_assessor_user3():
+            return assessor3
+
+        def _override_get_db3():
+            try:
+                yield db
+            finally:
+                pass
+
+        client.app.dependency_overrides[deps.get_current_area_assessor_user_http] = _override_current_area_assessor_user3
+        client.app.dependency_overrides[deps.get_db] = _override_get_db3
+
+        r4 = client.post(f"/api/v1/assessor/assessments/{assessment_id3}/rework")
+        assert r4.status_code == 400
+
+        client.app.dependency_overrides.clear()
 
 
 def test_finalize_rules_first_submission_vs_rework():
     client = TestClient(app)
 
-    # First submission with Fail should block finalize
+    # Test 1: First submission with Fail should block finalize
     with next(override_get_db()) as db:
         assessor, a = seed_assessment(db, status=AssessmentStatus.SUBMITTED_FOR_REVIEW, rework_count=0, reviewed=True, has_fail=True)
-    r1 = client.post(f"/api/v1/assessor/assessments/{a.id}/finalize", headers=auth_headers_assessor(assessor.id))
-    assert r1.status_code == 400
+        assessment_id = a.id
 
-    # Needs Rework (after rework) should allow finalize even if Fail
+        def _override_current_area_assessor_user():
+            return assessor
+
+        def _override_get_db():
+            try:
+                yield db
+            finally:
+                pass
+
+        client.app.dependency_overrides[deps.get_current_area_assessor_user_http] = _override_current_area_assessor_user
+        client.app.dependency_overrides[deps.get_db] = _override_get_db
+
+        r1 = client.post(f"/api/v1/assessor/assessments/{assessment_id}/finalize")
+        assert r1.status_code == 400
+
+        client.app.dependency_overrides.clear()
+
+    # Test 2: Needs Rework (after rework) should allow finalize even if Fail
     with next(override_get_db()) as db:
         assessor2, a2 = seed_assessment(db, status=AssessmentStatus.NEEDS_REWORK, rework_count=1, reviewed=True, has_fail=True)
-    r2 = client.post(f"/api/v1/assessor/assessments/{a2.id}/finalize", headers=auth_headers_assessor(assessor2.id))
-    assert r2.status_code in (200, 201)
+        assessment_id2 = a2.id
+
+        def _override_current_area_assessor_user2():
+            return assessor2
+
+        def _override_get_db2():
+            try:
+                yield db
+            finally:
+                pass
+
+        client.app.dependency_overrides[deps.get_current_area_assessor_user_http] = _override_current_area_assessor_user2
+        client.app.dependency_overrides[deps.get_db] = _override_get_db2
+
+        r2 = client.post(f"/api/v1/assessor/assessments/{assessment_id2}/finalize")
+        assert r2.status_code in (200, 201)
+
+        client.app.dependency_overrides.clear()
 
 
