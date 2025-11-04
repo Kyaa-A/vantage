@@ -8,6 +8,7 @@ import {
   TrendLineChart,
 } from "./ChartComponents";
 import { BarangayMap } from "@/components/features/analytics";
+import { AssessmentDataTable } from "./DataTable";
 
 interface VisualizationGridProps {
   data?: ReportsDataResponse;
@@ -98,20 +99,10 @@ export function VisualizationGrid({ data, isLoading }: VisualizationGridProps) {
         <h2 className="text-2xl font-semibold">Detailed Results</h2>
         <Card>
           <CardHeader>
-            <CardTitle>Assessment Data Table</CardTitle>
+            <CardTitle>Assessment Data</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[350px] flex items-center justify-center bg-muted/30 rounded-md border border-dashed">
-              <p className="text-sm text-muted-foreground">
-                Interactive Data Table (Coming in Task 2.8.1)
-              </p>
-            </div>
-            {data.table_data.rows.length > 0 && (
-              <p className="text-xs text-muted-foreground mt-2">
-                Showing {data.table_data.rows.length} of{" "}
-                {data.table_data.total_count} total rows
-              </p>
-            )}
+            <AssessmentDataTable data={data.table_data} />
           </CardContent>
         </Card>
       </section>

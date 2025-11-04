@@ -6,6 +6,7 @@ export {
   ComplianceStatusPieChart,
   TrendLineChart,
 } from "./ChartComponents";
+export { AssessmentDataTable } from "./DataTable";
 export { FilterControls } from "./FilterControls";
 export { InsightsGenerator } from "./InsightsGenerator";
 export { ReportsSkeleton } from "./ReportsSkeleton";

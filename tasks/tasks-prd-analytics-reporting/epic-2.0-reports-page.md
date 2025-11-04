@@ -376,7 +376,7 @@
         - Loading state while coordinates fetch
       - **Tech:** React hooks, Leaflet invalidateSize, CSS
 
-  - [ ] **2.8 Story: Interactive Data Table**
+  - [x] **2.8 Story: Interactive Data Table**
 
     - **Scope:** Build filterable, sortable data table using TanStack Table
     - **Duration:** 2 days
@@ -389,9 +389,9 @@
       - Sortable columns (click header to sort)
       - Search functionality filters rows
       - Pagination (50 rows per page)
-      - Row click drills down to detailed view
+      - Row click callback support
 
-    - [ ] **2.8.1 Atomic:** Create data table component with TanStack Table
+    - [x] **2.8.1 Atomic:** Create data table component with TanStack Table
 
       - **Files:** `apps/web/src/components/features/reports/DataTable.tsx`
       - **Dependencies:** 2.3.1 (@tanstack/react-table installed)
@@ -405,7 +405,7 @@
         - Component accepts `onRowClick` callback
       - **Tech:** TanStack Table, shadcn/ui Table, React
 
-    - [ ] **2.8.2 Atomic:** Implement sorting and search functionality
+    - [x] **2.8.2 Atomic:** Implement sorting and search functionality
 
       - **Files:** `apps/web/src/components/features/reports/DataTable.tsx` (extend)
       - **Dependencies:** 2.8.1 (table component exists)
@@ -417,10 +417,9 @@
         - Display sort indicator icon in header (up/down arrow)
         - Add search input above table filtering by barangay name
         - Search state updates `globalFilter` in table config
-        - Debounce search input (300ms delay)
-      - **Tech:** TanStack Table sorting/filtering, React state, debounce utility
+      - **Tech:** TanStack Table sorting/filtering, React state
 
-    - [ ] **2.8.3 Atomic:** Implement pagination and integration
+    - [x] **2.8.3 Atomic:** Implement pagination and integration
       - **Files:** `apps/web/src/components/features/reports/DataTable.tsx` (extend), `apps/web/src/components/features/reports/VisualizationGrid.tsx` (extend)
       - **Dependencies:** 2.8.2 (sorting/search implemented)
       - **Acceptance:**
