@@ -6,6 +6,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button';
 import type { AssessmentDetailsResponse } from '@vantage/shared';
 import * as React from 'react';
+import dynamic from 'next/dynamic';
+const PdfAnnotator = dynamic(() => import('@/components/shared/PdfAnnotator'), { ssr: false });
 
 interface LeftSubmissionViewProps {
   assessment: AssessmentDetailsResponse;
@@ -352,7 +354,12 @@ export function LeftSubmissionView({ assessment, expandedId, onToggle }: LeftSub
               <div className="text-sm text-muted-foreground">Loading…</div>
             ) : currentUrl ? (
               currentExt === 'pdf' ? (
-                <iframe src={currentUrl} className="w-full h-full" title="PDF preview" />
+                <PdfAnnotator
+                  url={currentUrl}
+                  annotateEnabled={annotateMode}
+                  annotations={annotations.filter((a) => a.type === 'pdfRect') as any}
+                  onAdd={(a: any) => setAnnotations((prev) => [...prev, a])}
+                />
               ) : currentExt === 'png' || currentExt === 'jpg' || currentExt === 'jpeg' || currentExt === 'webp' ? (
                 <div
                   className="relative w-full h-full flex items-center justify-center select-none"
@@ -410,13 +417,13 @@ export function LeftSubmissionView({ assessment, expandedId, onToggle }: LeftSub
               <div className="text-sm text-muted-foreground">No preview available.</div>
             )}
           </div>
-          {/* Toolbar and comments (images only) */}
-          {currentExt !== 'pdf' ? (
+          {/* Toolbar and comments (images + pdf) */}
+          {currentExt ? (
             <div className="mt-3 flex flex-col gap-2">
               <div className="flex items-center justify-between">
                 <label className="text-sm inline-flex items-center gap-2">
                   <input type="checkbox" checked={annotateMode} onChange={(e) => setAnnotateMode(e.target.checked)} />
-                  Enable highlight & comment (drag to draw rectangle)
+                  Enable highlight & comment {currentExt === 'pdf' ? '(select text)' : '(drag to draw rectangle)'}
                 </label>
               </div>
               {annotations.length > 0 ? (
@@ -426,7 +433,13 @@ export function LeftSubmissionView({ assessment, expandedId, onToggle }: LeftSub
                     {annotations.map((a) => (
                       <li key={a.id} className="px-3 py-2 text-sm flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <div className="text-xs text-muted-foreground">Rect: x{Math.round(a.rect.x)}, y{Math.round(a.rect.y)}, w{Math.round(a.rect.w)}, h{Math.round(a.rect.h)}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {a.type === 'pdfRect' ? (
+                              <>Page {a.page} — Rect: x{Math.round(a.rect.x)}, y{Math.round(a.rect.y)}, w{Math.round(a.rect.w)}, h{Math.round(a.rect.h)}</>
+                            ) : (
+                              <>Rect: x{Math.round(a.rect.x)}, y{Math.round(a.rect.y)}, w{Math.round(a.rect.w)}, h{Math.round(a.rect.h)}</>
+                            )}
+                          </div>
                           <div className="break-words">{a.comment || <span className="text-muted-foreground">(no comment)</span>}</div>
                         </div>
                         <Button type="button" variant="ghost" size="sm" onClick={() => onDeleteAnnotation(a.id)}>Delete</Button>
@@ -438,9 +451,7 @@ export function LeftSubmissionView({ assessment, expandedId, onToggle }: LeftSub
                 <div className="text-xs text-muted-foreground">No highlights yet.</div>
               )}
             </div>
-          ) : (
-            <div className="mt-3 text-xs text-muted-foreground">PDF annotation not yet available in-modal. Open in new tab for full viewer if needed.</div>
-          )}
+          ) : null}
           </div>
         </DialogContent>
       </Dialog>
