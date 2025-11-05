@@ -41,7 +41,7 @@ def admin_user(db_session: Session):
         email="admin@example.com",
         name="Admin User",
         hashed_password=get_password_hash("adminpass123"),
-        role=UserRole.SUPERADMIN,
+        role=UserRole.MLGOO_DILG,
         is_active=True,
     )
     db_session.add(user)
@@ -150,11 +150,11 @@ def test_get_users_with_search_by_email(db_session: Session, admin_user: User):
 def test_get_users_with_role_filter(db_session: Session, admin_user: User):
     """Test filtering users by role"""
     users, total = user_service.get_users(
-        db_session, role=UserRole.SUPERADMIN.value
+        db_session, role=UserRole.MLGOO_DILG.value
     )
 
     assert total >= 1
-    assert all(user.role == UserRole.SUPERADMIN for user in users)
+    assert all(user.role == UserRole.MLGOO_DILG for user in users)
 
 
 def test_get_users_with_active_filter(
@@ -213,6 +213,7 @@ def test_create_user_admin_success(db_session: Session):
         name="New User",
         password="password123",
         role=UserRole.BLGU_USER,
+        barangay_id=1,  # Required for BLGU_USER role
     )
 
     result = user_service.create_user_admin(db_session, user_data)
@@ -243,16 +244,16 @@ def test_create_user_admin_duplicate_email_raises_error(
     assert "Email already registered" in exc_info.value.detail
 
 
-def test_create_user_admin_area_assessor_requires_governance_area(
+def test_create_user_admin_validator_requires_validator_area(
     db_session: Session
 ):
-    """Test that creating Area Assessor requires governance_area_id"""
+    """Test that creating Validator requires validator_area_id"""
     user_data = UserAdminCreate(
-        email="assessor@example.com",
-        name="Area Assessor",
+        email="validator@example.com",
+        name="Validator User",
         password="password123",
-        role=UserRole.AREA_ASSESSOR,
-        governance_area_id=None,  # Missing required field
+        role=UserRole.VALIDATOR,
+        validator_area_id=None,  # Missing required field
     )
 
     with pytest.raises(HTTPException) as exc_info:
@@ -262,21 +263,22 @@ def test_create_user_admin_area_assessor_requires_governance_area(
     assert "Governance area is required" in exc_info.value.detail
 
 
-def test_create_user_admin_sets_governance_area_null_for_non_assessors(
+def test_create_user_admin_sets_validator_area_null_for_non_validators(
     db_session: Session
 ):
-    """Test that governance_area_id is set to null for non-assessor roles"""
+    """Test that validator_area_id is set to null for non-validator roles"""
     user_data = UserAdminCreate(
         email="blgu@example.com",
         name="BLGU User",
         password="password123",
         role=UserRole.BLGU_USER,
-        governance_area_id=1,  # This should be ignored
+        validator_area_id=1,  # This should be ignored
+        barangay_id=1,  # Required for BLGU_USER role
     )
 
     result = user_service.create_user_admin(db_session, user_data)
 
-    assert result.governance_area_id is None
+    assert result.validator_area_id is None
 
 
 # ====================================================================
@@ -319,6 +321,10 @@ def test_update_user_email_uniqueness_check(
 
 def test_update_user_admin_success(db_session: Session, sample_user: User):
     """Test updating user with admin privileges"""
+    # sample_user is BLGU_USER, so needs barangay_id
+    sample_user.barangay_id = 1
+    db_session.commit()
+
     # Just update name without changing role
     update_data = UserAdminUpdate(
         name="Admin Updated Name"
@@ -340,12 +346,12 @@ def test_update_user_admin_not_found(db_session: Session):
     assert result is None
 
 
-def test_update_user_admin_area_assessor_requires_governance_area(
+def test_update_user_admin_validator_requires_validator_area(
     db_session: Session, sample_user: User
 ):
-    """Test that changing to Area Assessor role requires governance_area_id"""
-    # User doesn't have governance_area_id and we're not providing one
-    update_data = UserAdminUpdate(role=UserRole.AREA_ASSESSOR)
+    """Test that changing to Validator role requires validator_area_id"""
+    # User doesn't have validator_area_id and we're not providing one
+    update_data = UserAdminUpdate(role=UserRole.VALIDATOR)
 
     with pytest.raises(HTTPException) as exc_info:
         user_service.update_user_admin(db_session, sample_user.id, update_data)
@@ -354,47 +360,50 @@ def test_update_user_admin_area_assessor_requires_governance_area(
     assert "Governance area is required" in exc_info.value.detail
 
 
-def test_update_user_admin_clears_barangay_for_assessor(
+def test_update_user_admin_clears_barangay_for_validator(
     db_session: Session, sample_user: User
 ):
-    """Test that changing to Assessor role clears barangay_id"""
+    """Test that changing to Validator role clears barangay_id"""
     # Give user a barangay_id first
     sample_user.barangay_id = 1
     db_session.commit()
 
     update_data = UserAdminUpdate(
-        role=UserRole.AREA_ASSESSOR, governance_area_id=1
+        role=UserRole.VALIDATOR, validator_area_id=1
     )
 
     result = user_service.update_user_admin(db_session, sample_user.id, update_data)
 
-    assert result.role == UserRole.AREA_ASSESSOR
+    assert result.role == UserRole.VALIDATOR
     assert result.barangay_id is None
 
 
-def test_update_user_admin_clears_governance_area_for_non_assessor(
+def test_update_user_admin_clears_validator_area_for_non_validator(
     db_session: Session
 ):
-    """Test that changing from Assessor to other role clears governance_area_id"""
-    # Create an assessor with governance area
-    assessor = User(
-        email="assessor@example.com",
-        name="Assessor",
+    """Test that changing from Validator to other role clears validator_area_id"""
+    # Create a validator with governance area
+    validator = User(
+        email="validator@example.com",
+        name="Validator",
         hashed_password=get_password_hash("pass"),
-        role=UserRole.AREA_ASSESSOR,
-        governance_area_id=1,
+        role=UserRole.VALIDATOR,
+        validator_area_id=1,
         is_active=True,
     )
-    db_session.add(assessor)
+    db_session.add(validator)
     db_session.commit()
-    db_session.refresh(assessor)
+    db_session.refresh(validator)
 
-    update_data = UserAdminUpdate(role=UserRole.BLGU_USER)
+    update_data = UserAdminUpdate(
+        role=UserRole.BLGU_USER,
+        barangay_id=1  # Required for BLGU_USER role
+    )
 
-    result = user_service.update_user_admin(db_session, assessor.id, update_data)
+    result = user_service.update_user_admin(db_session, validator.id, update_data)
 
     assert result.role == UserRole.BLGU_USER
-    assert result.governance_area_id is None
+    assert result.validator_area_id is None
 
 
 # ====================================================================
@@ -540,9 +549,9 @@ def test_get_user_stats_users_by_role(
     stats = user_service.get_user_stats(db_session)
 
     assert UserRole.BLGU_USER in stats["users_by_role"]
-    assert UserRole.SUPERADMIN in stats["users_by_role"]
+    assert UserRole.MLGOO_DILG in stats["users_by_role"]
     assert stats["users_by_role"][UserRole.BLGU_USER] >= 1
-    assert stats["users_by_role"][UserRole.SUPERADMIN] >= 1
+    assert stats["users_by_role"][UserRole.MLGOO_DILG] >= 1
 
 
 def test_get_user_stats_empty_database(db_session: Session):
