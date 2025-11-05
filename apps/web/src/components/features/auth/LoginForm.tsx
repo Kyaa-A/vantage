@@ -151,6 +151,8 @@ export default function LoginForm({ isDarkMode = false }: LoginFormProps) {
             const isValidRedirect =
               redirectTo.startsWith("/blgu/") ||
               redirectTo.startsWith("/mlgoo/") ||
+              redirectTo.startsWith("/assessor/") ||
+              redirectTo.startsWith("/validator/") ||
               redirectTo.startsWith("/user-management/") ||
               redirectTo.startsWith("/change-password");
 
@@ -164,8 +166,10 @@ export default function LoginForm({ isDarkMode = false }: LoginFormProps) {
 
               if (isAdmin) {
                 targetPath = "/mlgoo/dashboard";
-              } else if (isAssessor || isValidator) {
+              } else if (isAssessor) {
                 targetPath = "/assessor/submissions";
+              } else if (isValidator) {
+                targetPath = "/validator/submissions";
               } else {
                 targetPath = "/blgu/dashboard";
               }
@@ -178,8 +182,10 @@ export default function LoginForm({ isDarkMode = false }: LoginFormProps) {
 
             if (isAdmin) {
               targetPath = "/mlgoo/dashboard";
-            } else if (isAssessor || isValidator) {
+            } else if (isAssessor) {
               targetPath = "/assessor/submissions";
+            } else if (isValidator) {
+              targetPath = "/validator/submissions";
             } else {
               targetPath = "/blgu/dashboard";
             }

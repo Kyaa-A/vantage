@@ -14,12 +14,13 @@ export function middleware(request: NextRequest) {
   // Get the pathname from the request
   const { pathname } = request.nextUrl;
   
-  // Define protected routes (all routes that start with /mlgoo, /blgu, /assessor, etc.)
+  // Define protected routes (all routes that start with /mlgoo, /blgu, /assessor, /validator, etc.)
   // These correspond to the (app) route group
   const protectedRoutes = [
     '/mlgoo',
     '/blgu',
     '/assessor',
+    '/validator',
     '/user-management',
     '/change-password',
   ];
@@ -52,13 +53,15 @@ export function middleware(request: NextRequest) {
       // Decode the JWT token to get user role
       const payload = JSON.parse(atob(token.split('.')[1]));
       const userRole = payload.role;
-      
+
       // Redirect based on user role
       let dashboardUrl;
-      if (userRole === 'SUPERADMIN' || userRole === 'MLGOO_DILG') {
+      if (userRole === 'MLGOO_DILG') {
         dashboardUrl = new URL('/mlgoo/dashboard', request.url);
-      } else if (userRole === 'AREA_ASSESSOR') {
+      } else if (userRole === 'ASSESSOR') {
         dashboardUrl = new URL('/assessor/submissions', request.url);
+      } else if (userRole === 'VALIDATOR') {
+        dashboardUrl = new URL('/validator/submissions', request.url);
       } else {
         dashboardUrl = new URL('/blgu/dashboard', request.url);
       }
@@ -89,38 +92,56 @@ export function middleware(request: NextRequest) {
       const isAdminRoute = pathname.startsWith('/mlgoo');
       const isUserManagementRoute = pathname.startsWith('/user-management');
       const isAssessorRoute = pathname.startsWith('/assessor');
+      const isValidatorRoute = pathname.startsWith('/validator');
       const isBLGURoute = pathname.startsWith('/blgu');
-      
-      console.log(`Middleware: User role: ${userRole}, Path: ${pathname}, isAdminRoute: ${isAdminRoute}, isAssessorRoute: ${isAssessorRoute}, isBLGURoute: ${isBLGURoute}`);
-      
+
+      console.log(`Middleware: User role: ${userRole}, Path: ${pathname}, isAdminRoute: ${isAdminRoute}, isAssessorRoute: ${isAssessorRoute}, isValidatorRoute: ${isValidatorRoute}, isBLGURoute: ${isBLGURoute}`);
+
       // Only allow admin users to access admin routes and user management
-      if ((isAdminRoute || isUserManagementRoute) && userRole !== 'SUPERADMIN' && userRole !== 'MLGOO_DILG') {
+      if ((isAdminRoute || isUserManagementRoute) && userRole !== 'MLGOO_DILG') {
         console.log(`Middleware: Redirecting non-admin user (${userRole}) from ${pathname} to appropriate dashboard`);
         // Redirect non-admin users to their appropriate dashboard
         let dashboardUrl;
-        if (userRole === 'AREA_ASSESSOR') {
+        if (userRole === 'ASSESSOR') {
+          dashboardUrl = new URL('/assessor/submissions', request.url);
+        } else if (userRole === 'VALIDATOR') {
+          dashboardUrl = new URL('/validator/submissions', request.url);
+        } else {
+          dashboardUrl = new URL('/blgu/dashboard', request.url);
+        }
+        return NextResponse.redirect(dashboardUrl);
+      }
+
+      // Check role-based access for assessor routes
+      if (isAssessorRoute && userRole !== 'ASSESSOR' && userRole !== 'MLGOO_DILG') {
+        console.log(`Middleware: Redirecting non-assessor user (${userRole}) from ${pathname} to appropriate dashboard`);
+        let dashboardUrl;
+        if (userRole === 'VALIDATOR') {
+          dashboardUrl = new URL('/validator/submissions', request.url);
+        } else {
+          dashboardUrl = new URL('/blgu/dashboard', request.url);
+        }
+        return NextResponse.redirect(dashboardUrl);
+      }
+
+      // Check role-based access for validator routes
+      if (isValidatorRoute && userRole !== 'VALIDATOR' && userRole !== 'MLGOO_DILG') {
+        console.log(`Middleware: Redirecting non-validator user (${userRole}) from ${pathname} to appropriate dashboard`);
+        let dashboardUrl;
+        if (userRole === 'ASSESSOR') {
           dashboardUrl = new URL('/assessor/submissions', request.url);
         } else {
           dashboardUrl = new URL('/blgu/dashboard', request.url);
         }
         return NextResponse.redirect(dashboardUrl);
       }
-      
-      // Check role-based access for other routes
-      if (isAssessorRoute && userRole !== 'AREA_ASSESSOR') {
-        console.log(`Middleware: Redirecting non-assessor user (${userRole}) from ${pathname} to appropriate dashboard`);
-        let dashboardUrl;
-        if (userRole === 'SUPERADMIN' || userRole === 'MLGOO_DILG') {
-          dashboardUrl = new URL('/mlgoo/dashboard', request.url);
-        } else {
-          dashboardUrl = new URL('/blgu/dashboard', request.url);
-        }
-        return NextResponse.redirect(dashboardUrl);
-      }
-      
-      if (isBLGURoute && userRole === 'AREA_ASSESSOR') {
-        console.log(`Middleware: BLGU ROUTE CHECK - Redirecting assessor user from BLGU route ${pathname} to /assessor/submissions`);
-        const dashboardUrl = new URL('/assessor/submissions', request.url);
+
+      // Redirect ASSESSOR/VALIDATOR users trying to access BLGU routes
+      if (isBLGURoute && (userRole === 'ASSESSOR' || userRole === 'VALIDATOR')) {
+        console.log(`Middleware: Redirecting ${userRole} user from BLGU route ${pathname} to their dashboard`);
+        const dashboardUrl = userRole === 'ASSESSOR'
+          ? new URL('/assessor/submissions', request.url)
+          : new URL('/validator/submissions', request.url);
         return NextResponse.redirect(dashboardUrl);
       }
       
