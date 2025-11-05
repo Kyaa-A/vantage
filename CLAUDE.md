@@ -276,9 +276,9 @@ vantage/
 
 1. **Models** (`app/db/models/`): SQLAlchemy ORM models define database schema
    - `assessment.py`: Assessment submissions and data
-   - `user.py`: User accounts (Admin, BLGU, Assessor roles)
+   - `user.py`: User accounts with role-based access control
    - `barangay.py`: Barangay/LGU information
-   - `governance_area.py`: Assessment area definitions
+   - `governance_area.py`: Assessment area definitions (used for Validator assignments)
 
 2. **Schemas** (`app/schemas/`): Pydantic models for validation and serialization
    - Define request/response shapes
@@ -518,6 +518,77 @@ This application implements a structured workflow:
 4. **Classification**: Automated "3+1" SGLGB scoring logic
 5. **Intelligence**: Gemini API generates CapDev recommendations
 6. **Gap Analysis**: Compare initial vs. final results for insights
+
+## User Roles and Permissions
+
+The system implements role-based access control (RBAC) with four distinct user roles:
+
+### Role Definitions
+
+1. **MLGOO_DILG** (Admin Role)
+   - System administrators with full access to all features
+   - Can manage users, view all submissions, access analytics
+   - No barangay or governance area assignments (system-wide access)
+   - Replaces the legacy SUPERADMIN role
+
+2. **VALIDATOR**
+   - DILG validators assigned to specific governance areas
+   - Validates assessments for barangays within their assigned governance area
+   - **Required field**: `validator_area_id` (governance area assignment)
+   - Introduced in November 2025 following DILG consultation
+
+3. **ASSESSOR**
+   - DILG assessors who can work with any barangay
+   - No pre-assigned governance areas (flexible assignment)
+   - Can select barangays arbitrarily during the assessment workflow
+   - Replaces the legacy AREA_ASSESSOR role
+
+4. **BLGU_USER**
+   - Barangay-level users who submit assessments
+   - **Required field**: `barangay_id` (barangay assignment)
+   - Limited to their assigned barangay's data
+
+### Role-Based Field Requirements
+
+The system enforces strict role-based field validation:
+
+```python
+# User creation/update rules enforced by user_service.py
+VALIDATOR role → Requires validator_area_id (governance area)
+                 Clears barangay_id automatically
+
+BLGU_USER role → Requires barangay_id (barangay assignment)
+                 Clears validator_area_id automatically
+
+ASSESSOR role  → No assignments required
+                 Clears both validator_area_id and barangay_id
+
+MLGOO_DILG role → No assignments required
+                  Clears both validator_area_id and barangay_id
+```
+
+### Database Schema
+
+The User model includes these role-related fields:
+
+- `role`: String enum (MLGOO_DILG, VALIDATOR, ASSESSOR, BLGU_USER)
+- `validator_area_id`: Integer (nullable) - FK to governance_areas table
+- `barangay_id`: Integer (nullable) - FK to barangays table
+
+**Important**: The field `governance_area_id` was renamed to `validator_area_id` in November 2025 to better reflect its purpose.
+
+### API Endpoints
+
+All admin endpoints require `MLGOO_DILG` role:
+
+- `POST /api/v1/users/` - Create new user
+- `GET /api/v1/users/` - List all users
+- `PUT /api/v1/users/{user_id}` - Update user
+- `DELETE /api/v1/users/{user_id}` - Deactivate user
+- `POST /api/v1/users/{user_id}/activate` - Activate user
+- `POST /api/v1/users/{user_id}/reset-password` - Reset password
+
+See `apps/api/app/api/v1/users.py` for complete documentation.
 
 ## Documentation
 
