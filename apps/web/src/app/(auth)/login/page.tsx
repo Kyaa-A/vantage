@@ -101,14 +101,17 @@ export default function LoginPage() {
   // Redirect authenticated users to appropriate dashboard
   useEffect(() => {
     if (isAuthenticated && user) {
-      const isAdmin = user.role === "SUPERADMIN" || user.role === "MLGOO_DILG";
-      const isAssessor = user.role === "AREA_ASSESSOR";
+      const isAdmin = user.role === "MLGOO_DILG";
+      const isAssessor = user.role === "ASSESSOR";
+      const isValidator = user.role === "VALIDATOR";
 
       let dashboardPath;
       if (isAdmin) {
         dashboardPath = "/mlgoo/dashboard";
       } else if (isAssessor) {
         dashboardPath = "/assessor/submissions";
+      } else if (isValidator) {
+        dashboardPath = "/validator/submissions";
       } else {
         dashboardPath = "/blgu/dashboard";
       }

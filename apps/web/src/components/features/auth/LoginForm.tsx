@@ -176,9 +176,15 @@ export default function LoginForm({ isDarkMode = false }: LoginFormProps) {
             }
           } else {
             // No redirect parameter, go to appropriate dashboard
+            console.log("LoginForm: No redirect parameter, determining dashboard based on role");
+            console.log("LoginForm: User data:", result.data);
+            console.log("LoginForm: User role:", result.data.role);
+
             const isAdmin = result.data.role === "MLGOO_DILG";
             const isAssessor = result.data.role === "ASSESSOR";
             const isValidator = result.data.role === "VALIDATOR";
+
+            console.log("LoginForm: Role checks:", { isAdmin, isAssessor, isValidator });
 
             if (isAdmin) {
               targetPath = "/mlgoo/dashboard";
@@ -189,8 +195,11 @@ export default function LoginForm({ isDarkMode = false }: LoginFormProps) {
             } else {
               targetPath = "/blgu/dashboard";
             }
+
+            console.log("LoginForm: Determined target path:", targetPath);
           }
 
+          console.log("LoginForm: Navigating to:", targetPath);
           router.replace(targetPath);
         } else if (result.error) {
           console.error("Failed to fetch user data:", result.error);

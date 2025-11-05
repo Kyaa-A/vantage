@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 /**
  * Next.js middleware for route protection
@@ -50,26 +50,48 @@ export function middleware(request: NextRequest) {
     // Try to get user role from the token
     try {
       const token = authToken;
+      console.log(`Middleware: Token present, attempting to decode...`);
+
       // Decode the JWT token to get user role
       const payload = JSON.parse(atob(token.split('.')[1]));
+      console.log(`Middleware: Token decoded successfully. Payload:`, JSON.stringify(payload, null, 2));
+
       const userRole = payload.role;
+      console.log(`Middleware: Extracted user role: ${userRole}`);
 
       // Redirect based on user role
       let dashboardUrl;
       if (userRole === 'MLGOO_DILG') {
         dashboardUrl = new URL('/mlgoo/dashboard', request.url);
+        console.log(`Middleware: Redirecting MLGOO_DILG to ${dashboardUrl.pathname}`);
       } else if (userRole === 'ASSESSOR') {
         dashboardUrl = new URL('/assessor/submissions', request.url);
+        console.log(`Middleware: Redirecting ASSESSOR to ${dashboardUrl.pathname}`);
       } else if (userRole === 'VALIDATOR') {
         dashboardUrl = new URL('/validator/submissions', request.url);
-      } else {
+        console.log(`Middleware: Redirecting VALIDATOR to ${dashboardUrl.pathname}`);
+      } else if (userRole === 'BLGU_USER') {
         dashboardUrl = new URL('/blgu/dashboard', request.url);
+        console.log(`Middleware: Redirecting BLGU_USER to ${dashboardUrl.pathname}`);
+      } else {
+        // If role is unrecognized, allow the request to proceed without redirect
+        console.log(`Middleware: Unrecognized role ${userRole}, allowing to proceed`);
+        return NextResponse.next();
       }
       return NextResponse.redirect(dashboardUrl);
     } catch (error) {
-      // If token decoding fails, redirect to BLGU dashboard as default
-      const dashboardUrl = new URL('/blgu/dashboard', request.url);
-      return NextResponse.redirect(dashboardUrl);
+      // If token decoding fails, log detailed error and allow access
+      console.error('Middleware: ❌ ERROR decoding token in auth route check:', error);
+      console.error('Middleware: Error details:', {
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorStack: error instanceof Error ? error.stack : undefined,
+        tokenLength: authToken?.length,
+        tokenFirstChars: authToken?.substring(0, 20),
+        tokenParts: authToken?.split('.').length,
+      });
+      // Allow the request to proceed - let the app handle invalid tokens
+      console.log('Middleware: Allowing request to proceed despite token decode error');
+      return NextResponse.next();
     }
   }
   
@@ -85,9 +107,11 @@ export function middleware(request: NextRequest) {
   if (isAuthenticated && isProtectedRoute) {
     try {
       const token = authToken;
+      console.log(`Middleware: [Protected Route Check] Decoding token for role-based access...`);
+
       const payload = JSON.parse(atob(token.split('.')[1]));
       const userRole = payload.role;
-      
+
       // Check if user is trying to access admin routes
       const isAdminRoute = pathname.startsWith('/mlgoo');
       const isUserManagementRoute = pathname.startsWith('/user-management');
@@ -95,7 +119,18 @@ export function middleware(request: NextRequest) {
       const isValidatorRoute = pathname.startsWith('/validator');
       const isBLGURoute = pathname.startsWith('/blgu');
 
-      console.log(`Middleware: User role: ${userRole}, Path: ${pathname}, isAdminRoute: ${isAdminRoute}, isAssessorRoute: ${isAssessorRoute}, isValidatorRoute: ${isValidatorRoute}, isBLGURoute: ${isBLGURoute}`);
+      console.log(`Middleware: [Protected Route Check] User role: ${userRole}, Path: ${pathname}`);
+      console.log(`Middleware: [Route Flags] Admin: ${isAdminRoute}, Assessor: ${isAssessorRoute}, Validator: ${isValidatorRoute}, BLGU: ${isBLGURoute}`);
+
+      // CRITICAL: Immediately redirect ASSESSOR/VALIDATOR away from BLGU routes FIRST
+      // This must be the first check to prevent any flash of BLGU dashboard
+      if (isBLGURoute && (userRole === 'ASSESSOR' || userRole === 'VALIDATOR')) {
+        console.log(`Middleware: IMMEDIATE redirect - ${userRole} user trying to access BLGU route ${pathname}`);
+        const dashboardUrl = userRole === 'ASSESSOR'
+          ? new URL('/assessor/submissions', request.url)
+          : new URL('/validator/submissions', request.url);
+        return NextResponse.redirect(dashboardUrl);
+      }
 
       // Only allow admin users to access admin routes and user management
       if ((isAdminRoute || isUserManagementRoute) && userRole !== 'MLGOO_DILG') {
@@ -136,23 +171,16 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(dashboardUrl);
       }
 
-      // Redirect ASSESSOR/VALIDATOR users trying to access BLGU routes
-      if (isBLGURoute && (userRole === 'ASSESSOR' || userRole === 'VALIDATOR')) {
-        console.log(`Middleware: Redirecting ${userRole} user from BLGU route ${pathname} to their dashboard`);
-        const dashboardUrl = userRole === 'ASSESSOR'
-          ? new URL('/assessor/submissions', request.url)
-          : new URL('/validator/submissions', request.url);
-        return NextResponse.redirect(dashboardUrl);
-      }
-      
       // For all other protected routes (including BLGU routes), allow access
       // BLGU users can access BLGU routes
       // Admin users can access both admin and BLGU routes
-      console.log(`Middleware: Allowing user (${userRole}) to access route: ${pathname}`);
-      
+      console.log(`Middleware: ✅ Allowing user (${userRole}) to access route: ${pathname}`);
+
     } catch (error) {
       // If token decoding fails, allow access (fallback)
-      console.error('Error decoding token in middleware:', error);
+      console.error('Middleware: ❌ ERROR in protected route check - Token decode failed:', error);
+      console.error('Middleware: Token value (first 20 chars):', authToken?.substring(0, 20));
+      console.error('Middleware: Allowing request to proceed despite error (fallback behavior)');
     }
   }
   

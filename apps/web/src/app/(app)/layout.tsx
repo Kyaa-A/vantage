@@ -35,6 +35,15 @@ const assessorNavigation = [
   { name: "Profile", href: "/assessor/profile", icon: "user" },
 ];
 
+const validatorNavigation = [
+  {
+    name: "Submissions Queue",
+    href: "/validator/submissions",
+    icon: "clipboard",
+  },
+  { name: "Profile", href: "/validator/profile", icon: "user" },
+];
+
 const getIcon = (name: string) => {
   switch (name) {
     case "home":
@@ -156,13 +165,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { governanceAreaName } = useAssessorGovernanceArea();
 
   // Determine navigation based on user role - only when user data is loaded
-  const isAdmin = user?.role === "SUPERADMIN" || user?.role === "MLGOO_DILG";
-  const isAssessor = user?.role === "AREA_ASSESSOR";
+  const isAdmin = user?.role === "MLGOO_DILG";
+  const isAssessor = user?.role === "ASSESSOR";
+  const isValidator = user?.role === "VALIDATOR";
   const navigation = user
     ? isAdmin
       ? mlgooNavigation
       : isAssessor
       ? assessorNavigation
+      : isValidator
+      ? validatorNavigation
       : blguNavigation
     : blguNavigation;
 
@@ -226,20 +238,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }, [isAuthenticated, user, mustChangePassword, pathname, router]);
 
-  // Redirect users to appropriate dashboard based on role
+  // NOTE: Role-based redirect logic has been moved to middleware.ts
+  // The middleware handles all route protection and redirects BEFORE the page renders,
+  // which prevents the "flash" issue where users briefly see the wrong dashboard.
+  // This layout component now only handles root path redirects.
   useEffect(() => {
-    // Only proceed if user data is fully loaded and we're authenticated
-    if (isAuthenticated && user && !mustChangePassword) {
-      const isAdmin = user.role === "SUPERADMIN" || user.role === "MLGOO_DILG";
+    // Only redirect from root path if user data is fully loaded
+    if (isAuthenticated && user && !mustChangePassword && isUserDataLoaded) {
       const currentPath = pathname;
-
-      console.log("Routing Debug:", {
-        currentPath,
-        userRole: user.role,
-        isAdmin,
-        isAssessor,
-        willRedirect: currentPath === "/",
-      });
 
       // If user is on root path, redirect to appropriate dashboard
       if (currentPath === "/") {
@@ -247,52 +253,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           ? "/mlgoo/dashboard"
           : isAssessor
           ? "/assessor/submissions"
+          : isValidator
+          ? "/validator/submissions"
           : "/blgu/dashboard";
         console.log("Redirecting from root to:", dashboardPath);
         router.replace(dashboardPath);
-        return;
-      }
-
-      // Check if user is accessing wrong role routes
-      const isAdminRoute = currentPath.startsWith("/mlgoo");
-      const isBLGURoute = currentPath.startsWith("/blgu");
-      const isAssessorRoute = currentPath.startsWith("/assessor");
-      const isUserManagementRoute = currentPath.startsWith("/user-management");
-
-      console.log("Route Check:", {
-        isAdminRoute,
-        isBLGURoute,
-        isAssessorRoute,
-        isUserManagementRoute,
-      });
-
-      if (isAdmin) {
-        // Admin users should not access BLGU or assessor routes
-        if (isBLGURoute || isAssessorRoute) {
-          console.log(
-            "Admin accessing wrong route, redirecting to /mlgoo/dashboard"
-          );
-          router.replace("/mlgoo/dashboard");
-        }
-      } else if (isAssessor) {
-        // Assessor users should not access admin, BLGU routes or user management
-        if (isAdminRoute || isBLGURoute || isUserManagementRoute) {
-          console.log(
-            "Assessor accessing wrong route, redirecting to /assessor/submissions"
-          );
-          router.replace("/assessor/submissions");
-        }
-      } else {
-        // BLGU users should not access admin, assessor routes or user management
-        if (isAdminRoute || isAssessorRoute || isUserManagementRoute) {
-          console.log(
-            "BLGU accessing wrong route, redirecting to /blgu/dashboard"
-          );
-          router.replace("/blgu/dashboard");
-        }
       }
     }
-  }, [isAuthenticated, user, mustChangePassword, pathname, router, isAssessor]);
+  }, [isAuthenticated, user, mustChangePassword, pathname, router, isAdmin, isAssessor, isValidator, isUserDataLoaded]);
 
   // Show loading if not authenticated
   if (!isAuthenticated) {
@@ -301,6 +269,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Redirecting to login...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading if user data is not yet loaded
+  // Note: We removed the hasInitialRouteSet check because middleware now handles all route protection
+  if (isAuthenticated && !isUserDataLoaded) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your dashboard...</p>
         </div>
       </div>
     );
@@ -376,7 +357,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     {isAdmin
                       ? "Admin Portal"
                       : isAssessor
-                      ? "Area Assessor Portal"
+                      ? "Assessor Portal"
+                      : isValidator
+                      ? "Validator Portal"
                       : "Barangay Portal"}
                   </p>
                 </div>
@@ -424,7 +407,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     {isAdmin
                       ? "Admin Portal"
                       : isAssessor
-                      ? "Area Assessor Portal"
+                      ? "Assessor Portal"
+                      : isValidator
+                      ? "Validator Portal"
                       : "Barangay Portal"}
                   </p>
                 </div>
