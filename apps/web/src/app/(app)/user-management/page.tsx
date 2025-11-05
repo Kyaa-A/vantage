@@ -19,10 +19,10 @@ export default function UserManagementPage() {
   // Redirect non-admin users to their appropriate dashboard
   useEffect(() => {
     if (isAuthenticated && user) {
-      const isAdmin = user.role === 'SUPERADMIN' || user.role === 'MLGOO_DILG';
+      const isAdmin = user.role === 'MLGOO_DILG';
       if (!isAdmin) {
         // Redirect to appropriate dashboard based on role
-        if (user.role === 'AREA_ASSESSOR') {
+        if (user.role === 'ASSESSOR' || user.role === 'VALIDATOR') {
           router.replace('/assessor/submissions');
         } else {
           router.replace('/blgu/dashboard');
@@ -44,7 +44,7 @@ export default function UserManagementPage() {
   }
 
   // Show loading if user is not admin
-  if (user && user.role !== 'SUPERADMIN' && user.role !== 'MLGOO_DILG') {
+  if (user && user.role !== 'MLGOO_DILG') {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[var(--background)]">
         <div className="text-center">

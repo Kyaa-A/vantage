@@ -381,7 +381,7 @@ export default function UserListSection() {
                 email: editingUser.email,
                 role: editingUser.role,
                 phone_number: editingUser.phone_number || undefined,
-                governance_area_id: editingUser.governance_area_id || undefined,
+                validator_area_id: editingUser.validator_area_id || undefined,
                 barangay_id: editingUser.barangay_id || undefined,
                 is_active: editingUser.is_active,
                 is_superuser: editingUser.is_superuser,
