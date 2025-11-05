@@ -148,35 +148,35 @@ class StartupService:
             db.close()
 
     def _create_first_superuser(self) -> None:
-        """Create the first superuser if it doesn't exist."""
-        logger.info("👤 Checking for first superuser...")
+        """Create the first admin user (MLGOO_DILG) if it doesn't exist."""
+        logger.info("👤 Checking for first admin user...")
         db: Session = SessionLocal()
         try:
-            # Check if any superuser exists
+            # Check if any MLGOO_DILG user exists
             existing_user = (
-                db.query(User).filter(User.role == UserRole.SUPERADMIN).first()
+                db.query(User).filter(User.role == UserRole.MLGOO_DILG).first()
             )
             if existing_user:
-                logger.info("  - Superuser already exists. Skipping.")
+                logger.info("  - Admin user already exists. Skipping.")
                 return
 
-            # Create first superuser
-            logger.info(f"  - Creating first superuser: {settings.FIRST_SUPERUSER}")
+            # Create first admin user with MLGOO_DILG role
+            logger.info(f"  - Creating first admin user: {settings.FIRST_SUPERUSER}")
             user = User(
                 email=settings.FIRST_SUPERUSER,
-                name="System Administrator",
+                name="MLGOO-DILG Administrator",
                 hashed_password=get_password_hash(settings.FIRST_SUPERUSER_PASSWORD),
-                role=UserRole.SUPERADMIN,
+                role=UserRole.MLGOO_DILG,
                 is_active=True,
                 is_superuser=True,
                 must_change_password=False,
             )
             db.add(user)
             db.commit()
-            logger.info("  - Superuser created successfully.")
+            logger.info("  - Admin user created successfully.")
 
         except Exception as e:
-            logger.warning(f"⚠️  Could not create first superuser: {str(e)}")
+            logger.warning(f"⚠️  Could not create first admin user: {str(e)}")
             db.rollback()
         finally:
             db.close()

@@ -9,11 +9,17 @@ class UserRole(str, enum.Enum):
     Enum for user roles.
 
     Using a string-based enum improves readability and maintainability.
+
+    Roles:
+    - MLGOO_DILG: Admin/Chairman role with system-wide access (enum value 0 in DB)
+    - ASSESSOR: Assessor role with arbitrary barangay selection (enum value 1 in DB)
+    - VALIDATOR: Validator role with governance area specialization (enum value 2 in DB)
+    - BLGU_USER: BLGU user role with specific barangay assignment (enum value 3 in DB)
     """
 
-    SUPERADMIN = "SUPERADMIN"
     MLGOO_DILG = "MLGOO_DILG"
-    AREA_ASSESSOR = "AREA_ASSESSOR"
+    ASSESSOR = "ASSESSOR"
+    VALIDATOR = "VALIDATOR"
     BLGU_USER = "BLGU_USER"
 
 

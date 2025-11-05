@@ -12,7 +12,7 @@ class GovernanceArea(Base):
     """
     Governance Area table model for database storage.
 
-    Represents the SGLGB governance areas that Area Assessors can be assigned to.
+    Represents the SGLGB governance areas that Validators can be assigned to.
     Each area has a type: Core or Essential
     """
 
@@ -28,7 +28,7 @@ class GovernanceArea(Base):
     )
 
     # Relationships
-    assessors = relationship("User", back_populates="governance_area")
+    validators = relationship("User", back_populates="validator_area")
     indicators = relationship("Indicator", back_populates="governance_area")
 
 

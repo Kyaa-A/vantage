@@ -86,17 +86,28 @@ class UserService:
             )
 
         # Business logic for role-specific fields
-        if user_create.role == UserRole.AREA_ASSESSOR:
-            if not user_create.governance_area_id:
+        if user_create.role == UserRole.VALIDATOR:
+            # VALIDATOR role requires validator_area_id
+            if not user_create.validator_area_id:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Governance area is required for Area Assessor role.",
+                    detail="Governance area is required for Validator role.",
                 )
-            # Ensure barangay_id is null for assessors
+            # Ensure barangay_id is null for validators
             user_create.barangay_id = None
-        else:
-            # Ensure governance_area_id is null for non-assessor roles
-            user_create.governance_area_id = None
+        elif user_create.role == UserRole.BLGU_USER:
+            # BLGU_USER role requires barangay_id
+            if not user_create.barangay_id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Barangay is required for BLGU User role.",
+                )
+            # Ensure validator_area_id is null for BLGU users
+            user_create.validator_area_id = None
+        elif user_create.role in (UserRole.ASSESSOR, UserRole.MLGOO_DILG):
+            # ASSESSOR and MLGOO_DILG roles should not have any assignments
+            user_create.validator_area_id = None
+            user_create.barangay_id = None
 
         db_user = User(
             **user_create.model_dump(exclude={"password"}),
@@ -145,20 +156,32 @@ class UserService:
 
         # Business logic for role-specific fields
         role = update_data.get("role", db_user.role)
-        if role == UserRole.AREA_ASSESSOR:
+
+        if role == UserRole.VALIDATOR:
+            # VALIDATOR role requires validator_area_id
             if (
-                "governance_area_id" not in update_data
-                and db_user.governance_area_id is None
+                "validator_area_id" not in update_data
+                and db_user.validator_area_id is None
             ):
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Governance area is required for Area Assessor role.",
+                    detail="Governance area is required for Validator role.",
                 )
-            # Ensure barangay_id is set to null if role is changed to Assessor
+            # Ensure barangay_id is set to null if role is changed to Validator
             update_data["barangay_id"] = None
-        else:
-            # Ensure governance_area_id is set to null for non-assessor roles
-            update_data["governance_area_id"] = None
+        elif role == UserRole.BLGU_USER:
+            # BLGU_USER role requires barangay_id
+            if "barangay_id" not in update_data and db_user.barangay_id is None:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Barangay is required for BLGU User role.",
+                )
+            # Ensure validator_area_id is set to null for BLGU users
+            update_data["validator_area_id"] = None
+        elif role in (UserRole.ASSESSOR, UserRole.MLGOO_DILG):
+            # ASSESSOR and MLGOO_DILG roles should not have any assignments
+            update_data["validator_area_id"] = None
+            update_data["barangay_id"] = None
 
         # Check email uniqueness if email is being updated
         if "email" in update_data and update_data["email"] != db_user.email:

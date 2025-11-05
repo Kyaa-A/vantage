@@ -93,7 +93,7 @@ async def get_current_admin_user(
     """
     Get the current authenticated admin user.
 
-    Restricts access to users with SUPERADMIN or MLGOO_DILG role.
+    Restricts access to users with MLGOO_DILG role.
 
     Args:
         current_user: Current active user from get_current_active_user dependency
@@ -104,7 +104,7 @@ async def get_current_admin_user(
     Raises:
         HTTPException: If user doesn't have admin privileges
     """
-    if current_user.role not in [UserRole.SUPERADMIN, UserRole.MLGOO_DILG]:
+    if current_user.role != UserRole.MLGOO_DILG:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions. Admin access required.",
@@ -132,23 +132,23 @@ def get_supabase_admin_client() -> Client:
     return get_supabase_admin()
 
 
-async def get_current_area_assessor_user(
+async def get_current_validator_user(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ) -> User:
     """
-    Get the current authenticated Area Assessor user with governance area loaded.
+    Get the current authenticated Validator user with governance area loaded.
 
-    - Requires role to be AREA_ASSESSOR
-    - Ensures an assigned governance_area exists
-    - Returns the user with governance_area eagerly loaded
+    - Requires role to be VALIDATOR
+    - Ensures an assigned validator_area exists
+    - Returns the user with validator_area eagerly loaded
 
     Raises:
-        HTTPException: 403 if role is not AREA_ASSESSOR or governance area missing
+        HTTPException: 403 if role is not VALIDATOR or governance area missing
     """
     user_with_area = (
         db.query(User)
-        .options(joinedload(User.governance_area))
+        .options(joinedload(User.validator_area))
         .filter(User.id == current_user.id)
         .first()
     )
@@ -162,30 +162,30 @@ async def get_current_area_assessor_user(
 
     if (
         getattr(user_with_area, "role", None) is None
-        or user_with_area.role != UserRole.AREA_ASSESSOR
+        or user_with_area.role != UserRole.VALIDATOR
     ):
          raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions. Area Assessor access required.",
+            detail="Not enough permissions. Validator access required.",
         )
 
-    if user_with_area.governance_area is None:
+    if user_with_area.validator_area is None:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Assessor must be assigned to a governance area.",
+            detail="Validator must be assigned to a governance area.",
         )
 
     return user_with_area
 
 
-async def get_current_area_assessor_user_http(
+async def get_current_validator_user_http(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db),
 ) -> User:
     """
-    HTTP-friendly dependency that authenticates and enforces Area Assessor role.
+    HTTP-friendly dependency that authenticates and enforces Validator role.
 
-    Returns 401 for any invalid credentials or missing assessor context to align
+    Returns 401 for any invalid credentials or missing validator context to align
     with tests that expect unauthorized when user context is incomplete.
     """
     # Verify and decode JWT
@@ -214,8 +214,8 @@ async def get_current_area_assessor_user_http(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Enforce assessor role and governance area
-    if getattr(user, "role", None) != UserRole.AREA_ASSESSOR:
+    # Enforce validator role and governance area
+    if getattr(user, "role", None) != UserRole.VALIDATOR:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
@@ -223,9 +223,9 @@ async def get_current_area_assessor_user_http(
         )
 
     user_with_area = (
-        db.query(User).options(joinedload(User.governance_area)).filter(User.id == user.id).first()
+        db.query(User).options(joinedload(User.validator_area)).filter(User.id == user.id).first()
     )
-    if user_with_area is None or user_with_area.governance_area is None:
+    if user_with_area is None or user_with_area.validator_area is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
@@ -234,4 +234,8 @@ async def get_current_area_assessor_user_http(
 
     return user_with_area
 
-    return user_with_area
+
+# Temporary backwards compatibility aliases for assessor endpoints
+# TODO: Update assessor.py endpoints to use appropriate role checks (task 8.3.2)
+get_current_area_assessor_user = get_current_validator_user
+get_current_area_assessor_user_http = get_current_validator_user_http
