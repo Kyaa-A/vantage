@@ -36,7 +36,7 @@ def admin_user(db_session: Session):
         email=unique_email,
         name="Admin User",
         hashed_password=pwd_context.hash("adminpass123"),
-        role=UserRole.SUPERADMIN,
+        role=UserRole.MLGOO_DILG,
         is_active=True,
     )
     db_session.add(user)
@@ -55,6 +55,7 @@ def blgu_user(db_session: Session):
         name="BLGU User",
         hashed_password=pwd_context.hash("blgupass123"),
         role=UserRole.BLGU_USER,
+        barangay_id=1,  # Required for BLGU_USER role
         is_active=True,
     )
     db_session.add(user)
@@ -72,7 +73,7 @@ def assessor_user(db_session: Session):
         email=unique_email,
         name="Assessor User",
         hashed_password=pwd_context.hash("assessorpass123"),
-        role=UserRole.AREA_ASSESSOR,
+        role=UserRole.ASSESSOR,
         is_active=True,
     )
     db_session.add(user)
@@ -94,7 +95,7 @@ def _override_user_and_db(client, user: User, db_session: Session):
 
     client.app.dependency_overrides[deps.get_current_active_user] = _override_current_active_user
     # Only override admin dependency if user is actually an admin
-    if user.role == UserRole.SUPERADMIN:
+    if user.role == UserRole.MLGOO_DILG:
         client.app.dependency_overrides[deps.get_current_admin_user] = _override_current_active_user
     client.app.dependency_overrides[deps.get_db] = _override_get_db
 
@@ -262,6 +263,7 @@ def test_create_user_as_admin(
         "name": "New User",
         "password": "newpassword123",
         "role": UserRole.BLGU_USER.value,
+        "barangay_id": 1,  # Required for BLGU_USER role
     }
 
     response = client.post("/api/v1/users/", json=user_data)
@@ -289,6 +291,7 @@ def test_create_user_forbidden_for_non_admin(
         "name": "New User",
         "password": "newpassword123",
         "role": UserRole.BLGU_USER.value,
+        "barangay_id": 1,  # Required for BLGU_USER role
     }
 
     response = client.post("/api/v1/users/", json=user_data)
@@ -303,6 +306,7 @@ def test_create_user_unauthorized(client: TestClient):
         "name": "New User",
         "password": "newpassword123",
         "role": UserRole.BLGU_USER.value,
+        "barangay_id": 1,  # Required for BLGU_USER role
     }
 
     response = client.post("/api/v1/users/", json=user_data)
@@ -475,6 +479,7 @@ def test_activate_user_as_admin(
         name="Inactive User",
         hashed_password=pwd_context.hash("password123"),
         role=UserRole.BLGU_USER,
+        barangay_id=1,  # Required for BLGU_USER role
         is_active=False,
     )
     db_session.add(inactive_user)
