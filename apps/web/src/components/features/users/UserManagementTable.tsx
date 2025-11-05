@@ -13,14 +13,14 @@ interface UserManagementTableProps {
 
 function humanizeRole(role: string) {
   switch (role) {
-    case 'SUPERADMIN':
-      return 'Superadmin';
     case 'MLGOO_DILG':
-      return 'MLGOO DILG';
-    case 'AREA_ASSESSOR':
-      return 'Area Assessor';
+      return 'MLGOO DILG (Admin)';
+    case 'ASSESSOR':
+      return 'Assessor';
+    case 'VALIDATOR':
+      return 'Validator';
     case 'BLGU_USER':
-      return 'BLGU USER';
+      return 'BLGU User';
     default:
       // Capitalize and replace underscores with spaces for any other roles
       return role.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
@@ -70,21 +70,21 @@ export default function UserManagementTable({ users, onEditUser }: UserManagemen
               </div>
               
               <div className="flex items-center gap-4 flex-wrap">
-                <Badge 
+                <Badge
                   variant="outline"
                   className="px-3 py-1 rounded-sm font-medium"
                   style={{
-                    backgroundColor: user.role === 'SUPERADMIN' ? 'var(--analytics-danger-bg)' :
-                                   user.role === 'MLGOO_DILG' ? 'var(--kpi-purple-from)' :
-                                   user.role === 'AREA_ASSESSOR' ? 'var(--analytics-warning-bg)' :
+                    backgroundColor: user.role === 'MLGOO_DILG' ? 'var(--kpi-purple-from)' :
+                                   user.role === 'VALIDATOR' ? 'var(--analytics-warning-bg)' :
+                                   user.role === 'ASSESSOR' ? 'var(--analytics-info-bg)' :
                                    'var(--kpi-blue-from)',
-                    color: user.role === 'SUPERADMIN' ? 'var(--analytics-danger-text)' :
-                          user.role === 'MLGOO_DILG' ? 'var(--kpi-purple-text)' :
-                          user.role === 'AREA_ASSESSOR' ? 'var(--analytics-warning-text)' :
+                    color: user.role === 'MLGOO_DILG' ? 'var(--kpi-purple-text)' :
+                          user.role === 'VALIDATOR' ? 'var(--analytics-warning-text)' :
+                          user.role === 'ASSESSOR' ? 'var(--analytics-info-text)' :
                           'var(--kpi-blue-text)',
-                    borderColor: user.role === 'SUPERADMIN' ? 'var(--analytics-danger-border)' :
-                               user.role === 'MLGOO_DILG' ? 'var(--kpi-purple-border, var(--border))' :
-                               user.role === 'AREA_ASSESSOR' ? 'var(--analytics-warning-border)' :
+                    borderColor: user.role === 'MLGOO_DILG' ? 'var(--kpi-purple-border, var(--border))' :
+                               user.role === 'VALIDATOR' ? 'var(--analytics-warning-border)' :
+                               user.role === 'ASSESSOR' ? 'var(--analytics-info-border)' :
                                'var(--kpi-blue-border, var(--border))'
                   }}
                 >
@@ -118,16 +118,17 @@ export default function UserManagementTable({ users, onEditUser }: UserManagemen
                   </div>
                 )}
                 
-                {user.role === 'AREA_ASSESSOR' && user.governance_area_id && (
-                  <div 
+                {user.role === 'VALIDATOR' && user.validator_area_id && (
+                  <div
                     className="flex items-center gap-2 px-3 py-1 rounded-sm"
-                    style={{ backgroundColor: 'var(--kpi-purple-from)' }}
+                    style={{ backgroundColor: 'var(--analytics-warning-bg)' }}
                   >
-                    <span 
+                    <Users className="h-3 w-3" style={{ color: 'var(--analytics-warning-text)' }} />
+                    <span
                       className="text-xs font-medium"
-                      style={{ color: 'var(--kpi-purple-text)' }}
+                      style={{ color: 'var(--analytics-warning-text)' }}
                     >
-                      {governanceAreaMap.get(user.governance_area_id) || `Area #${user.governance_area_id}`}
+                      {governanceAreaMap.get(user.validator_area_id) || `Area #${user.validator_area_id}`}
                     </span>
                   </div>
                 )}

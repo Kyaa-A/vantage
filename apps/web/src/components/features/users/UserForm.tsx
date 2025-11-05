@@ -32,7 +32,7 @@ interface UserFormProps {
     password?: string;
     role?: UserRole;
     phone_number?: string;
-    governance_area_id?: number;
+    validator_area_id?: number;
     barangay_id?: number;
     is_active?: boolean;
     is_superuser?: boolean;
@@ -48,7 +48,7 @@ export function UserForm({ open, onOpenChange, initialValues, isEditing = false 
     password: '',
     role: UserRole.BLGU_USER as UserRole,
     phone_number: '',
-    governance_area_id: null as number | null,
+    validator_area_id: null as number | null,
     barangay_id: null as number | null,
     is_active: true,
     is_superuser: false,
@@ -79,7 +79,7 @@ export function UserForm({ open, onOpenChange, initialValues, isEditing = false 
         password: initialValues.password || '',
         role: initialValues.role || UserRole.BLGU_USER,
         phone_number: initialValues.phone_number || '',
-        governance_area_id: initialValues.governance_area_id || null,
+        validator_area_id: initialValues.validator_area_id || null,
         barangay_id: initialValues.barangay_id || null,
         is_active: initialValues.is_active ?? true,
         is_superuser: initialValues.is_superuser ?? false,
@@ -93,7 +93,7 @@ export function UserForm({ open, onOpenChange, initialValues, isEditing = false 
         password: '',
         role: UserRole.BLGU_USER,
         phone_number: '',
-        governance_area_id: null,
+        validator_area_id: null,
         barangay_id: null,
         is_active: true,
         is_superuser: false,
@@ -113,7 +113,7 @@ export function UserForm({ open, onOpenChange, initialValues, isEditing = false 
         password: '',
         role: UserRole.BLGU_USER,
         phone_number: '',
-        governance_area_id: null,
+        validator_area_id: null,
         barangay_id: null,
         is_active: true,
         is_superuser: false,
@@ -139,11 +139,14 @@ export function UserForm({ open, onOpenChange, initialValues, isEditing = false 
   };
 
   const handleRoleChange = (role: string) => {
-    setForm((prev) => ({ 
-      ...prev, 
+    setForm((prev) => ({
+      ...prev,
       role: role as UserRole,
-      // Clear area assignments when role changes
-      governance_area_id: role === UserRole.AREA_ASSESSOR ? prev.governance_area_id : null,
+      // Clear area assignments when role changes based on new role structure
+      // VALIDATOR: keeps validator_area_id, clears barangay_id
+      // BLGU_USER: keeps barangay_id, clears validator_area_id
+      // ASSESSOR/MLGOO_DILG: clears both
+      validator_area_id: role === UserRole.VALIDATOR ? prev.validator_area_id : null,
       barangay_id: role === UserRole.BLGU_USER ? prev.barangay_id : null,
     }));
   };
@@ -183,7 +186,7 @@ export function UserForm({ open, onOpenChange, initialValues, isEditing = false 
         email: form.email || null,
         role: form.role,
         phone_number: form.phone_number || null,
-        governance_area_id: form.governance_area_id,
+        validator_area_id: form.validator_area_id,
         barangay_id: form.barangay_id,
         is_active: form.is_active,
         is_superuser: form.is_superuser,
@@ -212,7 +215,7 @@ export function UserForm({ open, onOpenChange, initialValues, isEditing = false 
         password: form.password,
         role: form.role,
         phone_number: form.phone_number || null,
-        governance_area_id: form.governance_area_id,
+        validator_area_id: form.validator_area_id,
         barangay_id: form.barangay_id,
         is_active: form.is_active,
         is_superuser: form.is_superuser,
@@ -312,9 +315,9 @@ export function UserForm({ open, onOpenChange, initialValues, isEditing = false 
                 </SelectTrigger>
                 <SelectContent className="bg-[var(--card)] border border-[var(--border)]">
                   <SelectItem value={UserRole.BLGU_USER}>BLGU User</SelectItem>
-                  <SelectItem value={UserRole.AREA_ASSESSOR}>Area Assessor</SelectItem>
-                  <SelectItem value={UserRole.MLGOO_DILG}>MLGOO-DILG</SelectItem>
-                  <SelectItem value={UserRole.SUPERADMIN}>Super Admin</SelectItem>
+                  <SelectItem value={UserRole.ASSESSOR}>Assessor</SelectItem>
+                  <SelectItem value={UserRole.VALIDATOR}>Validator</SelectItem>
+                  <SelectItem value={UserRole.MLGOO_DILG}>MLGOO-DILG (Admin)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -362,13 +365,13 @@ export function UserForm({ open, onOpenChange, initialValues, isEditing = false 
               </div>
             )}
             
-            {/* Conditional dropdown for Area Assessor role */}
-            {form.role === UserRole.AREA_ASSESSOR && (
+            {/* Conditional dropdown for Validator role */}
+            {form.role === UserRole.VALIDATOR && (
               <div>
-                <Label htmlFor="governance_area_id" className="text-sm font-medium text-[var(--foreground)]">Assigned Governance Area</Label>
-                <Select 
-                  value={form.governance_area_id?.toString() || ''} 
-                  onValueChange={(value) => handleSelectChange('governance_area_id', value)}
+                <Label htmlFor="validator_area_id" className="text-sm font-medium text-[var(--foreground)]">Assigned Governance Area *</Label>
+                <Select
+                  value={form.validator_area_id?.toString() || ''}
+                  onValueChange={(value) => handleSelectChange('validator_area_id', value)}
                   disabled={isLoading}
                 >
                   <SelectTrigger className="mt-1 border-[var(--border)] focus:border-[var(--cityscape-yellow)] focus:ring-[var(--cityscape-yellow)]/20">
