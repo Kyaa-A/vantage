@@ -178,7 +178,7 @@ export const usePutUsersMe = <TError = HTTPValidationError,
     /**
  * Get paginated list of users with optional filtering.
 
-Requires admin privileges (System Admin role).
+Requires admin privileges (MLGOO_DILG role).
  * @summary Get Users
  */
 export const getUsers = (
@@ -245,7 +245,15 @@ export function useGetUsers<TData = Awaited<ReturnType<typeof getUsers>>, TError
 /**
  * Create a new user.
 
-Requires admin privileges (System Admin role).
+Requires admin privileges (MLGOO_DILG role).
+
+Role-based assignment rules:
+- VALIDATOR: Requires validator_area_id (governance area assignment)
+- BLGU_USER: Requires barangay_id (barangay assignment)
+- ASSESSOR: No assignments (arbitrary barangay selection in workflow)
+- MLGOO_DILG: No assignments (system-wide access)
+
+The service layer enforces these rules and returns 400 Bad Request for invalid combinations.
  * @summary Create User
  */
 export const postUsers = (
@@ -312,7 +320,7 @@ export const usePostUsers = <TError = HTTPValidationError,
     /**
  * Get user by ID.
 
-Requires admin privileges (System Admin role).
+Requires admin privileges (MLGOO_DILG role).
  * @summary Get User
  */
 export const getUsers$UserId = (
@@ -378,7 +386,16 @@ export function useGetUsersUserId<TData = Awaited<ReturnType<typeof getUsers$Use
 /**
  * Update user by ID.
 
-Requires admin privileges (System Admin role).
+Requires admin privileges (MLGOO_DILG role).
+
+Role-based assignment rules:
+- VALIDATOR: Requires validator_area_id (governance area assignment)
+- BLGU_USER: Requires barangay_id (barangay assignment)
+- ASSESSOR: No assignments (arbitrary barangay selection in workflow)
+- MLGOO_DILG: No assignments (system-wide access)
+
+When changing a user's role, the service layer automatically clears incompatible assignments.
+Returns 400 Bad Request for invalid role/assignment combinations.
  * @summary Update User
  */
 export const putUsers$UserId = (
@@ -445,7 +462,7 @@ export const usePutUsersUserId = <TError = HTTPValidationError,
     /**
  * Deactivate user by ID (soft delete).
 
-Requires admin privileges (System Admin role).
+Requires admin privileges (MLGOO_DILG role).
  * @summary Deactivate User
  */
 export const deleteUsers$UserId = (
@@ -509,7 +526,7 @@ export const useDeleteUsersUserId = <TError = HTTPValidationError,
     /**
  * Activate user by ID.
 
-Requires admin privileges (System Admin role).
+Requires admin privileges (MLGOO_DILG role).
  * @summary Activate User
  */
 export const postUsers$UserIdActivate = (
@@ -574,7 +591,7 @@ export const usePostUsersUserIdActivate = <TError = HTTPValidationError,
     /**
  * Reset user password.
 
-Requires admin privileges (System Admin role).
+Requires admin privileges (MLGOO_DILG role).
 Sets must_change_password to True.
  * @summary Reset User Password
  */
@@ -642,7 +659,7 @@ export const usePostUsersUserIdResetPassword = <TError = HTTPValidationError,
     /**
  * Get user statistics for admin dashboard.
 
-Requires admin privileges (System Admin role).
+Requires admin privileges (MLGOO_DILG role).
  * @summary Get User Stats
  */
 export const getUsersStatsDashboard = (

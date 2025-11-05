@@ -62,7 +62,7 @@ export interface User {
   name: string;
   role: UserRole;
   phone_number?: UserPhoneNumber;
-  governance_area_id?: UserGovernanceAreaId;
+  validator_area_id?: UserValidatorAreaId;
   barangay_id?: UserBarangayId;
   is_active: boolean;
   is_superuser: boolean;
@@ -81,7 +81,7 @@ export interface UserAdminCreate {
   password: string;
   role?: UserRole;
   phone_number?: UserAdminCreatePhoneNumber;
-  governance_area_id?: UserAdminCreateGovernanceAreaId;
+  validator_area_id?: UserAdminCreateValidatorAreaId;
   barangay_id?: UserAdminCreateBarangayId;
   is_active?: boolean;
   is_superuser?: boolean;
@@ -96,15 +96,15 @@ export type UserAdminCreateBarangayId = number | null;
 
 
 /**
- * UserAdminCreateGovernanceAreaId
- */
-export type UserAdminCreateGovernanceAreaId = number | null;
-
-
-/**
  * UserAdminCreatePhoneNumber
  */
 export type UserAdminCreatePhoneNumber = string | null;
+
+
+/**
+ * UserAdminCreateValidatorAreaId
+ */
+export type UserAdminCreateValidatorAreaId = number | null;
 
 
 /**
@@ -115,7 +115,7 @@ export interface UserAdminUpdate {
   name?: UserAdminUpdateName;
   role?: UserAdminUpdateRole;
   phone_number?: UserAdminUpdatePhoneNumber;
-  governance_area_id?: UserAdminUpdateGovernanceAreaId;
+  validator_area_id?: UserAdminUpdateValidatorAreaId;
   barangay_id?: UserAdminUpdateBarangayId;
   is_active?: UserAdminUpdateIsActive;
   is_superuser?: UserAdminUpdateIsSuperuser;
@@ -133,12 +133,6 @@ export type UserAdminUpdateBarangayId = number | null;
  * UserAdminUpdateEmail
  */
 export type UserAdminUpdateEmail = string | null;
-
-
-/**
- * UserAdminUpdateGovernanceAreaId
- */
-export type UserAdminUpdateGovernanceAreaId = number | null;
 
 
 /**
@@ -178,15 +172,15 @@ export type UserAdminUpdateRole = UserRole | null;
 
 
 /**
- * UserBarangayId
+ * UserAdminUpdateValidatorAreaId
  */
-export type UserBarangayId = number | null;
+export type UserAdminUpdateValidatorAreaId = number | null;
 
 
 /**
- * UserGovernanceAreaId
+ * UserBarangayId
  */
-export type UserGovernanceAreaId = number | null;
+export type UserBarangayId = number | null;
 
 
 /**
@@ -215,9 +209,9 @@ export type UserRole = typeof UserRole[keyof typeof UserRole];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UserRole = {
-  SUPERADMIN: 'SUPERADMIN',
   MLGOO_DILG: 'MLGOO_DILG',
-  AREA_ASSESSOR: 'AREA_ASSESSOR',
+  ASSESSOR: 'ASSESSOR',
+  VALIDATOR: 'VALIDATOR',
   BLGU_USER: 'BLGU_USER',
 } as const;
 
@@ -230,7 +224,7 @@ export interface UserUpdate {
   name?: UserUpdateName;
   role?: UserUpdateRole;
   phone_number?: UserUpdatePhoneNumber;
-  governance_area_id?: UserUpdateGovernanceAreaId;
+  validator_area_id?: UserUpdateValidatorAreaId;
   barangay_id?: UserUpdateBarangayId;
   is_active?: UserUpdateIsActive;
 }
@@ -246,12 +240,6 @@ export type UserUpdateBarangayId = number | null;
  * UserUpdateEmail
  */
 export type UserUpdateEmail = string | null;
-
-
-/**
- * UserUpdateGovernanceAreaId
- */
-export type UserUpdateGovernanceAreaId = number | null;
 
 
 /**
@@ -279,6 +267,18 @@ export type UserUpdateRole = UserRole | null;
 
 
 /**
+ * UserUpdateValidatorAreaId
+ */
+export type UserUpdateValidatorAreaId = number | null;
+
+
+/**
  * UserUpdatedAt
  */
 export type UserUpdatedAt = string | null;
+
+
+/**
+ * UserValidatorAreaId
+ */
+export type UserValidatorAreaId = number | null;

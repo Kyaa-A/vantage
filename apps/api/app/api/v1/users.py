@@ -62,7 +62,7 @@ async def get_users(
     """
     Get paginated list of users with optional filtering.
 
-    Requires admin privileges (System Admin role).
+    Requires admin privileges (MLGOO_DILG role).
     """
     skip = (page - 1) * size
     users, total = user_service.get_users(
@@ -85,7 +85,15 @@ async def create_user(
     """
     Create a new user.
 
-    Requires admin privileges (System Admin role).
+    Requires admin privileges (MLGOO_DILG role).
+
+    Role-based assignment rules:
+    - VALIDATOR: Requires validator_area_id (governance area assignment)
+    - BLGU_USER: Requires barangay_id (barangay assignment)
+    - ASSESSOR: No assignments (arbitrary barangay selection in workflow)
+    - MLGOO_DILG: No assignments (system-wide access)
+
+    The service layer enforces these rules and returns 400 Bad Request for invalid combinations.
     """
     return user_service.create_user_admin(db, user_create)
 
@@ -99,7 +107,7 @@ async def get_user(
     """
     Get user by ID.
 
-    Requires admin privileges (System Admin role).
+    Requires admin privileges (MLGOO_DILG role).
     """
     user = user_service.get_user_by_id(db, user_id)
     if not user:
@@ -119,7 +127,16 @@ async def update_user(
     """
     Update user by ID.
 
-    Requires admin privileges (System Admin role).
+    Requires admin privileges (MLGOO_DILG role).
+
+    Role-based assignment rules:
+    - VALIDATOR: Requires validator_area_id (governance area assignment)
+    - BLGU_USER: Requires barangay_id (barangay assignment)
+    - ASSESSOR: No assignments (arbitrary barangay selection in workflow)
+    - MLGOO_DILG: No assignments (system-wide access)
+
+    When changing a user's role, the service layer automatically clears incompatible assignments.
+    Returns 400 Bad Request for invalid role/assignment combinations.
     """
     updated_user = user_service.update_user_admin(db, user_id, user_update)
     if not updated_user:
@@ -138,7 +155,7 @@ async def deactivate_user(
     """
     Deactivate user by ID (soft delete).
 
-    Requires admin privileges (System Admin role).
+    Requires admin privileges (MLGOO_DILG role).
     """
     if user_id == current_user.id:
         raise HTTPException(
@@ -163,7 +180,7 @@ async def activate_user(
     """
     Activate user by ID.
 
-    Requires admin privileges (System Admin role).
+    Requires admin privileges (MLGOO_DILG role).
     """
     activated_user = user_service.activate_user(db, user_id)
     if not activated_user:
@@ -183,7 +200,7 @@ async def reset_user_password(
     """
     Reset user password.
 
-    Requires admin privileges (System Admin role).
+    Requires admin privileges (MLGOO_DILG role).
     Sets must_change_password to True.
     """
     reset_user = user_service.reset_password(db, user_id, new_password)
@@ -202,6 +219,6 @@ async def get_user_stats(
     """
     Get user statistics for admin dashboard.
 
-    Requires admin privileges (System Admin role).
+    Requires admin privileges (MLGOO_DILG role).
     """
     return user_service.get_user_stats(db)
