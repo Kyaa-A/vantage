@@ -610,3 +610,333 @@ def test_get_user_stats_unauthorized(client: TestClient):
 
     # Expect 401 or 403 depending on setup (matching analytics test pattern)
     assert response.status_code in [401, 403]
+
+
+# ====================================================================
+# Role-Based User Creation Tests (Epic 8.0)
+# ====================================================================
+
+
+def test_create_validator_user_with_area_assignment(
+    client: TestClient, db_session: Session, admin_user: User
+):
+    """Test creating VALIDATOR user with required validator_area_id"""
+    _override_user_and_db(client, admin_user, db_session)
+
+    unique_email = f"validator_{uuid.uuid4().hex[:8]}@example.com"
+    user_data = {
+        "email": unique_email,
+        "name": "Validator User",
+        "password": "validatorpass123",
+        "role": UserRole.VALIDATOR.value,
+        "validator_area_id": 1,  # Required for VALIDATOR role
+    }
+
+    response = client.post("/api/v1/users/", json=user_data)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["email"] == unique_email
+    assert data["role"] == UserRole.VALIDATOR.value
+    assert data["validator_area_id"] == 1
+
+    # Verify in database
+    new_user = db_session.query(User).filter(User.email == unique_email).first()
+    assert new_user is not None
+    assert new_user.validator_area_id == 1
+    assert new_user.barangay_id is None
+
+
+def test_create_validator_user_without_area_fails(
+    client: TestClient, db_session: Session, admin_user: User
+):
+    """Test creating VALIDATOR user without validator_area_id fails validation"""
+    _override_user_and_db(client, admin_user, db_session)
+
+    unique_email = f"validator_{uuid.uuid4().hex[:8]}@example.com"
+    user_data = {
+        "email": unique_email,
+        "name": "Validator User",
+        "password": "validatorpass123",
+        "role": UserRole.VALIDATOR.value,
+        # validator_area_id is missing
+    }
+
+    response = client.post("/api/v1/users/", json=user_data)
+
+    assert response.status_code == 400
+    detail_lower = response.json()["detail"].lower()
+    assert "governance area" in detail_lower and "validator" in detail_lower
+
+
+def test_create_assessor_user_no_assignment_required(
+    client: TestClient, db_session: Session, admin_user: User
+):
+    """Test creating ASSESSOR user requires no barangay or area assignment"""
+    _override_user_and_db(client, admin_user, db_session)
+
+    unique_email = f"assessor_{uuid.uuid4().hex[:8]}@example.com"
+    user_data = {
+        "email": unique_email,
+        "name": "Assessor User",
+        "password": "assessorpass123",
+        "role": UserRole.ASSESSOR.value,
+        # No barangay_id or validator_area_id
+    }
+
+    response = client.post("/api/v1/users/", json=user_data)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["role"] == UserRole.ASSESSOR.value
+    assert data.get("barangay_id") is None
+    assert data.get("validator_area_id") is None
+
+
+def test_create_assessor_with_validator_area_clears_it(
+    client: TestClient, db_session: Session, admin_user: User
+):
+    """Test creating ASSESSOR user with validator_area_id silently clears it"""
+    _override_user_and_db(client, admin_user, db_session)
+
+    unique_email = f"assessor_{uuid.uuid4().hex[:8]}@example.com"
+    user_data = {
+        "email": unique_email,
+        "name": "Assessor User",
+        "password": "assessorpass123",
+        "role": UserRole.ASSESSOR.value,
+        "validator_area_id": 1,  # Should be cleared for ASSESSOR
+    }
+
+    response = client.post("/api/v1/users/", json=user_data)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["role"] == UserRole.ASSESSOR.value
+    assert data.get("validator_area_id") is None  # Should be cleared
+
+    # Verify in database
+    new_user = db_session.query(User).filter(User.email == unique_email).first()
+    assert new_user is not None
+    assert new_user.validator_area_id is None
+
+
+def test_create_mlgoo_dilg_user_no_assignment_required(
+    client: TestClient, db_session: Session, admin_user: User
+):
+    """Test creating MLGOO_DILG user requires no assignments"""
+    _override_user_and_db(client, admin_user, db_session)
+
+    unique_email = f"mlgoo_{uuid.uuid4().hex[:8]}@example.com"
+    user_data = {
+        "email": unique_email,
+        "name": "MLGOO DILG User",
+        "password": "mlgoopass123",
+        "role": UserRole.MLGOO_DILG.value,
+        # No assignments
+    }
+
+    response = client.post("/api/v1/users/", json=user_data)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["role"] == UserRole.MLGOO_DILG.value
+    assert data.get("barangay_id") is None
+    assert data.get("validator_area_id") is None
+
+
+def test_create_blgu_user_requires_barangay(
+    client: TestClient, db_session: Session, admin_user: User
+):
+    """Test creating BLGU_USER requires barangay_id"""
+    _override_user_and_db(client, admin_user, db_session)
+
+    unique_email = f"blgu_{uuid.uuid4().hex[:8]}@example.com"
+    user_data = {
+        "email": unique_email,
+        "name": "BLGU User",
+        "password": "blgupass123",
+        "role": UserRole.BLGU_USER.value,
+        "barangay_id": 1,
+    }
+
+    response = client.post("/api/v1/users/", json=user_data)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["barangay_id"] == 1
+    assert data.get("validator_area_id") is None
+
+
+def test_create_duplicate_email_fails(
+    client: TestClient, db_session: Session, admin_user: User, blgu_user: User
+):
+    """Test creating user with duplicate email fails"""
+    _override_user_and_db(client, admin_user, db_session)
+
+    user_data = {
+        "email": blgu_user.email,  # Duplicate email
+        "name": "Another User",
+        "password": "password123",
+        "role": UserRole.BLGU_USER.value,
+        "barangay_id": 1,
+    }
+
+    response = client.post("/api/v1/users/", json=user_data)
+
+    assert response.status_code == 400
+    assert "email" in response.json()["detail"].lower()
+
+
+# ====================================================================
+# Role Change Tests (Epic 8.0)
+# ====================================================================
+
+
+def test_update_user_role_from_blgu_to_validator(
+    client: TestClient, db_session: Session, admin_user: User, blgu_user: User
+):
+    """Test changing user from BLGU_USER to VALIDATOR clears barangay_id and sets validator_area_id"""
+    _override_user_and_db(client, admin_user, db_session)
+
+    # Verify initial state
+    assert blgu_user.role == UserRole.BLGU_USER
+    assert blgu_user.barangay_id == 1
+
+    response = client.put(
+        f"/api/v1/users/{blgu_user.id}",
+        json={
+            "role": UserRole.VALIDATOR.value,
+            "validator_area_id": 2,
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["role"] == UserRole.VALIDATOR.value
+    assert data["validator_area_id"] == 2
+    assert data.get("barangay_id") is None
+
+    # Verify in database
+    db_session.refresh(blgu_user)
+    assert blgu_user.role == UserRole.VALIDATOR
+    assert blgu_user.validator_area_id == 2
+    assert blgu_user.barangay_id is None
+
+
+def test_update_user_role_from_validator_to_assessor(
+    client: TestClient, db_session: Session, admin_user: User
+):
+    """Test changing user from VALIDATOR to ASSESSOR clears validator_area_id"""
+    _override_user_and_db(client, admin_user, db_session)
+
+    # Create validator user
+    unique_email = f"validator_{uuid.uuid4().hex[:8]}@example.com"
+    validator = User(
+        email=unique_email,
+        name="Validator User",
+        hashed_password=pwd_context.hash("password123"),
+        role=UserRole.VALIDATOR,
+        validator_area_id=1,
+        is_active=True,
+    )
+    db_session.add(validator)
+    db_session.commit()
+    db_session.refresh(validator)
+
+    # Change role to ASSESSOR
+    response = client.put(
+        f"/api/v1/users/{validator.id}",
+        json={
+            "role": UserRole.ASSESSOR.value,
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["role"] == UserRole.ASSESSOR.value
+    assert data.get("validator_area_id") is None
+
+    # Verify in database
+    db_session.refresh(validator)
+    assert validator.role == UserRole.ASSESSOR
+    assert validator.validator_area_id is None
+
+
+def test_update_user_role_from_assessor_to_blgu(
+    client: TestClient, db_session: Session, admin_user: User, assessor_user: User
+):
+    """Test changing user from ASSESSOR to BLGU_USER requires barangay_id"""
+    _override_user_and_db(client, admin_user, db_session)
+
+    response = client.put(
+        f"/api/v1/users/{assessor_user.id}",
+        json={
+            "role": UserRole.BLGU_USER.value,
+            "barangay_id": 1,
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["role"] == UserRole.BLGU_USER.value
+    assert data["barangay_id"] == 1
+
+    # Verify in database
+    db_session.refresh(assessor_user)
+    assert assessor_user.role == UserRole.BLGU_USER
+    assert assessor_user.barangay_id == 1
+
+
+# ====================================================================
+# Access Control Tests (Epic 8.0)
+# ====================================================================
+
+
+def test_only_mlgoo_dilg_can_access_user_management(
+    client: TestClient, db_session: Session, assessor_user: User
+):
+    """Test that only MLGOO_DILG role can access user management endpoints"""
+    _override_user_and_db(client, assessor_user, db_session)
+
+    # Try to access user list
+    response = client.get("/api/v1/users/")
+    assert response.status_code == 403
+
+    # Try to create user
+    response = client.post(
+        "/api/v1/users/",
+        json={
+            "email": "test@example.com",
+            "name": "Test",
+            "password": "pass123",
+            "role": UserRole.BLGU_USER.value,
+            "barangay_id": 1,
+        },
+    )
+    assert response.status_code == 403
+
+
+def test_validator_cannot_access_user_management(
+    client: TestClient, db_session: Session
+):
+    """Test that VALIDATOR role cannot access user management endpoints"""
+    # Create validator user
+    unique_email = f"validator_{uuid.uuid4().hex[:8]}@example.com"
+    validator = User(
+        email=unique_email,
+        name="Validator User",
+        hashed_password=pwd_context.hash("password123"),
+        role=UserRole.VALIDATOR,
+        validator_area_id=1,
+        is_active=True,
+    )
+    db_session.add(validator)
+    db_session.commit()
+    db_session.refresh(validator)
+
+    _override_user_and_db(client, validator, db_session)
+
+    # Try to access user list
+    response = client.get("/api/v1/users/")
+    assert response.status_code == 403

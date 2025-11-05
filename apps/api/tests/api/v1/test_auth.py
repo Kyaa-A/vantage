@@ -36,7 +36,7 @@ def test_user(db_session: Session):
         email=unique_email,
         name="Auth Test User",
         hashed_password=pwd_context.hash("testpassword123"),
-        role=UserRole.SUPERADMIN,
+        role=UserRole.MLGOO_DILG,
         is_active=True,
         must_change_password=False,
     )
@@ -73,7 +73,7 @@ def user_must_change_password(db_session: Session):
         email=unique_email,
         name="Must Change Password User",
         hashed_password=pwd_context.hash("temppassword"),
-        role=UserRole.AREA_ASSESSOR,
+        role=UserRole.ASSESSOR,
         is_active=True,
         must_change_password=True,
     )
@@ -385,3 +385,179 @@ def test_expired_token_rejected(client: TestClient, db_session: Session, test_us
     )
 
     assert response.status_code == 401  # Unauthorized due to expired token
+
+
+# ====================================================================
+# Role-Based Login Tests (Epic 8.0 Acceptance Criteria)
+# ====================================================================
+
+
+@pytest.fixture
+def mlgoo_dilg_user(db_session: Session):
+    """Create a MLGOO_DILG user for role testing"""
+    unique_email = f"mlgoo_{uuid.uuid4().hex[:8]}@example.com"
+
+    user = User(
+        email=unique_email,
+        name="MLGOO DILG User",
+        hashed_password=pwd_context.hash("testpassword123"),
+        role=UserRole.MLGOO_DILG,
+        is_active=True,
+        must_change_password=False,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
+
+@pytest.fixture
+def assessor_user(db_session: Session):
+    """Create an ASSESSOR user for role testing"""
+    unique_email = f"assessor_{uuid.uuid4().hex[:8]}@example.com"
+
+    user = User(
+        email=unique_email,
+        name="Assessor User",
+        hashed_password=pwd_context.hash("testpassword123"),
+        role=UserRole.ASSESSOR,
+        is_active=True,
+        must_change_password=False,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
+
+@pytest.fixture
+def validator_user(db_session: Session):
+    """Create a VALIDATOR user for role testing"""
+    unique_email = f"validator_{uuid.uuid4().hex[:8]}@example.com"
+
+    user = User(
+        email=unique_email,
+        name="Validator User",
+        hashed_password=pwd_context.hash("testpassword123"),
+        role=UserRole.VALIDATOR,
+        is_active=True,
+        must_change_password=False,
+        validator_area_id=1,  # Assuming governance area 1 exists
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
+
+@pytest.fixture
+def blgu_user(db_session: Session):
+    """Create a BLGU_USER for role testing"""
+    unique_email = f"blgu_{uuid.uuid4().hex[:8]}@example.com"
+
+    user = User(
+        email=unique_email,
+        name="BLGU User",
+        hashed_password=pwd_context.hash("testpassword123"),
+        role=UserRole.BLGU_USER,
+        is_active=True,
+        must_change_password=False,
+        barangay_id=1,  # Assuming barangay 1 exists
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
+
+def test_login_mlgoo_dilg_role(client: TestClient, db_session: Session, mlgoo_dilg_user: User):
+    """Test login with MLGOO_DILG role returns correct role in token"""
+    import jwt
+
+    _override_db(client, db_session)
+
+    response = client.post(
+        "/api/v1/auth/login",
+        json={"email": mlgoo_dilg_user.email, "password": "testpassword123"},
+    )
+
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+    decoded = jwt.decode(token, options={"verify_signature": False})
+    assert decoded["role"] == UserRole.MLGOO_DILG.value
+
+
+def test_login_assessor_role(client: TestClient, db_session: Session, assessor_user: User):
+    """Test login with ASSESSOR role returns correct role in token"""
+    import jwt
+
+    _override_db(client, db_session)
+
+    response = client.post(
+        "/api/v1/auth/login",
+        json={"email": assessor_user.email, "password": "testpassword123"},
+    )
+
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+    decoded = jwt.decode(token, options={"verify_signature": False})
+    assert decoded["role"] == UserRole.ASSESSOR.value
+
+
+def test_login_validator_role(client: TestClient, db_session: Session, validator_user: User):
+    """Test login with VALIDATOR role returns correct role in token"""
+    import jwt
+
+    _override_db(client, db_session)
+
+    response = client.post(
+        "/api/v1/auth/login",
+        json={"email": validator_user.email, "password": "testpassword123"},
+    )
+
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+    decoded = jwt.decode(token, options={"verify_signature": False})
+    assert decoded["role"] == UserRole.VALIDATOR.value
+
+
+def test_login_blgu_user_role(client: TestClient, db_session: Session, blgu_user: User):
+    """Test login with BLGU_USER role returns correct role in token"""
+    import jwt
+
+    _override_db(client, db_session)
+
+    response = client.post(
+        "/api/v1/auth/login",
+        json={"email": blgu_user.email, "password": "testpassword123"},
+    )
+
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+    decoded = jwt.decode(token, options={"verify_signature": False})
+    assert decoded["role"] == UserRole.BLGU_USER.value
+
+
+def test_jwt_token_contains_correct_role_information(
+    client: TestClient, db_session: Session, validator_user: User
+):
+    """Test that JWT token contains correct role information for all role types"""
+    import jwt
+
+    _override_db(client, db_session)
+
+    response = client.post(
+        "/api/v1/auth/login",
+        json={"email": validator_user.email, "password": "testpassword123"},
+    )
+
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+    decoded = jwt.decode(token, options={"verify_signature": False})
+
+    # Verify all required fields are present
+    assert "sub" in decoded  # User ID
+    assert "role" in decoded  # User role
+    assert decoded["role"] == UserRole.VALIDATOR.value
+    assert "must_change_password" in decoded
+    assert "exp" in decoded

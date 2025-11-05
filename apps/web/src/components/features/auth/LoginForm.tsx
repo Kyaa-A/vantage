@@ -158,14 +158,13 @@ export default function LoginForm({ isDarkMode = false }: LoginFormProps) {
               targetPath = redirectTo;
             } else {
               // Fall back to dashboard if redirect is invalid
-              const isAdmin =
-                result.data.role === "SUPERADMIN" ||
-                result.data.role === "MLGOO_DILG";
-              const isAssessor = result.data.role === "AREA_ASSESSOR";
+              const isAdmin = result.data.role === "MLGOO_DILG";
+              const isAssessor = result.data.role === "ASSESSOR";
+              const isValidator = result.data.role === "VALIDATOR";
 
               if (isAdmin) {
                 targetPath = "/mlgoo/dashboard";
-              } else if (isAssessor) {
+              } else if (isAssessor || isValidator) {
                 targetPath = "/assessor/submissions";
               } else {
                 targetPath = "/blgu/dashboard";
@@ -173,14 +172,13 @@ export default function LoginForm({ isDarkMode = false }: LoginFormProps) {
             }
           } else {
             // No redirect parameter, go to appropriate dashboard
-            const isAdmin =
-              result.data.role === "SUPERADMIN" ||
-              result.data.role === "MLGOO_DILG";
-            const isAssessor = result.data.role === "AREA_ASSESSOR";
+            const isAdmin = result.data.role === "MLGOO_DILG";
+            const isAssessor = result.data.role === "ASSESSOR";
+            const isValidator = result.data.role === "VALIDATOR";
 
             if (isAdmin) {
               targetPath = "/mlgoo/dashboard";
-            } else if (isAssessor) {
+            } else if (isAssessor || isValidator) {
               targetPath = "/assessor/submissions";
             } else {
               targetPath = "/blgu/dashboard";
