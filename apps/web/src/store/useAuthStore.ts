@@ -172,8 +172,9 @@ export const useAuthStore = create<AuthState>()(
         isAuthenticated: state.isAuthenticated,
         mustChangePassword: state.mustChangePassword,
       }),
-              // Add version to force reset when needed
-        version: 2, // Increment version to force reset
+      // Version 3: Force reset for role redefinition (MLGOO_DILG, ASSESSOR, VALIDATOR)
+      // and validator_area_id field rename (was governance_area_id)
+      version: 3, // Increment version to force reset after role structure changes
     }
   )
 ); 
