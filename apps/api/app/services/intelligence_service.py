@@ -3,13 +3,24 @@
 
 import json
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Dict, List, Optional
 
 import google.generativeai as genai
 from app.core.config import settings
 from app.db.enums import ComplianceStatus, ValidationStatus
 from app.db.models.assessment import Assessment, AssessmentResponse
 from app.db.models.governance_area import GovernanceArea, Indicator
+from app.schemas.calculation_schema import (
+    AndAllRule,
+    BBIFunctionalityCheckRule,
+    CalculationRule,
+    CalculationSchema,
+    ConditionGroup,
+    CountThresholdRule,
+    MatchValueRule,
+    OrAnyRule,
+    PercentageThresholdRule,
+)
 from sqlalchemy.orm import Session, joinedload
 
 # Core governance areas (must all pass for compliance)
@@ -28,6 +39,337 @@ ESSENTIAL_AREAS = [
 
 
 class IntelligenceService:
+    # ========================================
+    # CALCULATION RULE ENGINE
+    # ========================================
+
+    def evaluate_rule(
+        self, rule: CalculationRule, assessment_data: Dict[str, Any]
+    ) -> bool:
+        """
+        Recursively evaluate a calculation rule against assessment data.
+
+        This is the core evaluation engine that handles all 6 rule types:
+        - AND_ALL: All nested conditions must be true
+        - OR_ANY: At least one nested condition must be true
+        - PERCENTAGE_THRESHOLD: Number field comparison
+        - COUNT_THRESHOLD: Checkbox count comparison
+        - MATCH_VALUE: Field value matching
+        - BBI_FUNCTIONALITY_CHECK: BBI status check (placeholder)
+
+        Args:
+            rule: The calculation rule to evaluate (discriminated union type)
+            assessment_data: Dictionary containing assessment response data
+                            Format: {"field_id": value, ...}
+
+        Returns:
+            Boolean indicating if the rule evaluates to true
+
+        Raises:
+            ValueError: If rule type is unknown or field_id not found in data
+        """
+        # Handle AND_ALL rule: all conditions must be true
+        if isinstance(rule, AndAllRule):
+            return self._evaluate_and_all_rule(rule, assessment_data)
+
+        # Handle OR_ANY rule: at least one condition must be true
+        elif isinstance(rule, OrAnyRule):
+            return self._evaluate_or_any_rule(rule, assessment_data)
+
+        # Handle PERCENTAGE_THRESHOLD rule: number field comparison
+        elif isinstance(rule, PercentageThresholdRule):
+            return self._evaluate_percentage_threshold_rule(rule, assessment_data)
+
+        # Handle COUNT_THRESHOLD rule: checkbox count comparison
+        elif isinstance(rule, CountThresholdRule):
+            return self._evaluate_count_threshold_rule(rule, assessment_data)
+
+        # Handle MATCH_VALUE rule: field value matching
+        elif isinstance(rule, MatchValueRule):
+            return self._evaluate_match_value_rule(rule, assessment_data)
+
+        # Handle BBI_FUNCTIONALITY_CHECK rule: BBI status check
+        elif isinstance(rule, BBIFunctionalityCheckRule):
+            return self._evaluate_bbi_functionality_check_rule(rule, assessment_data)
+
+        else:
+            raise ValueError(f"Unknown rule type: {type(rule).__name__}")
+
+    def _evaluate_and_all_rule(
+        self, rule: AndAllRule, assessment_data: Dict[str, Any]
+    ) -> bool:
+        """
+        Evaluate AND_ALL rule: all nested conditions must be true.
+
+        Args:
+            rule: The AndAllRule instance
+            assessment_data: Dictionary containing assessment response data
+
+        Returns:
+            True if all conditions evaluate to true, False otherwise
+        """
+        for condition in rule.conditions:
+            if not self.evaluate_rule(condition, assessment_data):
+                return False
+        return True
+
+    def _evaluate_or_any_rule(
+        self, rule: OrAnyRule, assessment_data: Dict[str, Any]
+    ) -> bool:
+        """
+        Evaluate OR_ANY rule: at least one nested condition must be true.
+
+        Args:
+            rule: The OrAnyRule instance
+            assessment_data: Dictionary containing assessment response data
+
+        Returns:
+            True if at least one condition evaluates to true, False otherwise
+        """
+        for condition in rule.conditions:
+            if self.evaluate_rule(condition, assessment_data):
+                return True
+        return False
+
+    def _evaluate_percentage_threshold_rule(
+        self, rule: PercentageThresholdRule, assessment_data: Dict[str, Any]
+    ) -> bool:
+        """
+        Evaluate PERCENTAGE_THRESHOLD rule: check if number field meets threshold.
+
+        Args:
+            rule: The PercentageThresholdRule instance
+            assessment_data: Dictionary containing assessment response data
+
+        Returns:
+            True if the field value meets the threshold condition, False otherwise
+
+        Raises:
+            ValueError: If field_id not found in assessment_data or value is not numeric
+        """
+        if rule.field_id not in assessment_data:
+            raise ValueError(
+                f"Field '{rule.field_id}' not found in assessment data. "
+                f"Available fields: {list(assessment_data.keys())}"
+            )
+
+        field_value = assessment_data[rule.field_id]
+
+        # Ensure field value is numeric
+        try:
+            numeric_value = float(field_value)
+        except (TypeError, ValueError):
+            raise ValueError(
+                f"Field '{rule.field_id}' has non-numeric value: {field_value}"
+            )
+
+        # Apply the comparison operator
+        if rule.operator == ">=":
+            return numeric_value >= rule.threshold
+        elif rule.operator == ">":
+            return numeric_value > rule.threshold
+        elif rule.operator == "<=":
+            return numeric_value <= rule.threshold
+        elif rule.operator == "<":
+            return numeric_value < rule.threshold
+        elif rule.operator == "==":
+            return numeric_value == rule.threshold
+        else:
+            raise ValueError(f"Unknown operator: {rule.operator}")
+
+    def _evaluate_count_threshold_rule(
+        self, rule: CountThresholdRule, assessment_data: Dict[str, Any]
+    ) -> bool:
+        """
+        Evaluate COUNT_THRESHOLD rule: check if checkbox count meets threshold.
+
+        Expects field value to be a list of selected checkbox values.
+
+        Args:
+            rule: The CountThresholdRule instance
+            assessment_data: Dictionary containing assessment response data
+                            Field value should be a list: ["value1", "value2", ...]
+
+        Returns:
+            True if the count of selected checkboxes meets the threshold, False otherwise
+
+        Raises:
+            ValueError: If field_id not found or value is not a list
+        """
+        if rule.field_id not in assessment_data:
+            raise ValueError(
+                f"Field '{rule.field_id}' not found in assessment data. "
+                f"Available fields: {list(assessment_data.keys())}"
+            )
+
+        field_value = assessment_data[rule.field_id]
+
+        # Ensure field value is a list (for checkbox groups)
+        if not isinstance(field_value, list):
+            raise ValueError(
+                f"Field '{rule.field_id}' expected list for checkbox count, "
+                f"got {type(field_value).__name__}: {field_value}"
+            )
+
+        count = len(field_value)
+
+        # Apply the comparison operator
+        if rule.operator == ">=":
+            return count >= rule.threshold
+        elif rule.operator == ">":
+            return count > rule.threshold
+        elif rule.operator == "<=":
+            return count <= rule.threshold
+        elif rule.operator == "<":
+            return count < rule.threshold
+        elif rule.operator == "==":
+            return count == rule.threshold
+        else:
+            raise ValueError(f"Unknown operator: {rule.operator}")
+
+    def _evaluate_match_value_rule(
+        self, rule: MatchValueRule, assessment_data: Dict[str, Any]
+    ) -> bool:
+        """
+        Evaluate MATCH_VALUE rule: check if field value matches expected value.
+
+        Supports multiple operators: ==, !=, contains, not_contains
+
+        Args:
+            rule: The MatchValueRule instance
+            assessment_data: Dictionary containing assessment response data
+
+        Returns:
+            True if the field value matches the condition, False otherwise
+
+        Raises:
+            ValueError: If field_id not found in assessment_data
+        """
+        if rule.field_id not in assessment_data:
+            raise ValueError(
+                f"Field '{rule.field_id}' not found in assessment data. "
+                f"Available fields: {list(assessment_data.keys())}"
+            )
+
+        field_value = assessment_data[rule.field_id]
+
+        # Apply the comparison operator
+        if rule.operator == "==":
+            return field_value == rule.expected_value
+        elif rule.operator == "!=":
+            return field_value != rule.expected_value
+        elif rule.operator == "contains":
+            # For string values
+            if isinstance(field_value, str):
+                return str(rule.expected_value) in field_value
+            # For list values (checkbox groups)
+            elif isinstance(field_value, list):
+                return rule.expected_value in field_value
+            else:
+                return False
+        elif rule.operator == "not_contains":
+            # For string values
+            if isinstance(field_value, str):
+                return str(rule.expected_value) not in field_value
+            # For list values (checkbox groups)
+            elif isinstance(field_value, list):
+                return rule.expected_value not in field_value
+            else:
+                return True
+        else:
+            raise ValueError(f"Unknown operator: {rule.operator}")
+
+    def _evaluate_bbi_functionality_check_rule(
+        self, rule: BBIFunctionalityCheckRule, assessment_data: Dict[str, Any]
+    ) -> bool:
+        """
+        Evaluate BBI_FUNCTIONALITY_CHECK rule: check if BBI is Functional.
+
+        This is a placeholder for Epic 4 BBI integration.
+        Currently returns False as BBI data is not yet available.
+
+        Args:
+            rule: The BBIFunctionalityCheckRule instance
+            assessment_data: Dictionary containing assessment response data
+
+        Returns:
+            Boolean indicating if BBI meets expected status
+
+        Note:
+            In Epic 4, this will query the BBI database table to check status.
+            For now, it returns False to indicate the feature is not yet implemented.
+        """
+        # TODO: Epic 4 - Implement BBI database query
+        # Expected implementation:
+        # 1. Query BBI table by bbi_id
+        # 2. Check if BBI status matches expected_status
+        # 3. Return comparison result
+
+        # Placeholder: Check if assessment_data has BBI status override
+        bbi_key = f"bbi_{rule.bbi_id}_status"
+        if bbi_key in assessment_data:
+            actual_status = assessment_data[bbi_key]
+            return actual_status == rule.expected_status
+
+        # Default: return False (feature not yet implemented)
+        return False
+
+    def evaluate_calculation_schema(
+        self,
+        calculation_schema: CalculationSchema,
+        assessment_data: Dict[str, Any],
+    ) -> bool:
+        """
+        Evaluate a complete calculation schema against assessment data.
+
+        Evaluates all condition groups and returns overall Pass/Fail status.
+        Top-level condition groups are evaluated with implicit AND logic.
+
+        Args:
+            calculation_schema: The CalculationSchema to evaluate
+            assessment_data: Dictionary containing assessment response data
+
+        Returns:
+            True if all condition groups pass (Pass status), False otherwise (Fail status)
+        """
+        # Evaluate all condition groups (implicit AND between groups)
+        for group in calculation_schema.condition_groups:
+            if not self._evaluate_condition_group(group, assessment_data):
+                return False
+        return True
+
+    def _evaluate_condition_group(
+        self, group: ConditionGroup, assessment_data: Dict[str, Any]
+    ) -> bool:
+        """
+        Evaluate a condition group with its logical operator (AND/OR).
+
+        Args:
+            group: The ConditionGroup to evaluate
+            assessment_data: Dictionary containing assessment response data
+
+        Returns:
+            True if the group evaluates to true based on its operator, False otherwise
+        """
+        if group.operator == "AND":
+            # All rules in the group must be true
+            for rule in group.rules:
+                if not self.evaluate_rule(rule, assessment_data):
+                    return False
+            return True
+        elif group.operator == "OR":
+            # At least one rule in the group must be true
+            for rule in group.rules:
+                if self.evaluate_rule(rule, assessment_data):
+                    return True
+            return False
+        else:
+            raise ValueError(f"Unknown condition group operator: {group.operator}")
+
+    # ========================================
+    # SGLGB CLASSIFICATION (3+1 Rule)
+    # ========================================
+
     def get_validated_responses_by_area(
         self, db: Session, assessment_id: int
     ) -> dict[str, list[AssessmentResponse]]:
