@@ -18,6 +18,7 @@ import {
 import { useFormBuilderStore } from '@/store/useFormBuilderStore';
 import { FieldPalette } from './FieldPalette';
 import { FieldCanvasItem } from './FieldCanvasItem';
+import { FieldPropertiesPanel } from './FieldPropertiesPanel';
 
 /**
  * FormSchemaBuilder - Visual form builder for creating indicator form schemas
@@ -239,37 +240,7 @@ export function FormSchemaBuilder() {
           </div>
 
           {/* Properties panel content */}
-          {selectedFieldId ? (
-            <div className="space-y-4">
-              <div className="rounded-lg border border-gray-200 bg-white p-4">
-                <p className="text-sm text-gray-500">
-                  Selected field: <span className="font-medium">{selectedFieldId}</span>
-                </p>
-                <p className="mt-2 text-xs text-gray-400">
-                  (Properties panel in Story 2.4)
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="flex h-64 items-center justify-center rounded-lg border-2 border-dashed border-gray-300">
-              <div className="text-center">
-                <svg
-                  className="mx-auto h-8 w-8 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"
-                  />
-                </svg>
-                <p className="mt-2 text-sm text-gray-500">Select a field to edit</p>
-              </div>
-            </div>
-          )}
+          <FieldPropertiesPanel />
         </div>
       </aside>
 
