@@ -82,7 +82,7 @@
 
 ### Atomic Tasks
 
-- [ ] **2.2.1 Atomic: Create form schema validation endpoint**
+- [x] **2.2.1 Atomic: Create form schema validation endpoint**
   - **Files:**
     - `apps/api/app/api/v1/indicators.py` (add endpoint)
   - **Dependencies:** 2.1.3
@@ -97,7 +97,7 @@
   - **Tech:** FastAPI, Pydantic validation
   - **Duration:** 2 hours
 
-- [ ] **2.2.2 Atomic: Integrate validation into update_indicator service**
+- [x] **2.2.2 Atomic: Integrate validation into update_indicator service**
   - **Files:**
     - `apps/api/app/services/indicator_service.py` (update)
   - **Dependencies:** 2.2.1
@@ -110,7 +110,7 @@
   - **Tech:** Python exception handling
   - **Duration:** 2 hours
 
-- [ ] **2.2.3 Atomic: Add circular reference detection**
+- [x] **2.2.3 Atomic: Add circular reference detection**
   - **Files:**
     - `apps/api/app/services/form_schema_validator.py` (update)
   - **Dependencies:** 2.1.3
@@ -122,7 +122,7 @@
   - **Tech:** Python graph traversal
   - **Duration:** 3 hours
 
-- [ ] **2.2.4 Atomic: Write tests for form schema validation**
+- [x] **2.2.4 Atomic: Write tests for form schema validation**
   - **Files:**
     - `apps/api/tests/services/test_form_schema_validator.py`
   - **Dependencies:** 2.2.3

@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.db.models.governance_area import GovernanceArea, Indicator, IndicatorHistory
 from app.db.models.user import User
+from app.services.form_schema_validator import generate_validation_errors
 
 
 class IndicatorService:
@@ -68,6 +69,15 @@ class IndicatorService:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail=f"Parent indicator with ID {parent_id} not found",
+                )
+
+        # Validate form_schema if provided
+        form_schema = data.get("form_schema")
+        if form_schema:
+            validation_errors = generate_validation_errors(form_schema)
+            if validation_errors:
+                raise ValueError(
+                    f"Form schema validation failed: {'; '.join(validation_errors)}"
                 )
 
         # Create indicator with version 1
@@ -190,6 +200,15 @@ class IndicatorService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Indicator with ID {indicator_id} not found",
             )
+
+        # Validate form_schema if being updated
+        form_schema = data.get("form_schema")
+        if form_schema is not None:
+            validation_errors = generate_validation_errors(form_schema)
+            if validation_errors:
+                raise ValueError(
+                    f"Form schema validation failed: {'; '.join(validation_errors)}"
+                )
 
         # Check if schema fields changed (requiring versioning)
         schema_changed = any(

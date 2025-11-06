@@ -14,7 +14,9 @@ from app.schemas.indicator import (
     IndicatorResponse,
     IndicatorUpdate,
 )
+from app.schemas.form_schema import FormSchema
 from app.services.indicator_service import indicator_service
+from app.services.form_schema_validator import generate_validation_errors
 
 router = APIRouter(tags=["indicators"])
 
@@ -94,6 +96,57 @@ def list_indicators(
         limit=limit,
     )
     return indicators
+
+
+@router.post(
+    "/validate-form-schema",
+    status_code=status.HTTP_200_OK,
+    summary="Validate a form schema",
+)
+def validate_form_schema(
+    *,
+    current_user: User = Depends(deps.require_mlgoo_dilg),
+    form_schema: FormSchema,
+) -> dict:
+    """
+    Validate a form schema without saving it.
+
+    **Permissions**: MLGOO_DILG only
+
+    **Request Body**:
+    - form_schema: FormSchema object with fields to validate
+
+    **Returns**:
+    - `{"valid": true}` if the schema is valid
+    - `{"valid": false, "errors": [...]}` if validation fails with detailed error messages
+
+    **Validation Checks**:
+    - Field IDs are unique
+    - No circular references in conditional logic
+    - Conditional MOV references point to existing fields
+    - Checkbox/Radio fields have at least one option
+    - Fields list is not empty
+
+    **Status Codes**:
+    - 200: Schema is valid
+    - 400: Schema is invalid (returns error details)
+    - 401: Unauthorized (not authenticated)
+    - 403: Forbidden (not MLGOO_DILG role)
+    """
+    # Generate validation errors
+    errors = generate_validation_errors(form_schema)
+
+    if errors:
+        # Return 400 with detailed errors
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "valid": False,
+                "errors": errors,
+            },
+        )
+
+    return {"valid": True}
 
 
 @router.get(
