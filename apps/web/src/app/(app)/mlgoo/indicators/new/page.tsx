@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { FormSchemaBuilder } from '@/components/features/indicators/FormSchemaBuilder';
+import { SaveFormSchemaButton } from '@/components/features/indicators/SaveFormSchemaButton';
 import { useFormBuilderStore } from '@/store/useFormBuilderStore';
 import { usePostIndicators } from '@vantage/shared';
 import { useGetGovernanceAreas } from '@vantage/shared';
@@ -186,13 +187,28 @@ export default function NewIndicatorPage() {
               <FileText className="mr-2 h-4 w-4" />
               Save Draft
             </Button>
-            <Button
-              onClick={handleSaveAndPublish}
+            <SaveFormSchemaButton
+              onSave={async () => {
+                await handleSubmit(async (data) => {
+                  const formSchema = { fields };
+                  await createIndicator.mutateAsync({
+                    data: {
+                      name: data.name,
+                      description: data.description || undefined,
+                      governance_area_id: data.governance_area_id,
+                      parent_id: data.parent_id || undefined,
+                      form_schema: formSchema as any,
+                      is_active: true,
+                    },
+                  });
+                  markAsSaved();
+                  router.push(`/mlgoo/indicators`);
+                })();
+              }}
               disabled={isSaving}
             >
-              <Save className="mr-2 h-4 w-4" />
-              {isSaving ? 'Saving...' : 'Save & Publish'}
-            </Button>
+              Save & Publish
+            </SaveFormSchemaButton>
           </div>
         </div>
       </div>

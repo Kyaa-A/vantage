@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { FormSchemaBuilder } from '@/components/features/indicators/FormSchemaBuilder';
+import { SaveFormSchemaButton } from '@/components/features/indicators/SaveFormSchemaButton';
 import { useFormBuilderStore } from '@/store/useFormBuilderStore';
 import {
   useGetIndicatorsIndicatorId,
@@ -227,13 +228,28 @@ export default function EditIndicatorPage() {
             >
               Cancel
             </Button>
-            <Button
-              onClick={handleSaveChanges}
+            <SaveFormSchemaButton
+              onSave={async () => {
+                await handleSubmit(async (data) => {
+                  const formSchema = { fields };
+                  await updateIndicator.mutateAsync({
+                    indicatorId: indicatorId,
+                    data: {
+                      name: data.name,
+                      description: data.description || undefined,
+                      governance_area_id: data.governance_area_id,
+                      parent_id: data.parent_id || undefined,
+                      form_schema: formSchema as any,
+                    },
+                  });
+                  markAsSaved();
+                  router.push(`/mlgoo/indicators/${indicatorId}`);
+                })();
+              }}
               disabled={isSaving}
             >
-              <Save className="mr-2 h-4 w-4" />
-              {isSaving ? 'Saving...' : 'Save Changes'}
-            </Button>
+              Save Changes
+            </SaveFormSchemaButton>
           </div>
         </div>
       </div>
