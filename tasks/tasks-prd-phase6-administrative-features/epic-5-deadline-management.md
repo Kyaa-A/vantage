@@ -12,30 +12,35 @@
 
 ### Atomic Tasks (5 tasks)
 
-- [ ] **5.1.1** Create assessment_cycles table model
+- [x] **5.1.1** Create assessment_cycles table model
   - **File:** `apps/api/app/db/models/admin.py`
   - **Criteria:** Fields: id, name, year, phase1_deadline, rework_deadline, phase2_deadline, calibration_deadline, is_active, created_at
   - **Duration:** 2 hours
+  - **Completed:** Added AssessmentCycle model with all required fields, indexes, and relationships
 
-- [ ] **5.1.2** Create deadline_overrides table model
+- [x] **5.1.2** Create deadline_overrides table model
   - **File:** `apps/api/app/db/models/admin.py`
   - **Criteria:** Fields: id, barangay_id, indicator_id, original_deadline, new_deadline, reason, created_by, created_at
   - **Duration:** 2 hours
+  - **Completed:** Added DeadlineOverride model with cycle_id, all required fields, composite indexes, and relationships to cycle, barangay, indicator, and user
 
-- [ ] **5.1.3** Add unique constraint for active cycle
+- [x] **5.1.3** Add unique constraint for active cycle
   - **File:** `apps/api/app/db/models/admin.py`
   - **Criteria:** Only one assessment_cycle can have is_active=True
   - **Duration:** 1 hour
+  - **Completed:** Added partial unique index 'uq_assessment_cycles_single_active' that ensures only one cycle can have is_active=True at database level
 
-- [ ] **5.1.4** Create Alembic migration for admin tables
-  - **File:** `apps/api/alembic/versions/xxxx_create_admin_tables.py`
+- [x] **5.1.4** Create Alembic migration for admin tables
+  - **File:** `apps/api/alembic/versions/c0ef832297f3_create_assessment_cycles_and_deadline_.py`
   - **Criteria:** Create assessment_cycles and deadline_overrides tables
   - **Duration:** 2 hours
+  - **Completed:** Generated migration with both tables, all indexes including partial unique index, foreign key constraints, and proper upgrade/downgrade functions
 
-- [ ] **5.1.5** Add relationships to barangays and users
-  - **Files:** `admin.py`, `barangay.py`, `user.py` (update)
+- [x] **5.1.5** Add relationships to barangays and users
+  - **Files:** `admin.py`, `barangay.py`, `user.py`, `governance_area.py` (update)
   - **Criteria:** Link overrides to barangays, indicators, users
   - **Duration:** 1 hour
+  - **Completed:** Added bidirectional relationships with back_populates between DeadlineOverride and Barangay, Indicator, User models for efficient querying in both directions
 
 ---
 

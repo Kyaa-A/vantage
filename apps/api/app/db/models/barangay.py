@@ -19,3 +19,4 @@ class Barangay(Base):
     name = Column(String, index=True, nullable=False, unique=True)
 
     users = relationship("User", back_populates="barangay")
+    deadline_overrides = relationship("DeadlineOverride", back_populates="barangay")

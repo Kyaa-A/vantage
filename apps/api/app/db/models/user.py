@@ -66,3 +66,4 @@ class User(Base):
     validator_area = relationship("GovernanceArea", back_populates="validators")
     assessments = relationship("Assessment", back_populates="blgu_user")
     feedback_comments = relationship("FeedbackComment", back_populates="assessor")
+    created_deadline_overrides = relationship("DeadlineOverride", back_populates="creator", foreign_keys="DeadlineOverride.created_by")
