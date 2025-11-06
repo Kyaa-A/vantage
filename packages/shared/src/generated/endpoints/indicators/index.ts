@@ -20,13 +20,17 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  FormSchemaInput,
+  BodyTestCalculationApiV1IndicatorsTestCalculationPost,
+  CalculationSchema,
+  FormSchema,
   GetIndicatorsParams,
   HTTPValidationError,
   IndicatorCreate,
   IndicatorHistoryResponse,
   IndicatorResponse,
   IndicatorUpdate,
+  PostIndicatorsTestCalculation200,
+  PostIndicatorsValidateCalculationSchema200,
   PostIndicatorsValidateFormSchema200
 } from '../../schemas';
 
@@ -225,7 +229,7 @@ export function useGetIndicators<TData = Awaited<ReturnType<typeof getIndicators
  * @summary Validate a form schema
  */
 export const postIndicatorsValidateFormSchema = (
-    formSchemaInput: FormSchemaInput,
+    formSchema: FormSchema,
  options?: SecondParameter<typeof mutator>,signal?: AbortSignal
 ) => {
       
@@ -233,7 +237,7 @@ export const postIndicatorsValidateFormSchema = (
       return mutator<PostIndicatorsValidateFormSchema200>(
       {url: `http://localhost:8000/api/v1/indicators/validate-form-schema`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: formSchemaInput, signal
+      data: formSchema, signal
     },
       options);
     }
@@ -241,8 +245,8 @@ export const postIndicatorsValidateFormSchema = (
 
 
 export const getPostIndicatorsValidateFormSchemaMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postIndicatorsValidateFormSchema>>, TError,{data: FormSchemaInput}, TContext>, request?: SecondParameter<typeof mutator>}
-): UseMutationOptions<Awaited<ReturnType<typeof postIndicatorsValidateFormSchema>>, TError,{data: FormSchemaInput}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postIndicatorsValidateFormSchema>>, TError,{data: FormSchema}, TContext>, request?: SecondParameter<typeof mutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postIndicatorsValidateFormSchema>>, TError,{data: FormSchema}, TContext> => {
 
 const mutationKey = ['postIndicatorsValidateFormSchema'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -254,7 +258,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postIndicatorsValidateFormSchema>>, {data: FormSchemaInput}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postIndicatorsValidateFormSchema>>, {data: FormSchema}> = (props) => {
           const {data} = props ?? {};
 
           return  postIndicatorsValidateFormSchema(data,requestOptions)
@@ -266,22 +270,230 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type PostIndicatorsValidateFormSchemaMutationResult = NonNullable<Awaited<ReturnType<typeof postIndicatorsValidateFormSchema>>>
-    export type PostIndicatorsValidateFormSchemaMutationBody = FormSchemaInput
+    export type PostIndicatorsValidateFormSchemaMutationBody = FormSchema
     export type PostIndicatorsValidateFormSchemaMutationError = HTTPValidationError
 
     /**
  * @summary Validate a form schema
  */
 export const usePostIndicatorsValidateFormSchema = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postIndicatorsValidateFormSchema>>, TError,{data: FormSchemaInput}, TContext>, request?: SecondParameter<typeof mutator>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postIndicatorsValidateFormSchema>>, TError,{data: FormSchema}, TContext>, request?: SecondParameter<typeof mutator>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof postIndicatorsValidateFormSchema>>,
         TError,
-        {data: FormSchemaInput},
+        {data: FormSchema},
         TContext
       > => {
 
       const mutationOptions = getPostIndicatorsValidateFormSchemaMutationOptions(options);
+
+      return useMutation(mutationOptions );
+    }
+    /**
+ * Validate a calculation schema without saving it.
+
+**Permissions**: MLGOO_DILG only
+
+**Request Body**:
+- calculation_schema: CalculationSchema object with condition groups and rules
+
+**Returns**:
+- `{"valid": true}` if the schema is valid
+- `{"valid": false, "errors": [...]}` if validation fails
+
+**Validation Checks**:
+- All rule types are valid and properly structured
+- Field references are present (basic structure validation)
+- Nested conditions are properly formed
+- Operators are valid for each rule type
+
+**Status Codes**:
+- 200: Schema is valid
+- 400: Schema is invalid (returns error details)
+- 401: Unauthorized (not authenticated)
+- 403: Forbidden (not MLGOO_DILG role)
+
+**Note**: This endpoint only validates the schema structure.
+To test the schema with actual data, use the `/test-calculation` endpoint.
+ * @summary Validate a calculation schema
+ */
+export const postIndicatorsValidateCalculationSchema = (
+    calculationSchema: CalculationSchema,
+ options?: SecondParameter<typeof mutator>,signal?: AbortSignal
+) => {
+      
+      
+      return mutator<PostIndicatorsValidateCalculationSchema200>(
+      {url: `http://localhost:8000/api/v1/indicators/validate-calculation-schema`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: calculationSchema, signal
+    },
+      options);
+    }
+  
+
+
+export const getPostIndicatorsValidateCalculationSchemaMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postIndicatorsValidateCalculationSchema>>, TError,{data: CalculationSchema}, TContext>, request?: SecondParameter<typeof mutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postIndicatorsValidateCalculationSchema>>, TError,{data: CalculationSchema}, TContext> => {
+
+const mutationKey = ['postIndicatorsValidateCalculationSchema'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postIndicatorsValidateCalculationSchema>>, {data: CalculationSchema}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postIndicatorsValidateCalculationSchema(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostIndicatorsValidateCalculationSchemaMutationResult = NonNullable<Awaited<ReturnType<typeof postIndicatorsValidateCalculationSchema>>>
+    export type PostIndicatorsValidateCalculationSchemaMutationBody = CalculationSchema
+    export type PostIndicatorsValidateCalculationSchemaMutationError = HTTPValidationError
+
+    /**
+ * @summary Validate a calculation schema
+ */
+export const usePostIndicatorsValidateCalculationSchema = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postIndicatorsValidateCalculationSchema>>, TError,{data: CalculationSchema}, TContext>, request?: SecondParameter<typeof mutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof postIndicatorsValidateCalculationSchema>>,
+        TError,
+        {data: CalculationSchema},
+        TContext
+      > => {
+
+      const mutationOptions = getPostIndicatorsValidateCalculationSchemaMutationOptions(options);
+
+      return useMutation(mutationOptions );
+    }
+    /**
+ * Test a calculation schema with sample assessment data.
+
+**Permissions**: MLGOO_DILG only
+
+**Request Body**:
+- calculation_schema: CalculationSchema to evaluate
+- assessment_data: Dictionary of field_id -> value pairs
+  Example: {"completion_rate": 85, "required_documents": ["doc1", "doc2", "doc3"]}
+
+**Returns**:
+```json
+{
+  "result": "Pass" | "Fail",
+  "evaluation_result": true | false,
+  "explanation": "Detailed explanation of evaluation",
+  "output_status_on_pass": "Pass",
+  "output_status_on_fail": "Fail"
+}
+```
+
+**Status Codes**:
+- 200: Calculation completed successfully
+- 400: Invalid schema or data (e.g., field not found, type mismatch)
+- 401: Unauthorized (not authenticated)
+- 403: Forbidden (not MLGOO_DILG role)
+
+**Error Examples**:
+- Field not found: `{"detail": "Field 'completion_rate' not found in assessment data. Available fields: ['other_field']"}`
+- Type mismatch: `{"detail": "Field 'count' expected list for checkbox count, got str"}`
+
+**Example Usage**:
+```json
+{
+  "calculation_schema": {
+    "condition_groups": [
+      {
+        "operator": "AND",
+        "rules": [
+          {
+            "rule_type": "PERCENTAGE_THRESHOLD",
+            "field_id": "completion_rate",
+            "operator": ">=",
+            "threshold": 75.0
+          }
+        ]
+      }
+    ],
+    "output_status_on_pass": "Pass",
+    "output_status_on_fail": "Fail"
+  },
+  "assessment_data": {
+    "completion_rate": 85
+  }
+}
+```
+ * @summary Test a calculation schema with sample data
+ */
+export const postIndicatorsTestCalculation = (
+    bodyTestCalculationApiV1IndicatorsTestCalculationPost: BodyTestCalculationApiV1IndicatorsTestCalculationPost,
+ options?: SecondParameter<typeof mutator>,signal?: AbortSignal
+) => {
+      
+      
+      return mutator<PostIndicatorsTestCalculation200>(
+      {url: `http://localhost:8000/api/v1/indicators/test-calculation`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: bodyTestCalculationApiV1IndicatorsTestCalculationPost, signal
+    },
+      options);
+    }
+  
+
+
+export const getPostIndicatorsTestCalculationMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postIndicatorsTestCalculation>>, TError,{data: BodyTestCalculationApiV1IndicatorsTestCalculationPost}, TContext>, request?: SecondParameter<typeof mutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postIndicatorsTestCalculation>>, TError,{data: BodyTestCalculationApiV1IndicatorsTestCalculationPost}, TContext> => {
+
+const mutationKey = ['postIndicatorsTestCalculation'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postIndicatorsTestCalculation>>, {data: BodyTestCalculationApiV1IndicatorsTestCalculationPost}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postIndicatorsTestCalculation(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostIndicatorsTestCalculationMutationResult = NonNullable<Awaited<ReturnType<typeof postIndicatorsTestCalculation>>>
+    export type PostIndicatorsTestCalculationMutationBody = BodyTestCalculationApiV1IndicatorsTestCalculationPost
+    export type PostIndicatorsTestCalculationMutationError = HTTPValidationError
+
+    /**
+ * @summary Test a calculation schema with sample data
+ */
+export const usePostIndicatorsTestCalculation = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postIndicatorsTestCalculation>>, TError,{data: BodyTestCalculationApiV1IndicatorsTestCalculationPost}, TContext>, request?: SecondParameter<typeof mutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof postIndicatorsTestCalculation>>,
+        TError,
+        {data: BodyTestCalculationApiV1IndicatorsTestCalculationPost},
+        TContext
+      > => {
+
+      const mutationOptions = getPostIndicatorsTestCalculationMutationOptions(options);
 
       return useMutation(mutationOptions );
     }

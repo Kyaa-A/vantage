@@ -243,6 +243,12 @@ export type AssessorAnalyticsResponseAssessmentPeriod = string | null;
 
 
 /**
+ * BodyTestCalculationApiV1IndicatorsTestCalculationPostAssessmentData
+ */
+export type BodyTestCalculationApiV1IndicatorsTestCalculationPostAssessmentData = { [key: string]: unknown };
+
+
+/**
  * BodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPost
  */
 export interface BodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPost {

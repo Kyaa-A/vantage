@@ -12,8 +12,9 @@
 
 - **Total Stories:** 8
 - **Total Tasks:** 45
-- **Completed Tasks:** 12 (Stories 3.1 & 3.2 complete!)
-- **Current Story:** Story 3.3
+- **Completed Tasks:** 18 (Stories 3.1, 3.2 & 3.3 complete!)
+- **Current Story:** Story 3.4
+- **Progress:** 40% (18/45 tasks)
 
 ---
 
@@ -106,17 +107,29 @@
 ## Story 3.3: Frontend Calculation Rule Builder Core Architecture
 
 **Duration:** 2 days
-**Status:** Pending
+**Status:** ✅ Complete
 **Dependencies:** Epic 2.0 (needs form_schema fields), `pnpm generate-types`
 
 ### Tasks
 
-- [ ] **3.3.1** Create Zustand store for calculation rule builder
-- [ ] **3.3.2** Create CalculationRuleBuilder main component
-- [ ] **3.3.3** Create ConditionGroup component with nesting
-- [ ] **3.3.4** Create RuleSelector component
-- [ ] **3.3.5** Create FieldSelector component
-- [ ] **3.3.6** Create OperatorSelector and ValueInput components
+- [x] **3.3.1** Create Zustand store for calculation rule builder
+  - **File:** `apps/web/src/store/useCalculationRuleStore.ts`
+  - **Completed:** Full Zustand store with nested state management, CRUD operations for condition groups and rules
+- [x] **3.3.2** Create CalculationRuleBuilder main component
+  - **File:** `apps/web/src/components/features/indicators/CalculationRuleBuilder/CalculationRuleBuilder.tsx`
+  - **Completed:** Main orchestrator component with initialization logic and props interface
+- [x] **3.3.3** Create ConditionGroup component with nesting
+  - **Files:** `ConditionGroupList.tsx`, `ConditionGroupItem.tsx`
+  - **Completed:** Full condition group rendering with AND/OR operators, rule display, and nested structure support
+- [x] **3.3.4** Create RuleSelector component
+  - **File:** `apps/web/src/components/features/indicators/CalculationRuleBuilder/RuleSelector.tsx`
+  - **Completed:** Dialog-based rule type selector with descriptions for all 6 rule types
+- [x] **3.3.5** Create FieldSelector component
+  - **File:** `apps/web/src/components/features/indicators/CalculationRuleBuilder/FieldSelector.tsx`
+  - **Completed:** Field selector with type filtering and form_schema integration
+- [x] **3.3.6** Create OperatorSelector and ValueInput components
+  - **Files:** `OperatorSelector.tsx`, `ValueInput.tsx`
+  - **Completed:** Both components with operator labeling and value input handling
 
 ---
 
@@ -213,13 +226,19 @@
 - `apps/api/app/db/models/assessment.py` - Assessment models (to be updated)
 
 ### Frontend Files
-- `apps/web/src/store/calculationRuleStore.ts` - Calculation rule state (to be created)
-- `apps/web/src/components/features/admin/indicators/CalculationRuleBuilder.tsx` - Main builder component (to be created)
-- `apps/web/src/components/features/admin/indicators/CalculationRuleBuilder/ConditionGroup.tsx` - Condition groups (to be created)
-- `apps/web/src/components/features/admin/indicators/CalculationRuleBuilder/RuleSelector.tsx` - Rule type selector (to be created)
-- `apps/web/src/components/features/admin/indicators/CalculationRuleBuilder/FieldSelector.tsx` - Field selector (to be created)
-- `apps/web/src/components/features/admin/indicators/CalculationRuleBuilder/Rules/` - Individual rule components directory (to be created)
-- `apps/web/src/components/features/admin/indicators/RemarkSchemaBuilder.tsx` - Remark builder component (to be created)
+- `apps/web/src/store/useCalculationRuleStore.ts` - Calculation rule state (✅ created - complete Zustand store with CRUD operations)
+- `apps/web/src/components/features/indicators/CalculationRuleBuilder/` - Calculation rule builder directory (✅ created)
+  - `CalculationRuleBuilder.tsx` - Main builder component (✅ created)
+  - `OutputStatusConfig.tsx` - Pass/Fail status configuration (✅ created)
+  - `ConditionGroupList.tsx` - List renderer for condition groups (✅ created)
+  - `ConditionGroupItem.tsx` - Individual condition group with AND/OR logic (✅ created)
+  - `RuleSelector.tsx` - Dialog-based rule type selector (✅ created)
+  - `RuleConfigForm.tsx` - Dynamic form for rule configuration (✅ created)
+  - `FieldSelector.tsx` - Field selector with type filtering (✅ created)
+  - `OperatorSelector.tsx` - Operator selector with labels (✅ created)
+  - `ValueInput.tsx` - Generic value input component (✅ created)
+  - `index.ts` - Barrel export file (✅ created)
+- `apps/web/src/components/features/indicators/RemarkSchemaBuilder.tsx` - Remark builder component (to be created)
 
 ### Test Files
 - `apps/api/tests/services/test_intelligence_service.py` - Intelligence service tests (to be created/updated)

@@ -3,7 +3,19 @@
 // 📁 Common-related types
 // 🏷️  Based on FastAPI tag: "common"
 
+import type { AndAllRule } from '../andallrule';
+import type { OrAnyRule } from '../oranyrule';
+import type { PercentageThresholdRule } from '../percentagethresholdrule';
+import type { CountThresholdRule } from '../countthresholdrule';
+import type { MatchValueRule } from '../matchvaluerule';
+import type { BBIFunctionalityCheckRule } from '../bbifunctionalitycheckrule';
 import type { AssessmentRow } from '../assessments';
+
+/**
+ * AndAllRuleConditionsItem
+ */
+export type AndAllRuleConditionsItem = AndAllRule | OrAnyRule | PercentageThresholdRule | CountThresholdRule | MatchValueRule | BBIFunctionalityCheckRule;
+
 
 /**
  * AreaBreakdown
@@ -36,6 +48,19 @@ export type AreaType = typeof AreaType[keyof typeof AreaType];
 export const AreaType = {
   Core: 'Core',
   Essential: 'Essential',
+} as const;
+
+
+/**
+ * BBIFunctionalityCheckRuleExpectedStatus
+ */
+export type BBIFunctionalityCheckRuleExpectedStatus = typeof BBIFunctionalityCheckRuleExpectedStatus[keyof typeof BBIFunctionalityCheckRuleExpectedStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const BBIFunctionalityCheckRuleExpectedStatus = {
+  Functional: 'Functional',
+  'Non-Functional': 'Non-Functional',
 } as const;
 
 
@@ -129,6 +154,48 @@ export interface BarangayRanking {
 
 
 /**
+ * CalculationSchema
+ */
+export interface CalculationSchema {
+  /**
+   * Top-level condition groups (evaluated with implicit AND)
+   * @minItems 1
+   */
+  condition_groups: ConditionGroup[];
+  /** Status to assign when conditions are met */
+  output_status_on_pass?: CalculationSchemaOutputStatusOnPass;
+  /** Status to assign when conditions are not met */
+  output_status_on_fail?: CalculationSchemaOutputStatusOnFail;
+}
+
+
+/**
+ * CalculationSchemaOutputStatusOnFail
+ */
+export type CalculationSchemaOutputStatusOnFail = typeof CalculationSchemaOutputStatusOnFail[keyof typeof CalculationSchemaOutputStatusOnFail];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CalculationSchemaOutputStatusOnFail = {
+  Pass: 'Pass',
+  Fail: 'Fail',
+} as const;
+
+
+/**
+ * CalculationSchemaOutputStatusOnPass
+ */
+export type CalculationSchemaOutputStatusOnPass = typeof CalculationSchemaOutputStatusOnPass[keyof typeof CalculationSchemaOutputStatusOnPass];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CalculationSchemaOutputStatusOnPass = {
+  Pass: 'Pass',
+  Fail: 'Fail',
+} as const;
+
+
+/**
  * ChangePasswordRequest
  */
 export interface ChangePasswordRequest {
@@ -207,6 +274,39 @@ export interface ComplianceRate {
 
 
 /**
+ * ConditionGroup
+ */
+export interface ConditionGroup {
+  /** Logical operator for combining rules in this group */
+  operator: ConditionGroupOperator;
+  /**
+   * List of rules in this condition group
+   * @minItems 1
+   */
+  rules: ConditionGroupRulesItem[];
+}
+
+
+/**
+ * ConditionGroupOperator
+ */
+export type ConditionGroupOperator = typeof ConditionGroupOperator[keyof typeof ConditionGroupOperator];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ConditionGroupOperator = {
+  AND: 'AND',
+  OR: 'OR',
+} as const;
+
+
+/**
+ * ConditionGroupRulesItem
+ */
+export type ConditionGroupRulesItem = AndAllRule | OrAnyRule | PercentageThresholdRule | CountThresholdRule | MatchValueRule | BBIFunctionalityCheckRule;
+
+
+/**
  * ConditionalMOVLogic
  */
 export interface ConditionalMOVLogic {
@@ -229,6 +329,22 @@ export type ConditionalMOVLogicOperator = typeof ConditionalMOVLogicOperator[key
 export const ConditionalMOVLogicOperator = {
   equals: 'equals',
   not_equals: 'not_equals',
+} as const;
+
+
+/**
+ * CountThresholdRuleOperator
+ */
+export type CountThresholdRuleOperator = typeof CountThresholdRuleOperator[keyof typeof CountThresholdRuleOperator];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CountThresholdRuleOperator = {
+  '>=': '>=',
+  '>': '>',
+  '<=': '<=',
+  '<': '<',
+  '==': '==',
 } as const;
 
 
@@ -354,15 +470,21 @@ export type FileUploadFieldMaxFileSizeMb = number | null;
 
 
 /**
- * FormSchemaInputFieldsItem
+ * FormSchema
  */
-export type FormSchemaInputFieldsItem = CheckboxGroupField | RadioButtonField | NumberInputField | TextInputField | TextAreaField | DatePickerField | FileUploadField;
+export interface FormSchema {
+  /**
+   * List of form fields in the schema
+   * @minItems 1
+   */
+  fields: FormSchemaFieldsItem[];
+}
 
 
 /**
- * FormSchemaOutputFieldsItem
+ * FormSchemaFieldsItem
  */
-export type FormSchemaOutputFieldsItem = CheckboxGroupField | RadioButtonField | NumberInputField | TextInputField | TextAreaField | DatePickerField | FileUploadField;
+export type FormSchemaFieldsItem = CheckboxGroupField | RadioButtonField | NumberInputField | TextInputField | TextAreaField | DatePickerField | FileUploadField;
 
 
 /**
@@ -420,6 +542,21 @@ export interface MapData {
   /** List of barangays with geographic coordinates and status */
   barangays?: BarangayMapPoint[];
 }
+
+
+/**
+ * MatchValueRuleOperator
+ */
+export type MatchValueRuleOperator = typeof MatchValueRuleOperator[keyof typeof MatchValueRuleOperator];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MatchValueRuleOperator = {
+  '==': '==',
+  '!=': '!=',
+  contains: 'contains',
+  not_contains: 'not_contains',
+} as const;
 
 
 /**
@@ -482,6 +619,28 @@ export type NumberInputFieldMinValue = number | null;
  * NumberInputFieldPlaceholder
  */
 export type NumberInputFieldPlaceholder = string | null;
+
+
+/**
+ * OrAnyRuleConditionsItem
+ */
+export type OrAnyRuleConditionsItem = AndAllRule | OrAnyRule | PercentageThresholdRule | CountThresholdRule | MatchValueRule | BBIFunctionalityCheckRule;
+
+
+/**
+ * PercentageThresholdRuleOperator
+ */
+export type PercentageThresholdRuleOperator = typeof PercentageThresholdRuleOperator[keyof typeof PercentageThresholdRuleOperator];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PercentageThresholdRuleOperator = {
+  '>=': '>=',
+  '>': '>',
+  '<=': '<=',
+  '<': '<',
+  '==': '==',
+} as const;
 
 
 /**
