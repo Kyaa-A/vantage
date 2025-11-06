@@ -6,6 +6,8 @@ from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.form_schema import FormSchema
+
 
 class GovernanceAreaNested(BaseModel):
     """Nested governance area for indicator responses."""
@@ -33,7 +35,7 @@ class IndicatorBase(BaseModel):
 class IndicatorCreate(IndicatorBase):
     """Schema for creating a new indicator."""
 
-    form_schema: Optional[Dict[str, Any]] = Field(None, description="Form schema (JSON)")
+    form_schema: Optional[FormSchema] = Field(None, description="Form schema with validated field types")
     calculation_schema: Optional[Dict[str, Any]] = Field(None, description="Calculation schema (JSON)")
     remark_schema: Optional[Dict[str, Any]] = Field(None, description="Remark schema (JSON)")
 
@@ -48,7 +50,7 @@ class IndicatorUpdate(BaseModel):
     is_active: Optional[bool] = None
     is_profiling_only: Optional[bool] = None
     is_auto_calculable: Optional[bool] = None
-    form_schema: Optional[Dict[str, Any]] = None
+    form_schema: Optional[FormSchema] = Field(None, description="Form schema with validated field types")
     calculation_schema: Optional[Dict[str, Any]] = None
     remark_schema: Optional[Dict[str, Any]] = None
     technical_notes_text: Optional[str] = None
@@ -76,7 +78,7 @@ class IndicatorResponse(BaseModel):
     is_active: bool
     is_profiling_only: bool
     is_auto_calculable: bool
-    form_schema: Optional[Dict[str, Any]] = None
+    form_schema: Optional[FormSchema] = Field(None, description="Form schema with validated field types")
     calculation_schema: Optional[Dict[str, Any]] = None
     remark_schema: Optional[Dict[str, Any]] = None
     technical_notes_text: Optional[str] = None
@@ -113,7 +115,7 @@ class IndicatorHistoryResponse(BaseModel):
     is_active: bool
     is_auto_calculable: bool
     is_profiling_only: bool
-    form_schema: Optional[Dict[str, Any]] = None
+    form_schema: Optional[FormSchema] = Field(None, description="Form schema with validated field types")
     calculation_schema: Optional[Dict[str, Any]] = None
     remark_schema: Optional[Dict[str, Any]] = None
     technical_notes_text: Optional[str] = None

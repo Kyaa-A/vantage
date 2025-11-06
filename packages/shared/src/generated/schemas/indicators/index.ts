@@ -3,7 +3,9 @@
 // 📁 Indicators-related types
 // 🏷️  Based on FastAPI tag: "indicators"
 
+import type { FormSchemaInput } from '../formschema';
 import type { UserNested } from '../users';
+import type { FormSchemaOutput } from '../formschema';
 import type { GovernanceAreaNested } from '../common';
 
 /**
@@ -26,9 +28,9 @@ export interface FailedIndicator {
 
 
 /**
- * GetIndicatorsIndicatorsParams
+ * GetIndicatorsParams
  */
-export type GetIndicatorsIndicatorsParams = {
+export type GetIndicatorsParams = {
 /**
  * Filter by governance area
  */
@@ -74,7 +76,7 @@ export interface IndicatorCreate {
   is_auto_calculable?: boolean;
   /** Technical notes (plain text) */
   technical_notes_text?: IndicatorCreateTechnicalNotesText;
-  /** Form schema (JSON) */
+  /** Form schema with validated field types */
   form_schema?: IndicatorCreateFormSchema;
   /** Calculation schema (JSON) */
   calculation_schema?: IndicatorCreateCalculationSchema;
@@ -104,13 +106,7 @@ export type IndicatorCreateDescription = string | null;
 /**
  * IndicatorCreateFormSchema
  */
-export type IndicatorCreateFormSchema = IndicatorCreateFormSchemaAnyOf | null;
-
-
-/**
- * IndicatorCreateFormSchemaAnyOf
- */
-export type IndicatorCreateFormSchemaAnyOf = { [key: string]: unknown };
+export type IndicatorCreateFormSchema = FormSchemaInput | null;
 
 
 /**
@@ -149,6 +145,7 @@ export interface IndicatorHistoryResponse {
   is_active: boolean;
   is_auto_calculable: boolean;
   is_profiling_only: boolean;
+  /** Form schema with validated field types */
   form_schema?: IndicatorHistoryResponseFormSchema;
   calculation_schema?: IndicatorHistoryResponseCalculationSchema;
   remark_schema?: IndicatorHistoryResponseRemarkSchema;
@@ -194,13 +191,7 @@ export type IndicatorHistoryResponseDescription = string | null;
 /**
  * IndicatorHistoryResponseFormSchema
  */
-export type IndicatorHistoryResponseFormSchema = IndicatorHistoryResponseFormSchemaAnyOf | null;
-
-
-/**
- * IndicatorHistoryResponseFormSchemaAnyOf
- */
-export type IndicatorHistoryResponseFormSchemaAnyOf = { [key: string]: unknown };
+export type IndicatorHistoryResponseFormSchema = FormSchemaOutput | null;
 
 
 /**
@@ -248,6 +239,7 @@ export interface IndicatorResponse {
   is_active: boolean;
   is_profiling_only: boolean;
   is_auto_calculable: boolean;
+  /** Form schema with validated field types */
   form_schema?: IndicatorResponseFormSchema;
   calculation_schema?: IndicatorResponseCalculationSchema;
   remark_schema?: IndicatorResponseRemarkSchema;
@@ -282,13 +274,7 @@ export type IndicatorResponseDescription = string | null;
 /**
  * IndicatorResponseFormSchema
  */
-export type IndicatorResponseFormSchema = IndicatorResponseFormSchemaAnyOf | null;
-
-
-/**
- * IndicatorResponseFormSchemaAnyOf
- */
-export type IndicatorResponseFormSchemaAnyOf = { [key: string]: unknown };
+export type IndicatorResponseFormSchema = FormSchemaOutput | null;
 
 
 /**
@@ -338,6 +324,7 @@ export interface IndicatorUpdate {
   is_active?: IndicatorUpdateIsActive;
   is_profiling_only?: IndicatorUpdateIsProfilingOnly;
   is_auto_calculable?: IndicatorUpdateIsAutoCalculable;
+  /** Form schema with validated field types */
   form_schema?: IndicatorUpdateFormSchema;
   calculation_schema?: IndicatorUpdateCalculationSchema;
   remark_schema?: IndicatorUpdateRemarkSchema;
@@ -366,13 +353,7 @@ export type IndicatorUpdateDescription = string | null;
 /**
  * IndicatorUpdateFormSchema
  */
-export type IndicatorUpdateFormSchema = IndicatorUpdateFormSchemaAnyOf | null;
-
-
-/**
- * IndicatorUpdateFormSchemaAnyOf
- */
-export type IndicatorUpdateFormSchemaAnyOf = { [key: string]: unknown };
+export type IndicatorUpdateFormSchema = FormSchemaInput | null;
 
 
 /**

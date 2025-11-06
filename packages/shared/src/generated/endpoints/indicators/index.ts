@@ -20,7 +20,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  GetIndicatorsIndicatorsParams,
+  GetIndicatorsParams,
   HTTPValidationError,
   IndicatorCreate,
   IndicatorHistoryResponse,
@@ -60,14 +60,14 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 **Returns**: Created indicator with version 1
  * @summary Create a new indicator
  */
-export const postIndicatorsIndicators = (
+export const postIndicators = (
     indicatorCreate: IndicatorCreate,
  options?: SecondParameter<typeof mutator>,signal?: AbortSignal
 ) => {
       
       
       return mutator<IndicatorResponse>(
-      {url: `http://localhost:8000/api/v1/indicators/indicators/`, method: 'POST',
+      {url: `http://localhost:8000/api/v1/indicators/`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: indicatorCreate, signal
     },
@@ -76,11 +76,11 @@ export const postIndicatorsIndicators = (
   
 
 
-export const getPostIndicatorsIndicatorsMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postIndicatorsIndicators>>, TError,{data: IndicatorCreate}, TContext>, request?: SecondParameter<typeof mutator>}
-): UseMutationOptions<Awaited<ReturnType<typeof postIndicatorsIndicators>>, TError,{data: IndicatorCreate}, TContext> => {
+export const getPostIndicatorsMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postIndicators>>, TError,{data: IndicatorCreate}, TContext>, request?: SecondParameter<typeof mutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postIndicators>>, TError,{data: IndicatorCreate}, TContext> => {
 
-const mutationKey = ['postIndicatorsIndicators'];
+const mutationKey = ['postIndicators'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -90,10 +90,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postIndicatorsIndicators>>, {data: IndicatorCreate}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postIndicators>>, {data: IndicatorCreate}> = (props) => {
           const {data} = props ?? {};
 
-          return  postIndicatorsIndicators(data,requestOptions)
+          return  postIndicators(data,requestOptions)
         }
 
         
@@ -101,23 +101,23 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type PostIndicatorsIndicatorsMutationResult = NonNullable<Awaited<ReturnType<typeof postIndicatorsIndicators>>>
-    export type PostIndicatorsIndicatorsMutationBody = IndicatorCreate
-    export type PostIndicatorsIndicatorsMutationError = HTTPValidationError
+    export type PostIndicatorsMutationResult = NonNullable<Awaited<ReturnType<typeof postIndicators>>>
+    export type PostIndicatorsMutationBody = IndicatorCreate
+    export type PostIndicatorsMutationError = HTTPValidationError
 
     /**
  * @summary Create a new indicator
  */
-export const usePostIndicatorsIndicators = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postIndicatorsIndicators>>, TError,{data: IndicatorCreate}, TContext>, request?: SecondParameter<typeof mutator>}
+export const usePostIndicators = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postIndicators>>, TError,{data: IndicatorCreate}, TContext>, request?: SecondParameter<typeof mutator>}
  ): UseMutationResult<
-        Awaited<ReturnType<typeof postIndicatorsIndicators>>,
+        Awaited<ReturnType<typeof postIndicators>>,
         TError,
         {data: IndicatorCreate},
         TContext
       > => {
 
-      const mutationOptions = getPostIndicatorsIndicatorsMutationOptions(options);
+      const mutationOptions = getPostIndicatorsMutationOptions(options);
 
       return useMutation(mutationOptions );
     }
@@ -135,57 +135,57 @@ export const usePostIndicatorsIndicators = <TError = HTTPValidationError,
 **Returns**: List of indicators matching filters
  * @summary List all indicators
  */
-export const getIndicatorsIndicators = (
-    params?: GetIndicatorsIndicatorsParams,
+export const getIndicators = (
+    params?: GetIndicatorsParams,
  options?: SecondParameter<typeof mutator>,signal?: AbortSignal
 ) => {
       
       
       return mutator<IndicatorResponse[]>(
-      {url: `http://localhost:8000/api/v1/indicators/indicators/`, method: 'GET',
+      {url: `http://localhost:8000/api/v1/indicators/`, method: 'GET',
         params, signal
     },
       options);
     }
   
 
-export const getGetIndicatorsIndicatorsQueryKey = (params?: GetIndicatorsIndicatorsParams,) => {
-    return [`http://localhost:8000/api/v1/indicators/indicators/`, ...(params ? [params]: [])] as const;
+export const getGetIndicatorsQueryKey = (params?: GetIndicatorsParams,) => {
+    return [`http://localhost:8000/api/v1/indicators/`, ...(params ? [params]: [])] as const;
     }
 
     
-export const getGetIndicatorsIndicatorsQueryOptions = <TData = Awaited<ReturnType<typeof getIndicatorsIndicators>>, TError = HTTPValidationError>(params?: GetIndicatorsIndicatorsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getIndicatorsIndicators>>, TError, TData>, request?: SecondParameter<typeof mutator>}
+export const getGetIndicatorsQueryOptions = <TData = Awaited<ReturnType<typeof getIndicators>>, TError = HTTPValidationError>(params?: GetIndicatorsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getIndicators>>, TError, TData>, request?: SecondParameter<typeof mutator>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetIndicatorsIndicatorsQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getGetIndicatorsQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getIndicatorsIndicators>>> = ({ signal }) => getIndicatorsIndicators(params, requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getIndicators>>> = ({ signal }) => getIndicators(params, requestOptions, signal);
 
       
 
       
 
-   return  { queryKey, queryFn,   staleTime: 300000, refetchOnWindowFocus: false,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getIndicatorsIndicators>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn,   staleTime: 300000, refetchOnWindowFocus: false,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getIndicators>>, TError, TData> & { queryKey: QueryKey }
 }
 
-export type GetIndicatorsIndicatorsQueryResult = NonNullable<Awaited<ReturnType<typeof getIndicatorsIndicators>>>
-export type GetIndicatorsIndicatorsQueryError = HTTPValidationError
+export type GetIndicatorsQueryResult = NonNullable<Awaited<ReturnType<typeof getIndicators>>>
+export type GetIndicatorsQueryError = HTTPValidationError
 
 
 /**
  * @summary List all indicators
  */
 
-export function useGetIndicatorsIndicators<TData = Awaited<ReturnType<typeof getIndicatorsIndicators>>, TError = HTTPValidationError>(
- params?: GetIndicatorsIndicatorsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getIndicatorsIndicators>>, TError, TData>, request?: SecondParameter<typeof mutator>}
+export function useGetIndicators<TData = Awaited<ReturnType<typeof getIndicators>>, TError = HTTPValidationError>(
+ params?: GetIndicatorsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getIndicators>>, TError, TData>, request?: SecondParameter<typeof mutator>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetIndicatorsIndicatorsQueryOptions(params,options)
+  const queryOptions = getGetIndicatorsQueryOptions(params,options)
 
   const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -210,56 +210,56 @@ export function useGetIndicatorsIndicators<TData = Awaited<ReturnType<typeof get
 - 404: Indicator not found
  * @summary Get indicator by ID
  */
-export const getIndicatorsIndicators$IndicatorId = (
+export const getIndicators$IndicatorId = (
     indicatorId: number,
  options?: SecondParameter<typeof mutator>,signal?: AbortSignal
 ) => {
       
       
       return mutator<IndicatorResponse>(
-      {url: `http://localhost:8000/api/v1/indicators/indicators/${indicatorId}`, method: 'GET', signal
+      {url: `http://localhost:8000/api/v1/indicators/${indicatorId}`, method: 'GET', signal
     },
       options);
     }
   
 
-export const getGetIndicatorsIndicatorsIndicatorIdQueryKey = (indicatorId: number,) => {
-    return [`http://localhost:8000/api/v1/indicators/indicators/${indicatorId}`] as const;
+export const getGetIndicatorsIndicatorIdQueryKey = (indicatorId: number,) => {
+    return [`http://localhost:8000/api/v1/indicators/${indicatorId}`] as const;
     }
 
     
-export const getGetIndicatorsIndicatorsIndicatorIdQueryOptions = <TData = Awaited<ReturnType<typeof getIndicatorsIndicators$IndicatorId>>, TError = HTTPValidationError>(indicatorId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getIndicatorsIndicators$IndicatorId>>, TError, TData>, request?: SecondParameter<typeof mutator>}
+export const getGetIndicatorsIndicatorIdQueryOptions = <TData = Awaited<ReturnType<typeof getIndicators$IndicatorId>>, TError = HTTPValidationError>(indicatorId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getIndicators$IndicatorId>>, TError, TData>, request?: SecondParameter<typeof mutator>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetIndicatorsIndicatorsIndicatorIdQueryKey(indicatorId);
+  const queryKey =  queryOptions?.queryKey ?? getGetIndicatorsIndicatorIdQueryKey(indicatorId);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getIndicatorsIndicators$IndicatorId>>> = ({ signal }) => getIndicatorsIndicators$IndicatorId(indicatorId, requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getIndicators$IndicatorId>>> = ({ signal }) => getIndicators$IndicatorId(indicatorId, requestOptions, signal);
 
       
 
       
 
-   return  { queryKey, queryFn, enabled: !!(indicatorId),  staleTime: 300000, refetchOnWindowFocus: false,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getIndicatorsIndicators$IndicatorId>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: !!(indicatorId),  staleTime: 300000, refetchOnWindowFocus: false,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getIndicators$IndicatorId>>, TError, TData> & { queryKey: QueryKey }
 }
 
-export type GetIndicatorsIndicatorsIndicatorIdQueryResult = NonNullable<Awaited<ReturnType<typeof getIndicatorsIndicators$IndicatorId>>>
-export type GetIndicatorsIndicatorsIndicatorIdQueryError = HTTPValidationError
+export type GetIndicatorsIndicatorIdQueryResult = NonNullable<Awaited<ReturnType<typeof getIndicators$IndicatorId>>>
+export type GetIndicatorsIndicatorIdQueryError = HTTPValidationError
 
 
 /**
  * @summary Get indicator by ID
  */
 
-export function useGetIndicatorsIndicatorsIndicatorId<TData = Awaited<ReturnType<typeof getIndicatorsIndicators$IndicatorId>>, TError = HTTPValidationError>(
- indicatorId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getIndicatorsIndicators$IndicatorId>>, TError, TData>, request?: SecondParameter<typeof mutator>}
+export function useGetIndicatorsIndicatorId<TData = Awaited<ReturnType<typeof getIndicators$IndicatorId>>, TError = HTTPValidationError>(
+ indicatorId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getIndicators$IndicatorId>>, TError, TData>, request?: SecondParameter<typeof mutator>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetIndicatorsIndicatorsIndicatorIdQueryOptions(indicatorId,options)
+  const queryOptions = getGetIndicatorsIndicatorIdQueryOptions(indicatorId,options)
 
   const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -304,14 +304,14 @@ export function useGetIndicatorsIndicatorsIndicatorId<TData = Awaited<ReturnType
 - 400: Invalid governance_area_id
  * @summary Update an indicator
  */
-export const putIndicatorsIndicators$IndicatorId = (
+export const putIndicators$IndicatorId = (
     indicatorId: number,
     indicatorUpdate: IndicatorUpdate,
  options?: SecondParameter<typeof mutator>,) => {
       
       
       return mutator<IndicatorResponse>(
-      {url: `http://localhost:8000/api/v1/indicators/indicators/${indicatorId}`, method: 'PUT',
+      {url: `http://localhost:8000/api/v1/indicators/${indicatorId}`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: indicatorUpdate
     },
@@ -320,11 +320,11 @@ export const putIndicatorsIndicators$IndicatorId = (
   
 
 
-export const getPutIndicatorsIndicatorsIndicatorIdMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putIndicatorsIndicators$IndicatorId>>, TError,{indicatorId: number;data: IndicatorUpdate}, TContext>, request?: SecondParameter<typeof mutator>}
-): UseMutationOptions<Awaited<ReturnType<typeof putIndicatorsIndicators$IndicatorId>>, TError,{indicatorId: number;data: IndicatorUpdate}, TContext> => {
+export const getPutIndicatorsIndicatorIdMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putIndicators$IndicatorId>>, TError,{indicatorId: number;data: IndicatorUpdate}, TContext>, request?: SecondParameter<typeof mutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof putIndicators$IndicatorId>>, TError,{indicatorId: number;data: IndicatorUpdate}, TContext> => {
 
-const mutationKey = ['putIndicatorsIndicatorsIndicatorId'];
+const mutationKey = ['putIndicatorsIndicatorId'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -334,10 +334,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putIndicatorsIndicators$IndicatorId>>, {indicatorId: number;data: IndicatorUpdate}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putIndicators$IndicatorId>>, {indicatorId: number;data: IndicatorUpdate}> = (props) => {
           const {indicatorId,data} = props ?? {};
 
-          return  putIndicatorsIndicators$IndicatorId(indicatorId,data,requestOptions)
+          return  putIndicators$IndicatorId(indicatorId,data,requestOptions)
         }
 
         
@@ -345,23 +345,23 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type PutIndicatorsIndicatorsIndicatorIdMutationResult = NonNullable<Awaited<ReturnType<typeof putIndicatorsIndicators$IndicatorId>>>
-    export type PutIndicatorsIndicatorsIndicatorIdMutationBody = IndicatorUpdate
-    export type PutIndicatorsIndicatorsIndicatorIdMutationError = HTTPValidationError
+    export type PutIndicatorsIndicatorIdMutationResult = NonNullable<Awaited<ReturnType<typeof putIndicators$IndicatorId>>>
+    export type PutIndicatorsIndicatorIdMutationBody = IndicatorUpdate
+    export type PutIndicatorsIndicatorIdMutationError = HTTPValidationError
 
     /**
  * @summary Update an indicator
  */
-export const usePutIndicatorsIndicatorsIndicatorId = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putIndicatorsIndicators$IndicatorId>>, TError,{indicatorId: number;data: IndicatorUpdate}, TContext>, request?: SecondParameter<typeof mutator>}
+export const usePutIndicatorsIndicatorId = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putIndicators$IndicatorId>>, TError,{indicatorId: number;data: IndicatorUpdate}, TContext>, request?: SecondParameter<typeof mutator>}
  ): UseMutationResult<
-        Awaited<ReturnType<typeof putIndicatorsIndicators$IndicatorId>>,
+        Awaited<ReturnType<typeof putIndicators$IndicatorId>>,
         TError,
         {indicatorId: number;data: IndicatorUpdate},
         TContext
       > => {
 
-      const mutationOptions = getPutIndicatorsIndicatorsIndicatorIdMutationOptions(options);
+      const mutationOptions = getPutIndicatorsIndicatorIdMutationOptions(options);
 
       return useMutation(mutationOptions );
     }
@@ -380,24 +380,24 @@ export const usePutIndicatorsIndicatorsIndicatorId = <TError = HTTPValidationErr
 - 400: Cannot deactivate indicator with active child indicators
  * @summary Deactivate an indicator
  */
-export const deleteIndicatorsIndicators$IndicatorId = (
+export const deleteIndicators$IndicatorId = (
     indicatorId: number,
  options?: SecondParameter<typeof mutator>,) => {
       
       
       return mutator<IndicatorResponse>(
-      {url: `http://localhost:8000/api/v1/indicators/indicators/${indicatorId}`, method: 'DELETE'
+      {url: `http://localhost:8000/api/v1/indicators/${indicatorId}`, method: 'DELETE'
     },
       options);
     }
   
 
 
-export const getDeleteIndicatorsIndicatorsIndicatorIdMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteIndicatorsIndicators$IndicatorId>>, TError,{indicatorId: number}, TContext>, request?: SecondParameter<typeof mutator>}
-): UseMutationOptions<Awaited<ReturnType<typeof deleteIndicatorsIndicators$IndicatorId>>, TError,{indicatorId: number}, TContext> => {
+export const getDeleteIndicatorsIndicatorIdMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteIndicators$IndicatorId>>, TError,{indicatorId: number}, TContext>, request?: SecondParameter<typeof mutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteIndicators$IndicatorId>>, TError,{indicatorId: number}, TContext> => {
 
-const mutationKey = ['deleteIndicatorsIndicatorsIndicatorId'];
+const mutationKey = ['deleteIndicatorsIndicatorId'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -407,10 +407,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteIndicatorsIndicators$IndicatorId>>, {indicatorId: number}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteIndicators$IndicatorId>>, {indicatorId: number}> = (props) => {
           const {indicatorId} = props ?? {};
 
-          return  deleteIndicatorsIndicators$IndicatorId(indicatorId,requestOptions)
+          return  deleteIndicators$IndicatorId(indicatorId,requestOptions)
         }
 
         
@@ -418,23 +418,23 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type DeleteIndicatorsIndicatorsIndicatorIdMutationResult = NonNullable<Awaited<ReturnType<typeof deleteIndicatorsIndicators$IndicatorId>>>
+    export type DeleteIndicatorsIndicatorIdMutationResult = NonNullable<Awaited<ReturnType<typeof deleteIndicators$IndicatorId>>>
     
-    export type DeleteIndicatorsIndicatorsIndicatorIdMutationError = HTTPValidationError
+    export type DeleteIndicatorsIndicatorIdMutationError = HTTPValidationError
 
     /**
  * @summary Deactivate an indicator
  */
-export const useDeleteIndicatorsIndicatorsIndicatorId = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteIndicatorsIndicators$IndicatorId>>, TError,{indicatorId: number}, TContext>, request?: SecondParameter<typeof mutator>}
+export const useDeleteIndicatorsIndicatorId = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteIndicators$IndicatorId>>, TError,{indicatorId: number}, TContext>, request?: SecondParameter<typeof mutator>}
  ): UseMutationResult<
-        Awaited<ReturnType<typeof deleteIndicatorsIndicators$IndicatorId>>,
+        Awaited<ReturnType<typeof deleteIndicators$IndicatorId>>,
         TError,
         {indicatorId: number},
         TContext
       > => {
 
-      const mutationOptions = getDeleteIndicatorsIndicatorsIndicatorIdMutationOptions(options);
+      const mutationOptions = getDeleteIndicatorsIndicatorIdMutationOptions(options);
 
       return useMutation(mutationOptions );
     }
@@ -452,56 +452,56 @@ export const useDeleteIndicatorsIndicatorsIndicatorId = <TError = HTTPValidation
 - 404: Indicator not found
  * @summary Get indicator version history
  */
-export const getIndicatorsIndicators$IndicatorIdHistory = (
+export const getIndicators$IndicatorIdHistory = (
     indicatorId: number,
  options?: SecondParameter<typeof mutator>,signal?: AbortSignal
 ) => {
       
       
       return mutator<IndicatorHistoryResponse[]>(
-      {url: `http://localhost:8000/api/v1/indicators/indicators/${indicatorId}/history`, method: 'GET', signal
+      {url: `http://localhost:8000/api/v1/indicators/${indicatorId}/history`, method: 'GET', signal
     },
       options);
     }
   
 
-export const getGetIndicatorsIndicatorsIndicatorIdHistoryQueryKey = (indicatorId: number,) => {
-    return [`http://localhost:8000/api/v1/indicators/indicators/${indicatorId}/history`] as const;
+export const getGetIndicatorsIndicatorIdHistoryQueryKey = (indicatorId: number,) => {
+    return [`http://localhost:8000/api/v1/indicators/${indicatorId}/history`] as const;
     }
 
     
-export const getGetIndicatorsIndicatorsIndicatorIdHistoryQueryOptions = <TData = Awaited<ReturnType<typeof getIndicatorsIndicators$IndicatorIdHistory>>, TError = HTTPValidationError>(indicatorId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getIndicatorsIndicators$IndicatorIdHistory>>, TError, TData>, request?: SecondParameter<typeof mutator>}
+export const getGetIndicatorsIndicatorIdHistoryQueryOptions = <TData = Awaited<ReturnType<typeof getIndicators$IndicatorIdHistory>>, TError = HTTPValidationError>(indicatorId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getIndicators$IndicatorIdHistory>>, TError, TData>, request?: SecondParameter<typeof mutator>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetIndicatorsIndicatorsIndicatorIdHistoryQueryKey(indicatorId);
+  const queryKey =  queryOptions?.queryKey ?? getGetIndicatorsIndicatorIdHistoryQueryKey(indicatorId);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getIndicatorsIndicators$IndicatorIdHistory>>> = ({ signal }) => getIndicatorsIndicators$IndicatorIdHistory(indicatorId, requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getIndicators$IndicatorIdHistory>>> = ({ signal }) => getIndicators$IndicatorIdHistory(indicatorId, requestOptions, signal);
 
       
 
       
 
-   return  { queryKey, queryFn, enabled: !!(indicatorId),  staleTime: 300000, refetchOnWindowFocus: false,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getIndicatorsIndicators$IndicatorIdHistory>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: !!(indicatorId),  staleTime: 300000, refetchOnWindowFocus: false,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getIndicators$IndicatorIdHistory>>, TError, TData> & { queryKey: QueryKey }
 }
 
-export type GetIndicatorsIndicatorsIndicatorIdHistoryQueryResult = NonNullable<Awaited<ReturnType<typeof getIndicatorsIndicators$IndicatorIdHistory>>>
-export type GetIndicatorsIndicatorsIndicatorIdHistoryQueryError = HTTPValidationError
+export type GetIndicatorsIndicatorIdHistoryQueryResult = NonNullable<Awaited<ReturnType<typeof getIndicators$IndicatorIdHistory>>>
+export type GetIndicatorsIndicatorIdHistoryQueryError = HTTPValidationError
 
 
 /**
  * @summary Get indicator version history
  */
 
-export function useGetIndicatorsIndicatorsIndicatorIdHistory<TData = Awaited<ReturnType<typeof getIndicatorsIndicators$IndicatorIdHistory>>, TError = HTTPValidationError>(
- indicatorId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getIndicatorsIndicators$IndicatorIdHistory>>, TError, TData>, request?: SecondParameter<typeof mutator>}
+export function useGetIndicatorsIndicatorIdHistory<TData = Awaited<ReturnType<typeof getIndicators$IndicatorIdHistory>>, TError = HTTPValidationError>(
+ indicatorId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getIndicators$IndicatorIdHistory>>, TError, TData>, request?: SecondParameter<typeof mutator>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetIndicatorsIndicatorsIndicatorIdHistoryQueryOptions(indicatorId,options)
+  const queryOptions = getGetIndicatorsIndicatorIdHistoryQueryOptions(indicatorId,options)
 
   const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

@@ -13,7 +13,7 @@
 
 ### Atomic Tasks
 
-- [ ] **2.1.1 Atomic: Create Pydantic models for form field types**
+- [x] **2.1.1 Atomic: Create Pydantic models for form field types**
   - **Files:**
     - `apps/api/app/schemas/form_schema.py`
   - **Dependencies:** None
@@ -31,7 +31,7 @@
   - **Tech:** Pydantic discriminated unions
   - **Duration:** 3 hours
 
-- [ ] **2.1.2 Atomic: Create FormSchema root model**
+- [x] **2.1.2 Atomic: Create FormSchema root model**
   - **Files:**
     - `apps/api/app/schemas/form_schema.py`
   - **Dependencies:** 2.1.1
@@ -46,7 +46,7 @@
   - **Tech:** Pydantic validators, JSON Schema
   - **Duration:** 2 hours
 
-- [ ] **2.1.3 Atomic: Create validation helper functions**
+- [x] **2.1.3 Atomic: Create validation helper functions**
   - **Files:**
     - `apps/api/app/services/form_schema_validator.py`
   - **Dependencies:** 2.1.2
@@ -60,7 +60,7 @@
   - **Tech:** Python type checking, Pydantic
   - **Duration:** 2 hours
 
-- [ ] **2.1.4 Atomic: Add TypeScript type generation for form schemas**
+- [x] **2.1.4 Atomic: Add TypeScript type generation for form schemas**
   - **Files:**
     - Update `orval.config.ts` if needed
   - **Dependencies:** 2.1.2
