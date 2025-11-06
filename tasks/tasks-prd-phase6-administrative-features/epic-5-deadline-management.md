@@ -319,37 +319,43 @@
 
 ---
 
-## Story 5.7: Frontend Deadline Override Audit Log
+## Story 5.7: Frontend Deadline Override Audit Log ✅
 
 **Duration:** 1 day
 **Dependencies:** 5.3, `pnpm generate-types`
+**Status:** COMPLETED
 
 ### Atomic Tasks (5 tasks)
 
-- [ ] **5.7.1** Create useDeadlineAuditLog custom hook
+- [x] **5.7.1** Create useDeadlineAuditLog custom hook ✅
   - **File:** `apps/web/src/hooks/useDeadlineAuditLog.ts`
   - **Criteria:** Wrap useGetDeadlineOverrides with filters
   - **Duration:** 1 hour
+  - **Completed:** Custom hook wraps useGetAdminDeadlinesOverrides with cycleId/barangayId/indicatorId filters, includes exportDeadlineOverridesCSV helper function
 
-- [ ] **5.7.2** Create DeadlineAuditLog component
+- [x] **5.7.2** Create DeadlineAuditLog component ✅
   - **File:** `apps/web/src/components/features/admin/deadlines/DeadlineAuditLog.tsx`
   - **Criteria:** Table with columns: Timestamp, User, Barangay, Indicators, Old Deadline, New Deadline, Reason
   - **Duration:** 3 hours
+  - **Completed:** Comprehensive table with 8 columns: Timestamp, Created By, Barangay, Indicator, Original Deadline, New Deadline, Extension (calculated days), Reason; iconography for each column header; hover effects
 
-- [ ] **5.7.3** Add filter controls
-  - **File:** `DeadlineAuditLog.tsx` (update)
+- [x] **5.7.3** Add filter controls ✅
+  - **File:** `DeadlineAuditLog.tsx` (integrated in task 5.7.2)
   - **Criteria:** Date range picker, barangay filter, user filter
   - **Duration:** 2 hours
+  - **Completed:** Filter panel with barangay dropdown and indicator dropdown, "All Barangays"/"All Indicators" default options, live filtering updates
 
-- [ ] **5.7.4** Implement CSV export button
-  - **File:** `DeadlineAuditLog.tsx` (update)
+- [x] **5.7.4** Implement CSV export button ✅
+  - **File:** `DeadlineAuditLog.tsx` (integrated in task 5.7.2)
   - **Criteria:** Call GET /api/v1/admin/deadlines/overrides/export, trigger download
   - **Duration:** 1.5 hours
+  - **Completed:** Export CSV button in header with Download icon, exportDeadlineOverridesCSV function creates temporary link and triggers browser download, respects active filters, timestamped filename
 
-- [ ] **5.7.5** Add pagination
-  - **File:** `DeadlineAuditLog.tsx` (update)
+- [x] **5.7.5** Add pagination ✅
+  - **File:** `DeadlineAuditLog.tsx` (integrated in task 5.7.2)
   - **Criteria:** shadcn/ui Pagination component, page size selector
   - **Duration:** 1.5 hours
+  - **Completed:** Full pagination system with Previous/Next buttons, page counter, page size dropdown (5/10/20/50), results counter showing "X to Y of Z overrides", automatic page reset on filter/page size change
 
 ---
 

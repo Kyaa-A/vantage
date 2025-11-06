@@ -6,3 +6,4 @@
 
 export { DeadlineStatusDashboard } from "./DeadlineStatusDashboard";
 export { DeadlineOverrideModal } from "./DeadlineOverrideModal";
+export { DeadlineAuditLog } from "./DeadlineAuditLog";
