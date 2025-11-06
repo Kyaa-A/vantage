@@ -5,16 +5,20 @@ import { useCreateBBIMutation } from "@/hooks/useBBIs";
 import { BBIForm } from "@/components/features/bbis";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import type { BBICreate } from "@vantage/shared";
 
 export default function NewBBIPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const createBBIMutation = useCreateBBIMutation();
 
   const handleSubmit = async (data: BBICreate) => {
     try {
       await createBBIMutation.mutateAsync({ data });
       toast.success("BBI created successfully!");
+      // Invalidate the BBIs list cache so it refetches with the new BBI
+      queryClient.invalidateQueries({ queryKey: ['bbis'] });
       router.push("/mlgoo/bbis");
     } catch (error: any) {
       toast.error(
