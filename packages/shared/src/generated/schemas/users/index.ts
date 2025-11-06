@@ -4,6 +4,18 @@
 // 🏷️  Based on FastAPI tag: "users"
 
 /**
+ * AuditLogResponseUserEmail
+ */
+export type AuditLogResponseUserEmail = string | null;
+
+
+/**
+ * AuditLogResponseUserName
+ */
+export type AuditLogResponseUserName = string | null;
+
+
+/**
  * GetUsersParams
  */
 export type GetUsersParams = {
@@ -37,6 +49,12 @@ is_active?: boolean | null;
  * GetUsersStatsDashboard200
  */
 export type GetUsersStatsDashboard200 = { [key: string]: unknown };
+
+
+/**
+ * IndicatorHistoryResponseArchivedByUser
+ */
+export type IndicatorHistoryResponseArchivedByUser = UserNested | null;
 
 
 /**
@@ -192,6 +210,16 @@ export interface UserListResponse {
   page: number;
   size: number;
   total_pages: number;
+}
+
+
+/**
+ * UserNested
+ */
+export interface UserNested {
+  id: number;
+  name: string;
+  email: string;
 }
 
 

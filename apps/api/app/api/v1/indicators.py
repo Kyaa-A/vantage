@@ -16,7 +16,7 @@ from app.schemas.indicator import (
 )
 from app.services.indicator_service import indicator_service
 
-router = APIRouter(prefix="/indicators", tags=["indicators"])
+router = APIRouter(tags=["indicators"])
 
 
 @router.post(

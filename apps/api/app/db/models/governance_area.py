@@ -5,7 +5,7 @@ from datetime import datetime
 
 from app.db.base import Base
 from app.db.enums import AreaType
-from sqlalchemy import JSON, Boolean, Column, DateTime, Enum, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import JSON, Boolean, Column, DateTime, Enum, ForeignKey, Integer, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import Optional
 
@@ -90,6 +90,10 @@ class Indicator(Base):
         ForeignKey("indicators.id"), nullable=True
     )
 
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(default=func.now(), onupdate=func.now())
+
     # Relationships
     governance_area = relationship("GovernanceArea", back_populates="indicators")
     responses = relationship("AssessmentResponse", back_populates="indicator")
@@ -153,6 +157,10 @@ class IndicatorHistory(Base):
     # Foreign keys preserved from original indicator
     governance_area_id: Mapped[int] = mapped_column(nullable=False)
     parent_id: Mapped[int | None] = mapped_column(nullable=True)
+
+    # Original timestamps from indicator
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
     # Archive metadata
     archived_at: Mapped[datetime] = mapped_column(

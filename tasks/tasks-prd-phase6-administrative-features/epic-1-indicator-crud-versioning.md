@@ -12,7 +12,7 @@
 
 ### Atomic Tasks
 
-- [ ] **1.1.1 Atomic: Update indicators table schema with versioning fields**
+- [x] **1.1.1 Atomic: Update indicators table schema with versioning fields**
   - **Files:**
     - `apps/api/app/db/models/assessment.py` (update Indicator model)
   - **Dependencies:** None
@@ -28,7 +28,7 @@
   - **Tech:** SQLAlchemy, PostgreSQL JSONB type
   - **Duration:** 2 hours
 
-- [ ] **1.1.2 Atomic: Create indicators_history table model**
+- [x] **1.1.2 Atomic: Create indicators_history table model**
   - **Files:**
     - `apps/api/app/db/models/assessment.py` (add IndicatorHistory model)
   - **Dependencies:** None
@@ -43,7 +43,7 @@
   - **Tech:** SQLAlchemy, PostgreSQL
   - **Duration:** 2 hours
 
-- [ ] **1.1.3 Atomic: Add rule type enums to enums.py**
+- [x] **1.1.3 Atomic: Add rule type enums to enums.py**
   - **Files:**
     - `apps/api/app/db/enums.py`
   - **Dependencies:** None
@@ -54,7 +54,7 @@
   - **Tech:** Python enum, SQLAlchemy
   - **Duration:** 1 hour
 
-- [ ] **1.1.4 Atomic: Create Alembic migration for indicator versioning**
+- [x] **1.1.4 Atomic: Create Alembic migration for indicator versioning**
   - **Files:**
     - `apps/api/alembic/versions/xxxx_add_indicator_versioning.py`
   - **Dependencies:** 1.1.1, 1.1.2, 1.1.3
@@ -69,7 +69,7 @@
   - **Tech:** Alembic, PostgreSQL
   - **Duration:** 2 hours
 
-- [ ] **1.1.5 Atomic: Create data migration to populate initial versions**
+- [x] **1.1.5 Atomic: Create data migration to populate initial versions**
   - **Files:**
     - `apps/api/alembic/versions/xxxx_populate_indicator_versions.py`
   - **Dependencies:** 1.1.4
@@ -91,7 +91,7 @@
 
 ### Atomic Tasks
 
-- [ ] **1.2.1 Atomic: Create indicator_service.py with base structure**
+- [x] **1.2.1 Atomic: Create indicator_service.py with base structure**
   - **Files:**
     - `apps/api/app/services/indicator_service.py`
   - **Dependencies:** 1.1.4
@@ -105,7 +105,7 @@
   - **Tech:** FastAPI, SQLAlchemy, Loguru
   - **Duration:** 1 hour
 
-- [ ] **1.2.2 Atomic: Implement create_indicator() method**
+- [x] **1.2.2 Atomic: Implement create_indicator() method**
   - **Files:**
     - `apps/api/app/services/indicator_service.py`
   - **Dependencies:** 1.2.1
@@ -123,7 +123,7 @@
   - **Tech:** SQLAlchemy, Pydantic validation
   - **Duration:** 3 hours
 
-- [ ] **1.2.3 Atomic: Implement get_indicator() method**
+- [x] **1.2.3 Atomic: Implement get_indicator() method**
   - **Files:**
     - `apps/api/app/services/indicator_service.py`
   - **Dependencies:** 1.2.1
@@ -136,7 +136,7 @@
   - **Tech:** SQLAlchemy query with joinedload
   - **Duration:** 1 hour
 
-- [ ] **1.2.4 Atomic: Implement list_indicators() method with filtering**
+- [x] **1.2.4 Atomic: Implement list_indicators() method with filtering**
   - **Files:**
     - `apps/api/app/services/indicator_service.py`
   - **Dependencies:** 1.2.1
@@ -151,7 +151,7 @@
   - **Tech:** SQLAlchemy filtering, pagination
   - **Duration:** 2 hours
 
-- [ ] **1.2.5 Atomic: Implement update_indicator() method with versioning**
+- [x] **1.2.5 Atomic: Implement update_indicator() method with versioning**
   - **Files:**
     - `apps/api/app/services/indicator_service.py`
   - **Dependencies:** 1.2.1, 1.2.3
@@ -170,7 +170,7 @@
   - **Tech:** SQLAlchemy, Python datetime
   - **Duration:** 4 hours
 
-- [ ] **1.2.6 Atomic: Implement deactivate_indicator() method**
+- [x] **1.2.6 Atomic: Implement deactivate_indicator() method**
   - **Files:**
     - `apps/api/app/services/indicator_service.py`
   - **Dependencies:** 1.2.1, 1.2.3
@@ -185,7 +185,7 @@
   - **Tech:** SQLAlchemy
   - **Duration:** 2 hours
 
-- [ ] **1.2.7 Atomic: Implement get_indicator_history() method**
+- [x] **1.2.7 Atomic: Implement get_indicator_history() method**
   - **Files:**
     - `apps/api/app/services/indicator_service.py`
   - **Dependencies:** 1.2.1
@@ -199,7 +199,7 @@
   - **Tech:** SQLAlchemy query with join to users
   - **Duration:** 2 hours
 
-- [ ] **1.2.8 Atomic: Implement helper to prevent circular parent relationships**
+- [x] **1.2.8 Atomic: Implement helper to prevent circular parent relationships**
   - **Files:**
     - `apps/api/app/services/indicator_service.py`
   - **Dependencies:** 1.2.1
@@ -221,7 +221,7 @@
 
 ### Atomic Tasks
 
-- [ ] **1.3.1 Atomic: Create Pydantic schemas for indicator requests/responses**
+- [x] **1.3.1 Atomic: Create Pydantic schemas for indicator requests/responses**
   - **Files:**
     - `apps/api/app/schemas/indicator.py`
   - **Dependencies:** None
@@ -236,7 +236,7 @@
   - **Tech:** Pydantic, Python type hints
   - **Duration:** 2 hours
 
-- [ ] **1.3.2 Atomic: Create indicators.py router with CRUD endpoints**
+- [x] **1.3.2 Atomic: Create indicators.py router with CRUD endpoints**
   - **Files:**
     - `apps/api/app/api/v1/indicators.py`
   - **Dependencies:** 1.3.1, 1.2.8 (service must be complete)
@@ -249,7 +249,7 @@
   - **Tech:** FastAPI APIRouter
   - **Duration:** 1 hour
 
-- [ ] **1.3.3 Atomic: Implement POST /api/v1/indicators endpoint**
+- [x] **1.3.3 Atomic: Implement POST /api/v1/indicators endpoint**
   - **Files:**
     - `apps/api/app/api/v1/indicators.py`
   - **Dependencies:** 1.3.2
@@ -264,7 +264,7 @@
   - **Tech:** FastAPI, Pydantic, HTTP status codes
   - **Duration:** 2 hours
 
-- [ ] **1.3.4 Atomic: Implement GET /api/v1/indicators endpoint (list)**
+- [x] **1.3.4 Atomic: Implement GET /api/v1/indicators endpoint (list)**
   - **Files:**
     - `apps/api/app/api/v1/indicators.py`
   - **Dependencies:** 1.3.2
@@ -278,7 +278,7 @@
   - **Tech:** FastAPI query parameters
   - **Duration:** 1.5 hours
 
-- [ ] **1.3.5 Atomic: Implement GET /api/v1/indicators/{id} endpoint**
+- [x] **1.3.5 Atomic: Implement GET /api/v1/indicators/{id} endpoint**
   - **Files:**
     - `apps/api/app/api/v1/indicators.py`
   - **Dependencies:** 1.3.2
@@ -292,7 +292,7 @@
   - **Tech:** FastAPI path parameters, HTTPException
   - **Duration:** 1 hour
 
-- [ ] **1.3.6 Atomic: Implement PUT /api/v1/indicators/{id} endpoint**
+- [x] **1.3.6 Atomic: Implement PUT /api/v1/indicators/{id} endpoint**
   - **Files:**
     - `apps/api/app/api/v1/indicators.py`
   - **Dependencies:** 1.3.2
@@ -308,7 +308,7 @@
   - **Tech:** FastAPI, Pydantic
   - **Duration:** 2 hours
 
-- [ ] **1.3.7 Atomic: Implement DELETE /api/v1/indicators/{id} endpoint**
+- [x] **1.3.7 Atomic: Implement DELETE /api/v1/indicators/{id} endpoint**
   - **Files:**
     - `apps/api/app/api/v1/indicators.py`
   - **Dependencies:** 1.3.2
@@ -323,7 +323,7 @@
   - **Tech:** FastAPI, HTTP 204 status
   - **Duration:** 1.5 hours
 
-- [ ] **1.3.8 Atomic: Implement GET /api/v1/indicators/{id}/history endpoint**
+- [x] **1.3.8 Atomic: Implement GET /api/v1/indicators/{id}/history endpoint**
   - **Files:**
     - `apps/api/app/api/v1/indicators.py`
   - **Dependencies:** 1.3.2
@@ -338,7 +338,7 @@
   - **Tech:** FastAPI, Pydantic nested models
   - **Duration:** 2 hours
 
-- [ ] **1.3.9 Atomic: Register indicators router in main API**
+- [x] **1.3.9 Atomic: Register indicators router in main API**
   - **Files:**
     - `apps/api/app/api/v1/__init__.py`
   - **Dependencies:** 1.3.8
@@ -359,7 +359,7 @@
 
 ### Atomic Tasks
 
-- [ ] **1.4.1 Atomic: Generate TypeScript types from backend**
+- [x] **1.4.1 Atomic: Generate TypeScript types from backend**
   - **Files:**
     - `packages/shared/src/generated/schemas/indicators/` (auto-generated)
     - `packages/shared/src/generated/endpoints/indicators/` (auto-generated)
@@ -374,7 +374,7 @@
   - **Tech:** Orval, OpenAPI, TypeScript
   - **Duration:** 0.5 hours
 
-- [ ] **1.4.2 Atomic: Create useIndicators custom hook**
+- [x] **1.4.2 Atomic: Create useIndicators custom hook**
   - **Files:**
     - `apps/web/src/hooks/useIndicators.ts`
   - **Dependencies:** 1.4.1
@@ -391,7 +391,7 @@
   - **Tech:** React, TanStack Query, TypeScript
   - **Duration:** 2 hours
 
-- [ ] **1.4.3 Atomic: Create admin/indicators folder structure**
+- [x] **1.4.3 Atomic: Create admin/indicators folder structure**
   - **Files:**
     - `apps/web/src/app/(app)/admin/indicators/page.tsx` (create)
     - `apps/web/src/app/(app)/admin/indicators/[id]/page.tsx` (create)
@@ -405,7 +405,7 @@
   - **Tech:** Next.js 15 App Router
   - **Duration:** 0.5 hours
 
-- [ ] **1.4.4 Atomic: Create IndicatorList component**
+- [x] **1.4.4 Atomic: Create IndicatorList component**
   - **Files:**
     - `apps/web/src/components/features/admin/indicators/IndicatorList.tsx`
   - **Dependencies:** 1.4.2
@@ -442,7 +442,7 @@
   - **Tech:** React, shadcn/ui Badge, DropdownMenu, AlertDialog
   - **Duration:** 3 hours
 
-- [ ] **1.4.6 Atomic: Create indicator list page**
+- [x] **1.4.6 Atomic: Create indicator list page**
   - **Files:**
     - `apps/web/src/app/(app)/admin/indicators/page.tsx`
   - **Dependencies:** 1.4.4, 1.4.5
@@ -456,7 +456,7 @@
   - **Tech:** Next.js App Router, Server Component
   - **Duration:** 1 hour
 
-- [ ] **1.4.7 Atomic: Create IndicatorDetail component**
+- [x] **1.4.7 Atomic: Create IndicatorDetail component**
   - **Files:**
     - `apps/web/src/components/features/admin/indicators/IndicatorDetail.tsx`
   - **Dependencies:** 1.4.2
@@ -480,7 +480,7 @@
   - **Tech:** React, TanStack Query, shadcn/ui Card, Accordion
   - **Duration:** 3 hours
 
-- [ ] **1.4.8 Atomic: Create IndicatorHistory component**
+- [x] **1.4.8 Atomic: Create IndicatorHistory component**
   - **Files:**
     - `apps/web/src/components/features/admin/indicators/IndicatorHistory.tsx`
   - **Dependencies:** 1.4.2
@@ -496,7 +496,7 @@
   - **Tech:** React, TanStack Query, custom Timeline component or shadcn/ui
   - **Duration:** 4 hours
 
-- [ ] **1.4.9 Atomic: Create indicator detail page**
+- [x] **1.4.9 Atomic: Create indicator detail page**
   - **Files:**
     - `apps/web/src/app/(app)/admin/indicators/[id]/page.tsx`
   - **Dependencies:** 1.4.7, 1.4.8
@@ -520,7 +520,7 @@
 
 ### Atomic Tasks
 
-- [ ] **1.5.1 Atomic: Create test fixtures for indicators**
+- [x] **1.5.1 Atomic: Create test fixtures for indicators**
   - **Files:**
     - `apps/api/tests/conftest.py` (update)
   - **Dependencies:** None
@@ -533,7 +533,7 @@
   - **Tech:** Pytest fixtures, SQLAlchemy
   - **Duration:** 2 hours
 
-- [ ] **1.5.2 Atomic: Write indicator_service unit tests**
+- [x] **1.5.2 Atomic: Write indicator_service unit tests**
   - **Files:**
     - `apps/api/tests/services/test_indicator_service.py`
   - **Dependencies:** 1.5.1
@@ -552,7 +552,7 @@
   - **Tech:** Pytest, SQLAlchemy mocking
   - **Duration:** 4 hours
 
-- [ ] **1.5.3 Atomic: Write indicator API endpoint tests**
+- [x] **1.5.3 Atomic: Write indicator API endpoint tests**
   - **Files:**
     - `apps/api/tests/api/v1/test_indicators.py`
   - **Dependencies:** 1.5.1
@@ -570,7 +570,7 @@
   - **Tech:** Pytest, FastAPI TestClient
   - **Duration:** 4 hours
 
-- [ ] **1.5.4 Atomic: Write versioning integration test**
+- [x] **1.5.4 Atomic: Write versioning integration test**
   - **Files:**
     - `apps/api/tests/integration/test_indicator_versioning.py`
   - **Dependencies:** 1.5.1
@@ -584,9 +584,9 @@
   - **Tech:** Pytest, SQLAlchemy integration testing
   - **Duration:** 3 hours
 
-- [ ] **1.5.5 Atomic: Write frontend IndicatorList component tests**
+- [x] **1.5.5 Atomic: Write frontend IndicatorList component tests**
   - **Files:**
-    - `apps/web/src/components/features/admin/indicators/IndicatorList.test.tsx`
+    - `apps/web/src/components/features/indicators/IndicatorList.test.tsx`
   - **Dependencies:** 1.4.4
   - **Acceptance Criteria:**
     - Mock useIndicators hook with MSW
@@ -602,9 +602,9 @@
   - **Tech:** Vitest, React Testing Library, MSW
   - **Duration:** 3 hours
 
-- [ ] **1.5.6 Atomic: Write frontend IndicatorDetail component tests**
+- [x] **1.5.6 Atomic: Write frontend IndicatorDetail component tests**
   - **Files:**
-    - `apps/web/src/components/features/admin/indicators/IndicatorDetail.test.tsx`
+    - `apps/web/src/components/features/indicators/IndicatorDetail.test.tsx`
   - **Dependencies:** 1.4.7
   - **Acceptance Criteria:**
     - Mock useIndicator hook with MSW

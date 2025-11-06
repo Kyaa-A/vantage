@@ -170,31 +170,22 @@ export interface ComplianceRate {
 
 
 /**
- * FailedIndicator
- */
-export interface FailedIndicator {
-  /** Unique identifier for the indicator */
-  indicator_id: number;
-  /** Name of the indicator */
-  indicator_name: string;
-  /** Number of times this indicator failed */
-  failure_count: number;
-  /**
-   * Failure rate as percentage
-   * @minimum 0
-   * @maximum 100
-   */
-  percentage: number;
-}
-
-
-/**
  * GovernanceArea
  */
 export interface GovernanceArea {
   name: string;
   area_type: AreaType;
   id: number;
+}
+
+
+/**
+ * GovernanceAreaNested
+ */
+export interface GovernanceAreaNested {
+  id: number;
+  name: string;
+  area_type: string;
 }
 
 

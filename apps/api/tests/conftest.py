@@ -36,6 +36,21 @@ def override_get_db():
         db.close()
 
 
+@pytest.fixture(scope="session", autouse=True)
+def disable_startup_seeding():
+    """Disable data seeding during test runs to speed up tests"""
+    import os
+    # Set environment variable to skip startup seeding
+    old_value = os.environ.get("SKIP_STARTUP_SEEDING")
+    os.environ["SKIP_STARTUP_SEEDING"] = "true"
+    yield
+    # Restore old value after session
+    if old_value is None:
+        os.environ.pop("SKIP_STARTUP_SEEDING", None)
+    else:
+        os.environ["SKIP_STARTUP_SEEDING"] = old_value
+
+
 @pytest.fixture(scope="session")
 def db_setup():
     """Create test database tables"""
@@ -56,9 +71,9 @@ def db_setup():
     Base.metadata.drop_all(bind=engine)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def client(db_setup):
-    """FastAPI test client with test database"""
+    """FastAPI test client with test database (session-scoped to avoid repeated startup)"""
     app.dependency_overrides[get_db] = override_get_db
     with TestClient(app) as test_client:
         yield test_client

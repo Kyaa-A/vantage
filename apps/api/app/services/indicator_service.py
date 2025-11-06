@@ -219,6 +219,8 @@ class IndicatorService:
                 technical_notes_text=indicator.technical_notes_text,
                 governance_area_id=indicator.governance_area_id,
                 parent_id=indicator.parent_id,
+                created_at=indicator.created_at,
+                updated_at=indicator.updated_at,
                 archived_at=datetime.utcnow(),
                 archived_by=user_id,
             )

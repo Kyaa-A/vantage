@@ -2,11 +2,13 @@
 // 🔄 Do not edit manually - regenerate with: pnpm generate-types
 // 📁 Barrel file for all endpoint modules.
 
+export * from './admin';
 export * from './analytics';
 export * from './assessments';
 export * from './assessor';
 export * from './auth';
 export * from './default';
+export * from './indicators';
 export * from './lookups';
 export * from './system';
 export * from './users';
