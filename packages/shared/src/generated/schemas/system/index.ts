@@ -3,9 +3,11 @@
 // 📁 System-related types
 // 🏷️  Based on FastAPI tag: "system"
 
+import type { AuditLogResponseUserEmail } from '../users';
+import type { AuditLogResponseUserName } from '../users';
 import type { ComplianceRate } from '../common';
 import type { AreaBreakdown } from '../common';
-import type { FailedIndicator } from '../common';
+import type { FailedIndicator } from '../indicators';
 import type { BarangayRanking } from '../common';
 import type { TrendData } from '../common';
 import type { ChartData } from '../common';
@@ -42,6 +44,62 @@ export type SystemicWeaknessReason = string | null;
 export interface ApiResponse {
   message: string;
 }
+
+
+/**
+ * AuditLogListResponse
+ */
+export interface AuditLogListResponse {
+  items: AuditLogResponse[];
+  total: number;
+  skip: number;
+  limit: number;
+}
+
+
+/**
+ * AuditLogResponse
+ */
+export interface AuditLogResponse {
+  /** Type of entity (indicator, bbi, deadline_override, etc.) */
+  entity_type: string;
+  /** ID of the entity (null for bulk operations) */
+  entity_id?: AuditLogResponseEntityId;
+  /** Action performed (create, update, delete, deactivate) */
+  action: string;
+  /** JSON diff of changes */
+  changes?: AuditLogResponseChanges;
+  id: number;
+  user_id: number;
+  ip_address: AuditLogResponseIpAddress;
+  created_at: string;
+  user_email?: AuditLogResponseUserEmail;
+  user_name?: AuditLogResponseUserName;
+}
+
+
+/**
+ * AuditLogResponseChanges
+ */
+export type AuditLogResponseChanges = AuditLogResponseChangesAnyOf | null;
+
+
+/**
+ * AuditLogResponseChangesAnyOf
+ */
+export type AuditLogResponseChangesAnyOf = { [key: string]: unknown };
+
+
+/**
+ * AuditLogResponseEntityId
+ */
+export type AuditLogResponseEntityId = number | null;
+
+
+/**
+ * AuditLogResponseIpAddress
+ */
+export type AuditLogResponseIpAddress = string | null;
 
 
 /**

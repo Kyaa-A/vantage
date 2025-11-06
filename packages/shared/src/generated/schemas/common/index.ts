@@ -151,6 +151,43 @@ export interface ChartData {
 
 
 /**
+ * CheckboxGroupField
+ */
+export interface CheckboxGroupField {
+  /**
+   * Unique identifier for the field
+   * @minLength 1
+   * @maxLength 100
+   */
+  field_id: string;
+  field_type?: 'checkbox_group';
+  /**
+   * Display label for the field
+   * @minLength 1
+   * @maxLength 500
+   */
+  label: string;
+  /** Whether the field is required */
+  required?: boolean;
+  /** Help text shown to users */
+  help_text?: CheckboxGroupFieldHelpText;
+  /**
+   * List of checkbox options
+   * @minItems 1
+   */
+  options: FieldOption[];
+  /** Whether MOV is conditionally required based on selections */
+  conditional_mov_requirement?: boolean;
+}
+
+
+/**
+ * CheckboxGroupFieldHelpText
+ */
+export type CheckboxGroupFieldHelpText = string | null;
+
+
+/**
  * ComplianceRate
  */
 export interface ComplianceRate {
@@ -170,22 +207,162 @@ export interface ComplianceRate {
 
 
 /**
- * FailedIndicator
+ * ConditionalMOVLogic
  */
-export interface FailedIndicator {
-  /** Unique identifier for the indicator */
-  indicator_id: number;
-  /** Name of the indicator */
-  indicator_name: string;
-  /** Number of times this indicator failed */
-  failure_count: number;
-  /**
-   * Failure rate as percentage
-   * @minimum 0
-   * @maximum 100
-   */
-  percentage: number;
+export interface ConditionalMOVLogic {
+  /** ID of the field to check */
+  field_id: string;
+  /** Comparison operator */
+  operator: ConditionalMOVLogicOperator;
+  /** Value to compare against */
+  value: string;
 }
+
+
+/**
+ * ConditionalMOVLogicOperator
+ */
+export type ConditionalMOVLogicOperator = typeof ConditionalMOVLogicOperator[keyof typeof ConditionalMOVLogicOperator];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ConditionalMOVLogicOperator = {
+  equals: 'equals',
+  not_equals: 'not_equals',
+} as const;
+
+
+/**
+ * DatePickerField
+ */
+export interface DatePickerField {
+  /**
+   * Unique identifier for the field
+   * @minLength 1
+   * @maxLength 100
+   */
+  field_id: string;
+  field_type?: 'date_picker';
+  /**
+   * Display label for the field
+   * @minLength 1
+   * @maxLength 500
+   */
+  label: string;
+  /** Whether the field is required */
+  required?: boolean;
+  /** Help text shown to users */
+  help_text?: DatePickerFieldHelpText;
+  /** Minimum allowed date (ISO format) */
+  min_date?: DatePickerFieldMinDate;
+  /** Maximum allowed date (ISO format) */
+  max_date?: DatePickerFieldMaxDate;
+  /** Whether to default to today's date */
+  default_to_today?: boolean;
+}
+
+
+/**
+ * DatePickerFieldHelpText
+ */
+export type DatePickerFieldHelpText = string | null;
+
+
+/**
+ * DatePickerFieldMaxDate
+ */
+export type DatePickerFieldMaxDate = string | null;
+
+
+/**
+ * DatePickerFieldMinDate
+ */
+export type DatePickerFieldMinDate = string | null;
+
+
+/**
+ * FieldOption
+ */
+export interface FieldOption {
+  /**
+   * Display label for the option
+   * @minLength 1
+   * @maxLength 200
+   */
+  label: string;
+  /**
+   * Value stored when option is selected
+   * @minLength 1
+   * @maxLength 100
+   */
+  value: string;
+}
+
+
+/**
+ * FileUploadField
+ */
+export interface FileUploadField {
+  /**
+   * Unique identifier for the field
+   * @minLength 1
+   * @maxLength 100
+   */
+  field_id: string;
+  field_type?: 'file_upload';
+  /**
+   * Display label for the field
+   * @minLength 1
+   * @maxLength 500
+   */
+  label: string;
+  /** Whether the field is required */
+  required?: boolean;
+  /** Help text shown to users */
+  help_text?: FileUploadFieldHelpText;
+  /** Allowed file extensions (e.g., ['pdf', 'jpg', 'png']) */
+  allowed_file_types?: FileUploadFieldAllowedFileTypes;
+  /** Maximum file size in megabytes */
+  max_file_size_mb?: FileUploadFieldMaxFileSizeMb;
+  /** Conditional logic for when MOV is required */
+  conditional_mov_requirement?: FileUploadFieldConditionalMovRequirement;
+}
+
+
+/**
+ * FileUploadFieldAllowedFileTypes
+ */
+export type FileUploadFieldAllowedFileTypes = string[] | null;
+
+
+/**
+ * FileUploadFieldConditionalMovRequirement
+ */
+export type FileUploadFieldConditionalMovRequirement = ConditionalMOVLogic | null;
+
+
+/**
+ * FileUploadFieldHelpText
+ */
+export type FileUploadFieldHelpText = string | null;
+
+
+/**
+ * FileUploadFieldMaxFileSizeMb
+ */
+export type FileUploadFieldMaxFileSizeMb = number | null;
+
+
+/**
+ * FormSchemaInputFieldsItem
+ */
+export type FormSchemaInputFieldsItem = CheckboxGroupField | RadioButtonField | NumberInputField | TextInputField | TextAreaField | DatePickerField | FileUploadField;
+
+
+/**
+ * FormSchemaOutputFieldsItem
+ */
+export type FormSchemaOutputFieldsItem = CheckboxGroupField | RadioButtonField | NumberInputField | TextInputField | TextAreaField | DatePickerField | FileUploadField;
 
 
 /**
@@ -195,6 +372,16 @@ export interface GovernanceArea {
   name: string;
   area_type: AreaType;
   id: number;
+}
+
+
+/**
+ * GovernanceAreaNested
+ */
+export interface GovernanceAreaNested {
+  id: number;
+  name: string;
+  area_type: string;
 }
 
 
@@ -233,6 +420,68 @@ export interface MapData {
   /** List of barangays with geographic coordinates and status */
   barangays?: BarangayMapPoint[];
 }
+
+
+/**
+ * NumberInputField
+ */
+export interface NumberInputField {
+  /**
+   * Unique identifier for the field
+   * @minLength 1
+   * @maxLength 100
+   */
+  field_id: string;
+  field_type?: 'number_input';
+  /**
+   * Display label for the field
+   * @minLength 1
+   * @maxLength 500
+   */
+  label: string;
+  /** Whether the field is required */
+  required?: boolean;
+  /** Help text shown to users */
+  help_text?: NumberInputFieldHelpText;
+  /** Minimum allowed value */
+  min_value?: NumberInputFieldMinValue;
+  /** Maximum allowed value */
+  max_value?: NumberInputFieldMaxValue;
+  /** Placeholder text */
+  placeholder?: NumberInputFieldPlaceholder;
+  /** Default value */
+  default_value?: NumberInputFieldDefaultValue;
+}
+
+
+/**
+ * NumberInputFieldDefaultValue
+ */
+export type NumberInputFieldDefaultValue = number | null;
+
+
+/**
+ * NumberInputFieldHelpText
+ */
+export type NumberInputFieldHelpText = string | null;
+
+
+/**
+ * NumberInputFieldMaxValue
+ */
+export type NumberInputFieldMaxValue = number | null;
+
+
+/**
+ * NumberInputFieldMinValue
+ */
+export type NumberInputFieldMinValue = number | null;
+
+
+/**
+ * NumberInputFieldPlaceholder
+ */
+export type NumberInputFieldPlaceholder = string | null;
 
 
 /**
@@ -284,6 +533,41 @@ export interface ProgressSummary {
 
 
 /**
+ * RadioButtonField
+ */
+export interface RadioButtonField {
+  /**
+   * Unique identifier for the field
+   * @minLength 1
+   * @maxLength 100
+   */
+  field_id: string;
+  field_type?: 'radio_button';
+  /**
+   * Display label for the field
+   * @minLength 1
+   * @maxLength 500
+   */
+  label: string;
+  /** Whether the field is required */
+  required?: boolean;
+  /** Help text shown to users */
+  help_text?: RadioButtonFieldHelpText;
+  /**
+   * List of radio button options
+   * @minItems 1
+   */
+  options: FieldOption[];
+}
+
+
+/**
+ * RadioButtonFieldHelpText
+ */
+export type RadioButtonFieldHelpText = string | null;
+
+
+/**
  * TableData
  */
 export interface TableData {
@@ -306,6 +590,114 @@ export interface TableData {
    */
   page_size: number;
 }
+
+
+/**
+ * TextAreaField
+ */
+export interface TextAreaField {
+  /**
+   * Unique identifier for the field
+   * @minLength 1
+   * @maxLength 100
+   */
+  field_id: string;
+  field_type?: 'text_area';
+  /**
+   * Display label for the field
+   * @minLength 1
+   * @maxLength 500
+   */
+  label: string;
+  /** Whether the field is required */
+  required?: boolean;
+  /** Help text shown to users */
+  help_text?: TextAreaFieldHelpText;
+  /** Maximum character length */
+  max_length?: TextAreaFieldMaxLength;
+  /** Number of visible rows */
+  rows?: TextAreaFieldRows;
+  /** Placeholder text */
+  placeholder?: TextAreaFieldPlaceholder;
+}
+
+
+/**
+ * TextAreaFieldHelpText
+ */
+export type TextAreaFieldHelpText = string | null;
+
+
+/**
+ * TextAreaFieldMaxLength
+ */
+export type TextAreaFieldMaxLength = number | null;
+
+
+/**
+ * TextAreaFieldPlaceholder
+ */
+export type TextAreaFieldPlaceholder = string | null;
+
+
+/**
+ * TextAreaFieldRows
+ */
+export type TextAreaFieldRows = number | null;
+
+
+/**
+ * TextInputField
+ */
+export interface TextInputField {
+  /**
+   * Unique identifier for the field
+   * @minLength 1
+   * @maxLength 100
+   */
+  field_id: string;
+  field_type?: 'text_input';
+  /**
+   * Display label for the field
+   * @minLength 1
+   * @maxLength 500
+   */
+  label: string;
+  /** Whether the field is required */
+  required?: boolean;
+  /** Help text shown to users */
+  help_text?: TextInputFieldHelpText;
+  /** Maximum character length */
+  max_length?: TextInputFieldMaxLength;
+  /** Placeholder text */
+  placeholder?: TextInputFieldPlaceholder;
+  /** Default value */
+  default_value?: TextInputFieldDefaultValue;
+}
+
+
+/**
+ * TextInputFieldDefaultValue
+ */
+export type TextInputFieldDefaultValue = string | null;
+
+
+/**
+ * TextInputFieldHelpText
+ */
+export type TextInputFieldHelpText = string | null;
+
+
+/**
+ * TextInputFieldMaxLength
+ */
+export type TextInputFieldMaxLength = number | null;
+
+
+/**
+ * TextInputFieldPlaceholder
+ */
+export type TextInputFieldPlaceholder = string | null;
 
 
 /**

@@ -8,6 +8,11 @@ from app.api.v1 import api_router as api_router_v1
 
 # Import from our restructured modules
 from app.core.config import settings
+from app.middleware import (
+    RateLimitMiddleware,
+    RequestLoggingMiddleware,
+    SecurityHeadersMiddleware,
+)
 from app.services.startup_service import startup_service
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -58,6 +63,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add security middleware (order matters - applied in reverse order)
+# 1. Request logging (outermost - logs everything)
+app.add_middleware(RequestLoggingMiddleware)
+
+# 2. Rate limiting (before security headers)
+app.add_middleware(RateLimitMiddleware)
+
+# 3. Security headers (innermost - adds headers to all responses)
+app.add_middleware(SecurityHeadersMiddleware)
 
 
 # Health check endpoint

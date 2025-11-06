@@ -103,6 +103,12 @@ class StartupService:
 
     def _seed_initial_data(self) -> None:
         """Seed the database with initial required data."""
+        import os
+        # Skip seeding in tests to speed up test runs
+        if os.getenv("SKIP_STARTUP_SEEDING") == "true":
+            logger.info("⏭️  Skipping startup seeding (test mode)")
+            return
+
         logger.info("🌱 Seeding initial data...")
         db: Session = SessionLocal()
         try:

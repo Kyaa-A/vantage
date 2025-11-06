@@ -36,6 +36,21 @@ def override_get_db():
         db.close()
 
 
+@pytest.fixture(scope="session", autouse=True)
+def disable_startup_seeding():
+    """Disable data seeding during test runs to speed up tests"""
+    import os
+    # Set environment variable to skip startup seeding
+    old_value = os.environ.get("SKIP_STARTUP_SEEDING")
+    os.environ["SKIP_STARTUP_SEEDING"] = "true"
+    yield
+    # Restore old value after session
+    if old_value is None:
+        os.environ.pop("SKIP_STARTUP_SEEDING", None)
+    else:
+        os.environ["SKIP_STARTUP_SEEDING"] = old_value
+
+
 @pytest.fixture(scope="session")
 def db_setup():
     """Create test database tables"""
@@ -56,9 +71,9 @@ def db_setup():
     Base.metadata.drop_all(bind=engine)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def client(db_setup):
-    """FastAPI test client with test database"""
+    """FastAPI test client with test database (session-scoped to avoid repeated startup)"""
     app.dependency_overrides[get_db] = override_get_db
     with TestClient(app) as test_client:
         yield test_client
@@ -224,3 +239,130 @@ def mock_assessment_without_barangay(db_session):
         db_session.refresh(assessment.blgu_user)
 
     return assessment
+
+
+# ============================================================================
+# User Role Fixtures for Access Control Testing
+# ============================================================================
+
+
+@pytest.fixture
+def mlgoo_user(db_session):
+    """Create a MLGOO_DILG admin user for testing"""
+    import uuid
+
+    from app.db.enums import UserRole
+    from app.db.models.user import User
+    from passlib.context import CryptContext
+
+    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+    unique_email = f"mlgoo{uuid.uuid4().hex[:8]}@dilg.gov.ph"
+
+    user = User(
+        email=unique_email,
+        name="MLGOO Admin User",
+        hashed_password=pwd_context.hash("password123"),
+        role=UserRole.MLGOO_DILG,
+        is_active=True,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
+
+@pytest.fixture
+def mock_governance_area(db_session):
+    """Create a mock governance area for testing"""
+    import uuid
+
+    from app.db.models.governance_area import GovernanceArea
+
+    unique_name = f"Test Governance Area {uuid.uuid4().hex[:8]}"
+
+    area = GovernanceArea(name=unique_name, abbreviation="TGA")
+    db_session.add(area)
+    db_session.commit()
+    db_session.refresh(area)
+    return area
+
+
+@pytest.fixture
+def validator_user(db_session, mock_governance_area):
+    """Create a VALIDATOR user for testing"""
+    import uuid
+
+    from app.db.enums import UserRole
+    from app.db.models.user import User
+    from passlib.context import CryptContext
+
+    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+    unique_email = f"validator{uuid.uuid4().hex[:8]}@dilg.gov.ph"
+
+    user = User(
+        email=unique_email,
+        name="Validator User",
+        hashed_password=pwd_context.hash("password123"),
+        role=UserRole.VALIDATOR,
+        validator_area_id=mock_governance_area.id,
+        is_active=True,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
+
+@pytest.fixture
+def assessor_user(db_session):
+    """Create an ASSESSOR user for testing"""
+    import uuid
+
+    from app.db.enums import UserRole
+    from app.db.models.user import User
+    from passlib.context import CryptContext
+
+    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+    unique_email = f"assessor{uuid.uuid4().hex[:8]}@dilg.gov.ph"
+
+    user = User(
+        email=unique_email,
+        name="Assessor User",
+        hashed_password=pwd_context.hash("password123"),
+        role=UserRole.ASSESSOR,
+        is_active=True,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
+
+@pytest.fixture
+def blgu_user(db_session, mock_barangay):
+    """Alias for mock_blgu_user for consistency in naming"""
+    import uuid
+
+    from app.db.enums import UserRole
+    from app.db.models.user import User
+    from passlib.context import CryptContext
+
+    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+    unique_email = f"blgu{uuid.uuid4().hex[:8]}@example.com"
+
+    user = User(
+        email=unique_email,
+        name="BLGU User",
+        hashed_password=pwd_context.hash("password123"),
+        role=UserRole.BLGU_USER,
+        barangay_id=mock_barangay.id,
+        is_active=True,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user

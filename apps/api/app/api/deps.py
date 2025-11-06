@@ -1,6 +1,7 @@
 # 🔐 FastAPI Dependencies
 # Reusable dependency injection functions for authentication, database sessions, etc.
 
+import logging
 from typing import Generator, Optional
 
 from app.core.security import verify_token
@@ -8,10 +9,12 @@ from app.db.base import get_db as get_db_session
 from app.db.base import get_supabase, get_supabase_admin
 from app.db.enums import UserRole
 from app.db.models.user import User
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session, joinedload
 from supabase import Client
+
+logger = logging.getLogger(__name__)
 
 # Security scheme for JWT tokens
 security = HTTPBearer()
@@ -105,6 +108,11 @@ async def get_current_admin_user(
         HTTPException: If user doesn't have admin privileges
     """
     if current_user.role != UserRole.MLGOO_DILG:
+        # Log unauthorized access attempt
+        logger.warning(
+            f"Unauthorized admin access attempt by user_id={current_user.id} "
+            f"(role={current_user.role}, email={current_user.email})"
+        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions. Admin access required.",
@@ -233,6 +241,69 @@ async def get_current_validator_user_http(
         )
 
     return user_with_area
+
+
+async def require_mlgoo_dilg(
+    current_user: User = Depends(get_current_active_user),
+) -> User:
+    """
+    Require MLGOO_DILG role for admin endpoints.
+
+    This dependency function enforces that only users with MLGOO_DILG role
+    can access administrative features (indicators, BBIs, deadlines, audit logs).
+
+    Args:
+        current_user: Current active user from get_current_active_user dependency
+
+    Returns:
+        User: Current MLGOO_DILG user
+
+    Raises:
+        HTTPException: 403 Forbidden if user doesn't have MLGOO_DILG role
+    """
+    if current_user.role != UserRole.MLGOO_DILG:
+        # Log unauthorized admin access attempt
+        logger.warning(
+            f"Unauthorized admin access attempt by user_id={current_user.id} "
+            f"(role={current_user.role}, email={current_user.email})"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions. MLGOO-DILG admin access required.",
+        )
+    return current_user
+
+
+def get_client_ip(request: Request) -> Optional[str]:
+    """
+    Extract client IP address from request.
+
+    Checks for X-Forwarded-For header (for proxied requests) first,
+    then falls back to direct client IP.
+
+    Args:
+        request: FastAPI request object
+
+    Returns:
+        Optional[str]: Client IP address (IPv4 or IPv6), or None if unavailable
+    """
+    # Check X-Forwarded-For header (proxy/load balancer)
+    forwarded_for = request.headers.get("X-Forwarded-For")
+    if forwarded_for:
+        # X-Forwarded-For can contain multiple IPs (client, proxy1, proxy2, ...)
+        # The first IP is the original client
+        return forwarded_for.split(",")[0].strip()
+
+    # Check X-Real-IP header (alternative proxy header)
+    real_ip = request.headers.get("X-Real-IP")
+    if real_ip:
+        return real_ip.strip()
+
+    # Fall back to direct client IP
+    if request.client:
+        return request.client.host
+
+    return None
 
 
 # Temporary backwards compatibility aliases for assessor endpoints

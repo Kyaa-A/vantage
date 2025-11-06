@@ -70,3 +70,37 @@ class ComplianceStatus(str, enum.Enum):
 
     PASSED = "Passed"
     FAILED = "Failed"
+
+
+class RuleType(str, enum.Enum):
+    """
+    Enum for calculation rule types in indicator calculation schemas.
+
+    These rule types define how indicator Pass/Fail status is automatically determined:
+    - AND_ALL: All conditions must be true
+    - OR_ANY: At least one condition must be true
+    - PERCENTAGE_THRESHOLD: A numeric field must meet or exceed a percentage threshold
+    - COUNT_THRESHOLD: Count of selected items must meet or exceed a threshold
+    - MATCH_VALUE: A field must exactly match a specific value
+    - BBI_FUNCTIONALITY_CHECK: Check if a BBI is Functional or Non-Functional
+    """
+
+    AND_ALL = "AND_ALL"
+    OR_ANY = "OR_ANY"
+    PERCENTAGE_THRESHOLD = "PERCENTAGE_THRESHOLD"
+    COUNT_THRESHOLD = "COUNT_THRESHOLD"
+    MATCH_VALUE = "MATCH_VALUE"
+    BBI_FUNCTIONALITY_CHECK = "BBI_FUNCTIONALITY_CHECK"
+
+
+class BBIStatus(str, enum.Enum):
+    """
+    Enum for BBI (Barangay-based Institutions) functionality status.
+
+    BBIs can be either:
+    - FUNCTIONAL: The BBI meets all requirements and is operating properly
+    - NON_FUNCTIONAL: The BBI does not meet requirements or is not operating
+    """
+
+    FUNCTIONAL = "FUNCTIONAL"
+    NON_FUNCTIONAL = "NON_FUNCTIONAL"

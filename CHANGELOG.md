@@ -8,14 +8,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Comprehensive documentation structure with organized sections (getting-started, architecture, api, guides, workflows, troubleshooting)
-- Archive directory for historical development context
-- Docker development journey documentation chronicling all Docker issues and solutions
-- documentation-specialist agent for future documentation work
+
+#### Epic 6.0: Audit & Security Infrastructure
+- **Backend Audit Logging**
+  - `AuditLog` database model with optimized composite indexes
+  - Comprehensive `AuditService` with event logging, JSON diff, and filtering
+  - Admin API endpoints for audit log viewing, filtering, and CSV export
+  - IP address tracking for all administrative actions
+  - Migration with descending `created_at` and `(entity_type, entity_id)` indexes
+
+- **Access Control & Security**
+  - `require_mlgoo_dilg()` dependency for admin-only endpoints
+  - `get_client_ip()` utility for IP extraction from proxied requests
+  - Access attempt logging for unauthorized admin access
+  - Role-based access control enforcement across all admin endpoints
+
+- **Security Middleware Stack**
+  - `SecurityHeadersMiddleware` with HSTS, CSP, X-Frame-Options, XSS-Protection
+  - `RateLimitMiddleware` with per-endpoint configuration (100 req/min general, 20 req/min auth)
+  - `RequestLoggingMiddleware` with request ID tracking and processing time metrics
+  - CORS configuration for development and production origins
+
+- **Frontend Error Handling**
+  - `ErrorBoundary` component with development/production fallback UI
+  - Toast notification system using sonner with 5 notification types
+  - User-friendly error message mapping for 20+ common API scenarios
+  - Enhanced Axios interceptor with global error handling (401, 403, 429, 500, network)
+  - Comprehensive loading states (spinner, overlay, skeleton, inline)
+
+- **Testing Infrastructure**
+  - 20+ tests for access control (role-based permissions, authentication)
+  - 11/12 tests for security middleware (headers, rate limiting, CORS, logging)
+  - User role fixtures for testing (MLGOO_DILG, Validator, Assessor, BLGU)
+  - Request ID and processing time validation tests
 
 ### Changed
 - Consolidated Docker troubleshooting from 8 separate files into organized guides
 - Reorganized documentation into clear, maintainable structure
+- Enhanced Axios interceptor with comprehensive error handling and toast notifications
+- Updated CORS configuration with placeholder for production domains
 
 ## [0.4.0] - 2025-10-28
 
