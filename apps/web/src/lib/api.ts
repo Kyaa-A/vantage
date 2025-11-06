@@ -56,10 +56,58 @@ axiosInstance.interceptors.response.use(
       ) {
         // Clear auth data using the store
         useAuthStore.getState().logout();
+        // Show toast notification (only in browser)
+        if (typeof window !== "undefined") {
+          import('./toast').then(({ showWarning }) => {
+            showWarning('Session expired', {
+              description: 'Please log in again to continue.',
+            });
+          });
+        }
         // Redirect to login
         window.location.href = "/login";
       }
     }
+
+    // Handle 403 Forbidden
+    if (error.response?.status === 403 && typeof window !== "undefined") {
+      import('./toast').then(({ showError }) => {
+        showError('Access denied', {
+          description: 'You do not have permission to perform this action.',
+        });
+      });
+    }
+
+    // Handle 429 Rate Limit
+    if (error.response?.status === 429 && typeof window !== "undefined") {
+      const retryAfter = error.response.headers['retry-after'];
+      import('./toast').then(({ showWarning }) => {
+        showWarning('Too many requests', {
+          description: retryAfter
+            ? `Please wait ${retryAfter} seconds before trying again.`
+            : 'Please wait a moment and try again.',
+        });
+      });
+    }
+
+    // Handle 500 Server Error
+    if (error.response?.status === 500 && typeof window !== "undefined") {
+      import('./toast').then(({ showError }) => {
+        showError('Server error', {
+          description: 'Something went wrong on our end. Please try again later.',
+        });
+      });
+    }
+
+    // Handle Network Errors
+    if (error.message === 'Network Error' && typeof window !== "undefined") {
+      import('./toast').then(({ showError }) => {
+        showError('Network error', {
+          description: 'Unable to connect to the server. Please check your internet connection.',
+        });
+      });
+    }
+
     return Promise.reject(error);
   }
 );
