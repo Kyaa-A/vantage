@@ -86,6 +86,9 @@ class AssessmentResponse(Base):
         nullable=True,
     )
 
+    # Generated remark (from remark_schema template)
+    generated_remark: Mapped[str | None] = mapped_column(Text, nullable=True)
+
     # Foreign keys
     assessment_id: Mapped[int] = mapped_column(
         ForeignKey("assessments.id"), nullable=False

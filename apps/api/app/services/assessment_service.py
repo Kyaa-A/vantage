@@ -847,6 +847,32 @@ class AssessmentService:
                 db_response.indicator.form_schema, response_update.response_data, db_response.movs
             )
 
+        # Generate remark if response is completed and indicator has calculation_schema
+        if db_response.is_completed and db_response.indicator.calculation_schema:
+            try:
+                from app.services.intelligence_service import intelligence_service
+
+                # Calculate indicator status
+                indicator_status = intelligence_service.calculate_indicator_status(
+                    db=db,
+                    indicator_id=db_response.indicator_id,
+                    assessment_data=db_response.response_data or {},
+                )
+
+                # Generate remark
+                generated_remark = intelligence_service.generate_indicator_remark(
+                    db=db,
+                    indicator_id=db_response.indicator_id,
+                    indicator_status=indicator_status,
+                    assessment_data=db_response.response_data or {},
+                )
+
+                if generated_remark:
+                    db_response.generated_remark = generated_remark
+            except Exception as e:
+                # Log error but don't fail the update
+                print(f"Failed to generate remark for response {response_id}: {str(e)}")
+
         db.commit()
         db.refresh(db_response)
         return db_response

@@ -12,9 +12,9 @@
 
 - **Total Stories:** 8
 - **Total Tasks:** 45
-- **Completed Tasks:** 28 (Stories 3.1, 3.2, 3.3, 3.5 & 3.6 complete! Story 3.4 skipped)
-- **Current Story:** Story 3.7
-- **Progress:** 62% (28/45 tasks)
+- **Completed Tasks:** 32 (Stories 3.1, 3.2, 3.3, 3.5, 3.6 & 3.7 complete! Story 3.4 skipped)
+- **Current Story:** Story 3.8 (Testing)
+- **Progress:** 71% (32/45 tasks)
 
 ---
 
@@ -205,15 +205,23 @@
 ## Story 3.7: Backend Remark Generation Service
 
 **Duration:** 1 day
-**Status:** Pending
+**Status:** ✅ Complete
 **Dependencies:** Story 3.6
 
 ### Tasks
 
-- [ ] **3.7.1** Create generate_indicator_remark() function
-- [ ] **3.7.2** Implement template rendering with Jinja2
-- [ ] **3.7.3** Integrate with assessment response workflow
-- [ ] **3.7.4** Add generated_remark column to assessment_responses
+- [x] **3.7.1** Create generate_indicator_remark() function
+  - **File:** `apps/api/app/services/intelligence_service.py` (lines 432-498)
+  - **Completed:** Function to generate remarks based on remark_schema with Jinja2 template rendering
+- [x] **3.7.2** Implement template rendering with Jinja2
+  - **File:** Same as 3.7.1
+  - **Completed:** Integrated Jinja2 Template with context including indicator_name, status, and assessment_data
+- [x] **3.7.3** Integrate with assessment response workflow
+  - **Files:** `apps/api/app/services/assessment_service.py` (lines 850-874), `apps/api/app/services/assessor_service.py` (lines 112-138)
+  - **Completed:** Automatic remark generation on response update and assessor validation
+- [x] **3.7.4** Add generated_remark column to assessment_responses
+  - **Files:** `apps/api/app/db/models/assessment.py` (line 90), `apps/api/alembic/versions/996bae672415_add_generated_remark_column_to_.py`
+  - **Completed:** Database column added and migration applied
 
 ---
 

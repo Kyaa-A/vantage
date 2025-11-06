@@ -430,6 +430,86 @@ class IntelligenceService:
             raise ValueError(f"Unknown condition group operator: {group.operator}")
 
     # ========================================
+    # REMARK GENERATION ENGINE
+    # ========================================
+
+    def generate_indicator_remark(
+        self,
+        db: Session,
+        indicator_id: int,
+        indicator_status: Optional[str],
+        assessment_data: Dict[str, Any],
+    ) -> Optional[str]:
+        """
+        Generate a remark for an indicator based on its remark_schema.
+
+        This function evaluates the remark_schema and generates appropriate remarks
+        based on the indicator's Pass/Fail status. Supports Jinja2 templates with
+        placeholders for dynamic content.
+
+        Args:
+            db: Database session
+            indicator_id: ID of the indicator
+            indicator_status: Pass/Fail status of the indicator (or None)
+            assessment_data: Dictionary containing assessment response data
+
+        Returns:
+            Generated remark string, or None if no remark_schema defined
+
+        Raises:
+            ValueError: If indicator not found or template rendering fails
+        """
+        from jinja2 import Template, TemplateSyntaxError, UndefinedError
+        from app.schemas.remark_schema import RemarkSchema
+
+        # Get the indicator with its remark schema
+        indicator = db.query(Indicator).filter(Indicator.id == indicator_id).first()
+        if not indicator:
+            raise ValueError(f"Indicator with ID {indicator_id} not found")
+
+        # Check if remark_schema exists
+        if not indicator.remark_schema:
+            return None
+
+        try:
+            # Parse the remark schema
+            remark_schema = RemarkSchema(**indicator.remark_schema)
+        except Exception as e:
+            raise ValueError(f"Invalid remark schema format: {str(e)}")
+
+        # Find matching conditional remark based on status
+        template_str = None
+        if indicator_status:
+            status_lower = indicator_status.lower()
+            for conditional_remark in remark_schema.conditional_remarks:
+                if conditional_remark.condition.lower() == status_lower:
+                    template_str = conditional_remark.template
+                    break
+
+        # Use default template if no match found
+        if template_str is None:
+            template_str = remark_schema.default_template
+
+        # Prepare template context
+        context = {
+            "indicator_name": indicator.name,
+            "status": indicator_status or "Unknown",
+            **assessment_data,  # Include all assessment data for field access
+        }
+
+        # Render the template with Jinja2
+        try:
+            template = Template(template_str)
+            rendered_remark = template.render(context)
+            return rendered_remark.strip()
+        except TemplateSyntaxError as e:
+            raise ValueError(f"Template syntax error in remark: {str(e)}")
+        except UndefinedError as e:
+            raise ValueError(f"Undefined variable in remark template: {str(e)}")
+        except Exception as e:
+            raise ValueError(f"Failed to render remark template: {str(e)}")
+
+    # ========================================
     # SGLGB CLASSIFICATION (3+1 Rule)
     # ========================================
 

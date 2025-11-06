@@ -108,6 +108,33 @@ class AssessorService:
 
         # Update the validation status
         response.validation_status = validation_status
+
+        # Generate remark if indicator has calculation_schema and remark_schema
+        if response.indicator.calculation_schema and response.is_completed:
+            try:
+                from app.services.intelligence_service import intelligence_service
+
+                # Calculate indicator status based on response data
+                indicator_status = intelligence_service.calculate_indicator_status(
+                    db=db,
+                    indicator_id=response.indicator_id,
+                    assessment_data=response.response_data or {},
+                )
+
+                # Generate remark
+                generated_remark = intelligence_service.generate_indicator_remark(
+                    db=db,
+                    indicator_id=response.indicator_id,
+                    indicator_status=indicator_status,
+                    assessment_data=response.response_data or {},
+                )
+
+                if generated_remark:
+                    response.generated_remark = generated_remark
+            except Exception as e:
+                # Log error but don't fail the validation
+                print(f"Failed to generate remark for response {response_id}: {str(e)}")
+
         db.commit()
 
         # Save public comment if provided
