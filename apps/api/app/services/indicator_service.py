@@ -1,17 +1,389 @@
 """
 🧪 Indicator Service
-Seed and manage mock indicators for development/testing.
+Comprehensive indicator management with versioning support.
+
+This service handles:
+- Full CRUD operations for indicators
+- Versioning logic to preserve historical data integrity
+- Seed/utility methods for development/testing
 """
 
-from typing import Any, Dict, List
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from sqlalchemy.orm import Session  # type: ignore[reportMissingImports]
+from fastapi import HTTPException, status
+from loguru import logger
+from sqlalchemy.orm import Session, joinedload
 
-from app.db.models.governance_area import Indicator
+from app.db.models.governance_area import GovernanceArea, Indicator, IndicatorHistory
+from app.db.models.user import User
 
 
 class IndicatorService:
-    """Service for managing indicator data, including mock seeding."""
+    """
+    Service for managing indicator data with versioning support.
+
+    Follows the Fat Service pattern - all business logic lives here,
+    routers are thin and just handle HTTP.
+    """
+
+    # ========================================================================
+    # CRUD Operations with Versioning
+    # ========================================================================
+
+    def create_indicator(
+        self, db: Session, data: Dict[str, Any], user_id: int
+    ) -> Indicator:
+        """
+        Create a new indicator with version 1.
+
+        Args:
+            db: Database session
+            data: Indicator data (name, description, governance_area_id, etc.)
+            user_id: ID of user creating the indicator
+
+        Returns:
+            Created Indicator instance
+
+        Raises:
+            HTTPException: If governance area doesn't exist or parent_id is circular
+        """
+        # Validate governance_area_id exists
+        governance_area = (
+            db.query(GovernanceArea)
+            .filter(GovernanceArea.id == data.get("governance_area_id"))
+            .first()
+        )
+        if not governance_area:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Governance area with ID {data.get('governance_area_id')} not found",
+            )
+
+        # Validate parent_id if provided
+        parent_id = data.get("parent_id")
+        if parent_id:
+            parent = db.query(Indicator).filter(Indicator.id == parent_id).first()
+            if not parent:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Parent indicator with ID {parent_id} not found",
+                )
+
+        # Create indicator with version 1
+        indicator = Indicator(
+            name=data["name"],
+            description=data.get("description"),
+            version=1,
+            is_active=data.get("is_active", True),
+            is_auto_calculable=data.get("is_auto_calculable", False),
+            is_profiling_only=data.get("is_profiling_only", False),
+            form_schema=data.get("form_schema"),
+            calculation_schema=data.get("calculation_schema"),
+            remark_schema=data.get("remark_schema"),
+            technical_notes_text=data.get("technical_notes_text"),
+            governance_area_id=data["governance_area_id"],
+            parent_id=parent_id,
+        )
+
+        db.add(indicator)
+        db.commit()
+        db.refresh(indicator)
+
+        logger.info(
+            f"Created indicator '{indicator.name}' (ID: {indicator.id}) by user {user_id}"
+        )
+
+        return indicator
+
+    def get_indicator(self, db: Session, indicator_id: int) -> Optional[Indicator]:
+        """
+        Get an indicator by ID with relationships loaded.
+
+        Args:
+            db: Database session
+            indicator_id: ID of indicator to retrieve
+
+        Returns:
+            Indicator instance or None if not found
+        """
+        return (
+            db.query(Indicator)
+            .options(
+                joinedload(Indicator.governance_area),
+                joinedload(Indicator.parent),
+                joinedload(Indicator.children),
+            )
+            .filter(Indicator.id == indicator_id)
+            .first()
+        )
+
+    def list_indicators(
+        self,
+        db: Session,
+        governance_area_id: Optional[int] = None,
+        is_active: Optional[bool] = None,
+        search: Optional[str] = None,
+        skip: int = 0,
+        limit: int = 100,
+    ) -> List[Indicator]:
+        """
+        List indicators with optional filtering and pagination.
+
+        Args:
+            db: Database session
+            governance_area_id: Filter by governance area
+            is_active: Filter by active status
+            search: Search in name (case-insensitive)
+            skip: Number of records to skip (pagination)
+            limit: Maximum number of records to return
+
+        Returns:
+            List of Indicator instances
+        """
+        query = db.query(Indicator).options(
+            joinedload(Indicator.governance_area)
+        )
+
+        # Apply filters
+        if governance_area_id is not None:
+            query = query.filter(Indicator.governance_area_id == governance_area_id)
+
+        if is_active is not None:
+            query = query.filter(Indicator.is_active == is_active)
+
+        if search:
+            query = query.filter(Indicator.name.ilike(f"%{search}%"))
+
+        # Order by governance_area_id, then name
+        query = query.order_by(Indicator.governance_area_id, Indicator.name)
+
+        # Apply pagination
+        indicators = query.offset(skip).limit(limit).all()
+
+        return indicators
+
+    def update_indicator(
+        self, db: Session, indicator_id: int, data: Dict[str, Any], user_id: int
+    ) -> Indicator:
+        """
+        Update an indicator with versioning logic.
+
+        If schemas are changed, creates a new version and archives the old one.
+        If only metadata is changed, updates in place without versioning.
+
+        Args:
+            db: Database session
+            indicator_id: ID of indicator to update
+            data: Updated indicator data
+            user_id: ID of user making the update
+
+        Returns:
+            Updated Indicator instance
+
+        Raises:
+            HTTPException: If indicator not found or validation fails
+        """
+        indicator = db.query(Indicator).filter(Indicator.id == indicator_id).first()
+        if not indicator:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Indicator with ID {indicator_id} not found",
+            )
+
+        # Check if schema fields changed (requiring versioning)
+        schema_changed = any(
+            [
+                data.get("form_schema") is not None
+                and data.get("form_schema") != indicator.form_schema,
+                data.get("calculation_schema") is not None
+                and data.get("calculation_schema") != indicator.calculation_schema,
+                data.get("remark_schema") is not None
+                and data.get("remark_schema") != indicator.remark_schema,
+            ]
+        )
+
+        if schema_changed:
+            # Archive current version
+            history = IndicatorHistory(
+                indicator_id=indicator.id,
+                version=indicator.version,
+                name=indicator.name,
+                description=indicator.description,
+                is_active=indicator.is_active,
+                is_auto_calculable=indicator.is_auto_calculable,
+                is_profiling_only=indicator.is_profiling_only,
+                form_schema=indicator.form_schema,
+                calculation_schema=indicator.calculation_schema,
+                remark_schema=indicator.remark_schema,
+                technical_notes_text=indicator.technical_notes_text,
+                governance_area_id=indicator.governance_area_id,
+                parent_id=indicator.parent_id,
+                archived_at=datetime.utcnow(),
+                archived_by=user_id,
+            )
+            db.add(history)
+
+            # Increment version
+            indicator.version += 1
+            logger.info(
+                f"Creating version {indicator.version} of indicator '{indicator.name}' (ID: {indicator.id})"
+            )
+
+        # Update fields
+        if "name" in data:
+            indicator.name = data["name"]
+        if "description" in data:
+            indicator.description = data["description"]
+        if "is_active" in data:
+            indicator.is_active = data["is_active"]
+        if "is_auto_calculable" in data:
+            indicator.is_auto_calculable = data["is_auto_calculable"]
+        if "is_profiling_only" in data:
+            indicator.is_profiling_only = data["is_profiling_only"]
+        if "form_schema" in data:
+            indicator.form_schema = data["form_schema"]
+        if "calculation_schema" in data:
+            indicator.calculation_schema = data["calculation_schema"]
+        if "remark_schema" in data:
+            indicator.remark_schema = data["remark_schema"]
+        if "technical_notes_text" in data:
+            indicator.technical_notes_text = data["technical_notes_text"]
+
+        db.commit()
+        db.refresh(indicator)
+
+        logger.info(f"Updated indicator '{indicator.name}' (ID: {indicator.id})")
+
+        return indicator
+
+    def deactivate_indicator(
+        self, db: Session, indicator_id: int, user_id: int
+    ) -> Indicator:
+        """
+        Soft delete an indicator by setting is_active to False.
+
+        Args:
+            db: Database session
+            indicator_id: ID of indicator to deactivate
+            user_id: ID of user making the deactivation
+
+        Returns:
+            Deactivated Indicator instance
+
+        Raises:
+            HTTPException: If indicator not found or has active children
+        """
+        indicator = db.query(Indicator).filter(Indicator.id == indicator_id).first()
+        if not indicator:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Indicator with ID {indicator_id} not found",
+            )
+
+        # Prevent deletion if indicator has active children
+        active_children = (
+            db.query(Indicator)
+            .filter(Indicator.parent_id == indicator_id, Indicator.is_active == True)
+            .count()
+        )
+        if active_children > 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Cannot deactivate indicator with {active_children} active child indicators",
+            )
+
+        indicator.is_active = False
+        db.commit()
+        db.refresh(indicator)
+
+        logger.info(
+            f"Deactivated indicator '{indicator.name}' (ID: {indicator.id}) by user {user_id}"
+        )
+
+        return indicator
+
+    def get_indicator_history(
+        self, db: Session, indicator_id: int
+    ) -> List[IndicatorHistory]:
+        """
+        Get all historical versions of an indicator.
+
+        Args:
+            db: Database session
+            indicator_id: ID of indicator
+
+        Returns:
+            List of IndicatorHistory instances ordered by version DESC
+        """
+        # Get current indicator to verify it exists
+        indicator = db.query(Indicator).filter(Indicator.id == indicator_id).first()
+        if not indicator:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Indicator with ID {indicator_id} not found",
+            )
+
+        # Get all archived versions
+        history = (
+            db.query(IndicatorHistory)
+            .options(joinedload(IndicatorHistory.archived_by_user))
+            .filter(IndicatorHistory.indicator_id == indicator_id)
+            .order_by(IndicatorHistory.version.desc())
+            .all()
+        )
+
+        return history
+
+    def _check_circular_parent(
+        self, db: Session, indicator_id: int, parent_id: int
+    ) -> bool:
+        """
+        Helper to recursively check for circular parent relationships.
+
+        Args:
+            db: Database session
+            indicator_id: ID of indicator being checked
+            parent_id: Proposed parent ID
+
+        Returns:
+            True if circular relationship detected
+
+        Raises:
+            ValueError: If circular relationship detected
+        """
+        if indicator_id == parent_id:
+            raise ValueError("An indicator cannot be its own parent")
+
+        # Recursively check if parent_id eventually leads back to indicator_id
+        current_id = parent_id
+        visited = set()
+
+        while current_id is not None:
+            if current_id in visited:
+                # Infinite loop detected in parent chain (shouldn't happen with proper data)
+                raise ValueError("Circular parent chain detected in database")
+
+            if current_id == indicator_id:
+                raise ValueError(
+                    f"Circular relationship: indicator {indicator_id} cannot have "
+                    f"parent {parent_id} as it would create a cycle"
+                )
+
+            visited.add(current_id)
+
+            # Get next parent
+            parent = db.query(Indicator).filter(Indicator.id == current_id).first()
+            if parent:
+                current_id = parent.parent_id
+            else:
+                break
+
+        return False
+
+    # ========================================================================
+    # Seed & Utility Methods (Legacy - preserved for development/testing)
+    # ========================================================================
 
     def seed_mock_indicators(self, db: Session) -> None:
         """
