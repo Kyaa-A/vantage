@@ -1,6 +1,8 @@
 # 🔐 Security Functions
 # Password hashing, JWT token creation/verification, and security utilities
 
+import html
+import re
 from datetime import datetime, timedelta
 from typing import Optional, Union
 
@@ -153,3 +155,139 @@ def generate_password_reset_token(email: str) -> str:
         algorithm=settings.ALGORITHM,
     )
     return encoded_jwt
+
+
+# ============================================================================
+# HTML Sanitization & XSS Prevention
+# ============================================================================
+
+
+def sanitize_html(text: Optional[str], allow_basic_formatting: bool = False) -> Optional[str]:
+    """
+    Sanitize HTML content to prevent XSS attacks.
+
+    This function removes dangerous HTML tags and attributes while optionally
+    preserving basic formatting tags like <b>, <i>, <p>, <br>.
+
+    Args:
+        text: The text content to sanitize
+        allow_basic_formatting: If True, allows basic HTML formatting tags.
+                               If False, strips all HTML tags.
+
+    Returns:
+        Sanitized text with dangerous content removed, or None if input is None
+
+    Examples:
+        >>> sanitize_html("<script>alert('xss')</script>Hello")
+        "Hello"
+
+        >>> sanitize_html("<b>Bold</b> text", allow_basic_formatting=True)
+        "<b>Bold</b> text"
+    """
+    if text is None:
+        return None
+
+    if not isinstance(text, str):
+        return str(text)
+
+    # List of dangerous tags to always remove
+    dangerous_tags = [
+        'script', 'iframe', 'object', 'embed', 'applet',
+        'link', 'style', 'meta', 'base', 'form',
+    ]
+
+    # List of dangerous attributes to remove
+    dangerous_attrs = [
+        'onload', 'onerror', 'onclick', 'onmouseover', 'onmouseout',
+        'onkeydown', 'onkeyup', 'onkeypress', 'onfocus', 'onblur',
+        'onchange', 'onsubmit', 'onreset', 'onselect', 'onabort',
+        'javascript:', 'data:', 'vbscript:',
+    ]
+
+    # Remove dangerous tags and their content
+    for tag in dangerous_tags:
+        # Remove opening tag, content, and closing tag
+        pattern = f'<{tag}[^>]*>.*?</{tag}>'
+        text = re.sub(pattern, '', text, flags=re.IGNORECASE | re.DOTALL)
+        # Remove self-closing tags
+        pattern = f'<{tag}[^>]*/>'
+        text = re.sub(pattern, '', text, flags=re.IGNORECASE)
+
+    # Remove dangerous attributes from remaining tags
+    for attr in dangerous_attrs:
+        # Remove attribute="value" or attribute='value' or attribute=value
+        pattern = f'{attr}\\s*=\\s*["\']?[^"\'\\s>]*["\']?'
+        text = re.sub(pattern, '', text, flags=re.IGNORECASE)
+
+    # If basic formatting is not allowed, strip all remaining HTML tags
+    if not allow_basic_formatting:
+        text = re.sub('<[^>]+>', '', text)
+
+    # Escape any remaining special HTML characters to prevent injection
+    # This converts < > & " ' to their HTML entity equivalents
+    if not allow_basic_formatting:
+        text = html.escape(text)
+
+    return text.strip()
+
+
+def sanitize_text_input(text: Optional[str], max_length: Optional[int] = None) -> Optional[str]:
+    """
+    Sanitize plain text input by removing all HTML and limiting length.
+
+    Args:
+        text: The text to sanitize
+        max_length: Maximum allowed length (characters will be truncated)
+
+    Returns:
+        Sanitized text with all HTML removed, or None if input is None
+    """
+    if text is None:
+        return None
+
+    # Remove all HTML tags
+    sanitized = sanitize_html(text, allow_basic_formatting=False)
+
+    # Trim to max length if specified
+    if max_length and sanitized and len(sanitized) > max_length:
+        sanitized = sanitized[:max_length]
+
+    return sanitized
+
+
+def sanitize_rich_text(text: Optional[str]) -> Optional[str]:
+    """
+    Sanitize rich text that may contain basic HTML formatting.
+
+    Allows safe HTML tags like <b>, <i>, <u>, <p>, <br>, <ul>, <ol>, <li>
+    while removing dangerous content.
+
+    Args:
+        text: The rich text content to sanitize
+
+    Returns:
+        Sanitized text with dangerous content removed, basic formatting preserved
+    """
+    if text is None:
+        return None
+
+    # First pass: remove dangerous content
+    sanitized = sanitize_html(text, allow_basic_formatting=True)
+
+    # Whitelist of allowed tags for rich text
+    allowed_tags = {'b', 'i', 'u', 'strong', 'em', 'p', 'br', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'}
+
+    # Remove tags not in whitelist
+    def replace_tag(match):
+        tag = match.group(1).lower()
+        if tag.startswith('/'):
+            tag = tag[1:]  # Remove slash for closing tags
+        if tag in allowed_tags:
+            return match.group(0)  # Keep allowed tags
+        return ''  # Remove disallowed tags
+
+    # Pattern to match HTML tags
+    pattern = r'<(/?\w+)(?:\s[^>]*)?>'
+    sanitized = re.sub(pattern, replace_tag, sanitized, flags=re.IGNORECASE)
+
+    return sanitized

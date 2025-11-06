@@ -19,7 +19,11 @@ from app.db.models.governance_area import GovernanceArea, Indicator, IndicatorHi
 from app.db.models.user import User
 from app.schemas.form_schema import FormSchema
 from app.schemas.calculation_schema import CalculationSchema
-from app.services.form_schema_validator import generate_validation_errors
+from app.services.form_schema_validator import (
+    generate_validation_errors,
+    validate_calculation_schema_field_references,
+)
+from app.core.security import sanitize_rich_text, sanitize_text_input
 
 
 class IndicatorService:
@@ -97,10 +101,31 @@ class IndicatorService:
             except Exception as e:
                 raise ValueError(f"Invalid calculation schema format: {str(e)}")
 
+            # Validate that calculation_schema field references exist in form_schema
+            if form_schema:
+                try:
+                    form_schema_obj = FormSchema(**form_schema)
+                    field_ref_errors = validate_calculation_schema_field_references(
+                        form_schema_obj, calculation_schema
+                    )
+                    if field_ref_errors:
+                        raise ValueError(
+                            f"Calculation schema validation failed: {'; '.join(field_ref_errors)}"
+                        )
+                except ValueError:
+                    # Re-raise our validation errors
+                    raise
+                except Exception as e:
+                    raise ValueError(f"Error validating calculation schema field references: {str(e)}")
+
+        # Sanitize text fields to prevent XSS
+        sanitized_description = sanitize_text_input(data.get("description"))
+        sanitized_technical_notes = sanitize_rich_text(data.get("technical_notes_text"))
+
         # Create indicator with version 1
         indicator = Indicator(
             name=data["name"],
-            description=data.get("description"),
+            description=sanitized_description,
             version=1,
             is_active=data.get("is_active", True),
             is_auto_calculable=data.get("is_auto_calculable", False),
@@ -108,7 +133,7 @@ class IndicatorService:
             form_schema=data.get("form_schema"),
             calculation_schema=data.get("calculation_schema"),
             remark_schema=data.get("remark_schema"),
-            technical_notes_text=data.get("technical_notes_text"),
+            technical_notes_text=sanitized_technical_notes,
             governance_area_id=data["governance_area_id"],
             parent_id=parent_id,
         )
@@ -236,6 +261,25 @@ class IndicatorService:
             except Exception as e:
                 raise ValueError(f"Invalid calculation schema format: {str(e)}")
 
+            # Validate that calculation_schema field references exist in form_schema
+            # Use updated form_schema if provided, otherwise use existing
+            active_form_schema = form_schema if form_schema is not None else indicator.form_schema
+            if active_form_schema:
+                try:
+                    form_schema_obj = FormSchema(**active_form_schema)
+                    field_ref_errors = validate_calculation_schema_field_references(
+                        form_schema_obj, calculation_schema
+                    )
+                    if field_ref_errors:
+                        raise ValueError(
+                            f"Calculation schema validation failed: {'; '.join(field_ref_errors)}"
+                        )
+                except ValueError:
+                    # Re-raise our validation errors
+                    raise
+                except Exception as e:
+                    raise ValueError(f"Error validating calculation schema field references: {str(e)}")
+
         # Check if schema fields changed (requiring versioning)
         schema_changed = any(
             [
@@ -277,11 +321,11 @@ class IndicatorService:
                 f"Creating version {indicator.version} of indicator '{indicator.name}' (ID: {indicator.id})"
             )
 
-        # Update fields
+        # Update fields with sanitization
         if "name" in data:
             indicator.name = data["name"]
         if "description" in data:
-            indicator.description = data["description"]
+            indicator.description = sanitize_text_input(data["description"])
         if "is_active" in data:
             indicator.is_active = data["is_active"]
         if "is_auto_calculable" in data:
@@ -295,7 +339,7 @@ class IndicatorService:
         if "remark_schema" in data:
             indicator.remark_schema = data["remark_schema"]
         if "technical_notes_text" in data:
-            indicator.technical_notes_text = data["technical_notes_text"]
+            indicator.technical_notes_text = sanitize_rich_text(data["technical_notes_text"])
 
         db.commit()
         db.refresh(indicator)

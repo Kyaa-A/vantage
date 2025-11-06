@@ -5,7 +5,7 @@ This module provides reusable validation functions for form schemas.
 These functions are used across the application to ensure form schema integrity.
 """
 
-from typing import List, Set, Dict
+from typing import List, Set, Dict, Optional
 from app.schemas.form_schema import (
     FormSchema,
     FormField,
@@ -224,5 +224,89 @@ def generate_validation_errors(schema: FormSchema) -> List[str]:
                 errors.append(
                     f"{field_type} field '{field.field_id}' must have at least one option"
                 )
+
+    return errors
+
+
+def validate_calculation_schema_field_references(
+    form_schema: Optional[FormSchema],
+    calculation_schema: Optional[Dict]
+) -> List[str]:
+    """
+    Validate that all field_ids referenced in calculation_schema exist in form_schema.
+
+    This ensures calculation rules only reference fields that actually exist in the form.
+
+    Args:
+        form_schema: FormSchema object containing the form fields
+        calculation_schema: CalculationSchema dict containing calculation rules
+
+    Returns:
+        List of error messages for invalid field references. Empty list if all valid.
+    """
+    errors: List[str] = []
+
+    # If no calculation schema or form schema, nothing to validate
+    if not calculation_schema or not form_schema:
+        return errors
+
+    # Get all valid field_ids from form_schema
+    valid_field_ids = {field.field_id for field in form_schema.fields}
+
+    # Extract all field_ids referenced in calculation_schema
+    referenced_field_ids: Set[str] = set()
+
+    def extract_field_ids_from_group(group: Dict) -> None:
+        """Recursively extract field_ids from condition groups"""
+        # Check nested groups
+        if "groups" in group and group["groups"]:
+            for nested_group in group["groups"]:
+                extract_field_ids_from_group(nested_group)
+
+        # Check rules in this group
+        if "rules" in group and group["rules"]:
+            for rule in group["rules"]:
+                rule_type = rule.get("rule_type")
+
+                # Rules that reference field_ids
+                if rule_type in ["PERCENTAGE_THRESHOLD", "COUNT_THRESHOLD", "MATCH_VALUE"]:
+                    field_id = rule.get("field_id")
+                    if field_id:
+                        referenced_field_ids.add(field_id)
+
+                # Nested AND_ALL and OR_ANY rules
+                elif rule_type in ["AND_ALL", "OR_ANY"]:
+                    if "conditions" in rule and rule["conditions"]:
+                        for condition in rule["conditions"]:
+                            # Recursively process nested conditions
+                            if isinstance(condition, dict):
+                                if "field_id" in condition:
+                                    referenced_field_ids.add(condition["field_id"])
+                                # Handle nested groups within rules
+                                if "groups" in condition or "rules" in condition:
+                                    extract_field_ids_from_group(condition)
+
+    # Start extraction from root
+    if "groups" in calculation_schema and calculation_schema["groups"]:
+        for group in calculation_schema["groups"]:
+            extract_field_ids_from_group(group)
+
+    # Also check rules at root level
+    if "rules" in calculation_schema and calculation_schema["rules"]:
+        for rule in calculation_schema["rules"]:
+            rule_type = rule.get("rule_type")
+            if rule_type in ["PERCENTAGE_THRESHOLD", "COUNT_THRESHOLD", "MATCH_VALUE"]:
+                field_id = rule.get("field_id")
+                if field_id:
+                    referenced_field_ids.add(field_id)
+
+    # Check for invalid references
+    invalid_field_ids = referenced_field_ids - valid_field_ids
+
+    if invalid_field_ids:
+        for invalid_id in sorted(invalid_field_ids):
+            errors.append(
+                f"Calculation schema references field '{invalid_id}' which does not exist in form schema"
+            )
 
     return errors
