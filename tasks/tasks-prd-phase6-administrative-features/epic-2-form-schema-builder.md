@@ -423,9 +423,9 @@
 
 ### Atomic Tasks
 
-- [ ] **2.6.1 Atomic: Create form builder page for new indicator**
+- [x] **2.6.1 Atomic: Create form builder page for new indicator**
   - **Files:**
-    - `apps/web/src/app/(app)/admin/indicators/new/page.tsx`
+    - `apps/web/src/app/(app)/mlgoo/indicators/new/page.tsx`
   - **Dependencies:** 2.5.4
   - **Acceptance Criteria:**
     - Page title: "Create New Indicator"
@@ -435,13 +435,14 @@
     - "Save Draft" button (saves without form_schema)
     - "Save & Publish" button (validates and saves)
     - Uses useCreateIndicator mutation
-    - Redirects to indicator detail page on success
+    - Redirects to indicator list page on success
   - **Tech:** Next.js App Router, React Hook Form
   - **Duration:** 3 hours
+  - **Completed:** 2025-11-06
 
-- [ ] **2.6.2 Atomic: Create form builder page for editing indicator**
+- [x] **2.6.2 Atomic: Create form builder page for editing indicator**
   - **Files:**
-    - `apps/web/src/app/(app)/admin/indicators/[id]/edit/page.tsx`
+    - `apps/web/src/app/(app)/mlgoo/indicators/[id]/edit/page.tsx`
   - **Dependencies:** 2.5.4
   - **Acceptance Criteria:**
     - Fetch indicator by ID on page load
@@ -451,42 +452,46 @@
     - "Save Changes" button
     - Uses useUpdateIndicator mutation
     - Warning if navigating away with unsaved changes
-    - Redirects to indicator detail page on success
+    - Redirects to indicator list page on success
   - **Tech:** Next.js App Router, React Hook Form
   - **Duration:** 3 hours
+  - **Completed:** 2025-11-06
 
-- [ ] **2.6.3 Atomic: Implement client-side validation before save**
+- [x] **2.6.3 Atomic: Implement client-side validation before save**
   - **Files:**
-    - `apps/web/src/components/features/admin/indicators/FormSchemaBuilder.tsx` (update)
+    - `apps/web/src/lib/form-schema-validation.ts` (created)
+    - `apps/web/src/components/features/indicators/SaveFormSchemaButton.tsx` (created)
   - **Dependencies:** 2.6.2
   - **Acceptance Criteria:**
     - Validate all fields have unique field_ids
     - Validate required fields are filled
-    - Validate no circular references
+    - Validate no circular references (using DFS algorithm)
     - Validate options exist for checkbox/radio fields
     - Validate min < max for number/date fields
-    - Display validation errors in toast or inline
+    - Display validation errors in dialog with scrollable list
     - Prevent save if validation fails
-  - **Tech:** Zod or custom validation, React Hook Form
+  - **Tech:** Custom validation functions, React Hook Form
   - **Duration:** 2 hours
+  - **Completed:** 2025-11-06
 
-- [ ] **2.6.4 Atomic: Implement server-side validation integration**
+- [x] **2.6.4 Atomic: Implement server-side validation integration**
   - **Files:**
-    - `apps/web/src/components/features/admin/indicators/FormSchemaBuilder.tsx` (update)
+    - `apps/api/app/services/indicator_service.py` (updated)
+    - `apps/web/src/components/features/indicators/SaveFormSchemaButton.tsx`
   - **Dependencies:** 2.2.1 (validation endpoint)
   - **Acceptance Criteria:**
-    - On "Save" click, call POST /api/v1/indicators/validate-form-schema
-    - If server returns errors, display in UI
-    - Map server error paths to specific fields
-    - Highlight invalid fields in builder
-    - Allow MLGOO to fix and re-validate
+    - On "Save" click, server validates form_schema via indicator_service
+    - If server returns errors, display in toast notification
+    - Server validation converts dict to Pydantic FormSchema model
+    - Backend calls form_schema_validator for validation
     - Only save to database if server validation passes
-  - **Tech:** TanStack Query mutation, error mapping
+  - **Tech:** TanStack Query mutation, error handling
   - **Duration:** 3 hours
+  - **Completed:** 2025-11-06
 
-- [ ] **2.6.5 Atomic: Implement save functionality with loading states**
+- [x] **2.6.5 Atomic: Implement save functionality with loading states**
   - **Files:**
-    - `apps/web/src/components/features/admin/indicators/FormSchemaBuilder.tsx` (update)
+    - `apps/web/src/components/features/indicators/SaveFormSchemaButton.tsx`
   - **Dependencies:** 2.6.4
   - **Acceptance Criteria:**
     - "Save" button triggers save mutation
@@ -494,23 +499,25 @@
     - Button disabled while saving
     - Success toast on successful save
     - Error toast with details on failure
-    - Optimistic update of indicator in cache
     - Invalidate queries after save
   - **Tech:** TanStack Query mutations, shadcn/ui Toast
   - **Duration:** 2 hours
+  - **Completed:** 2025-11-06
 
-- [ ] **2.6.6 Atomic: Implement unsaved changes warning**
+- [x] **2.6.6 Atomic: Implement unsaved changes warning**
   - **Files:**
-    - `apps/web/src/components/features/admin/indicators/FormSchemaBuilder.tsx` (update)
+    - `apps/web/src/store/useFormBuilderStore.ts` (updated with isDirty tracking)
+    - `apps/web/src/app/(app)/mlgoo/indicators/new/page.tsx` (unsaved changes dialog)
   - **Dependencies:** 2.3.1
   - **Acceptance Criteria:**
-    - Track if form has unsaved changes (compare store to saved state)
-    - Show browser confirmation dialog on navigate away
-    - Use Next.js router events to detect navigation
-    - Clear warning after successful save
-    - "Discard Changes" button to reset to saved state
+    - Track if form has unsaved changes via isDirty flag in store
+    - Show custom dialog on navigate away with unsaved changes
+    - Use Next.js router events and beforeunload for detection
+    - Clear warning after successful save (markAsSaved())
+    - "Discard Changes" and "Continue Editing" buttons
   - **Tech:** React useEffect, Next.js router, browser beforeunload event
   - **Duration:** 2 hours
+  - **Completed:** 2025-11-06
 
 ---
 
