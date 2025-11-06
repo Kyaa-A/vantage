@@ -7,6 +7,7 @@ export * from './analytics';
 export * from './assessments';
 export * from './assessor';
 export * from './auth';
+export * from './bbis';
 export * from './default';
 export * from './indicators';
 export * from './lookups';

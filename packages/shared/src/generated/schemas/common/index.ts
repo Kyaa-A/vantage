@@ -8,7 +8,7 @@ import type { OrAnyRule } from '../oranyrule';
 import type { PercentageThresholdRule } from '../percentagethresholdrule';
 import type { CountThresholdRule } from '../countthresholdrule';
 import type { MatchValueRule } from '../matchvaluerule';
-import type { BBIFunctionalityCheckRule } from '../bbifunctionalitycheckrule';
+import type { BBIFunctionalityCheckRule } from '../bbis';
 import type { AssessmentRow } from '../assessments';
 
 /**
@@ -48,19 +48,6 @@ export type AreaType = typeof AreaType[keyof typeof AreaType];
 export const AreaType = {
   Core: 'Core',
   Essential: 'Essential',
-} as const;
-
-
-/**
- * BBIFunctionalityCheckRuleExpectedStatus
- */
-export type BBIFunctionalityCheckRuleExpectedStatus = typeof BBIFunctionalityCheckRuleExpectedStatus[keyof typeof BBIFunctionalityCheckRuleExpectedStatus];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const BBIFunctionalityCheckRuleExpectedStatus = {
-  Functional: 'Functional',
-  'Non-Functional': 'Non-Functional',
 } as const;
 
 
@@ -485,16 +472,6 @@ export interface FormSchema {
  * FormSchemaFieldsItem
  */
 export type FormSchemaFieldsItem = CheckboxGroupField | RadioButtonField | NumberInputField | TextInputField | TextAreaField | DatePickerField | FileUploadField;
-
-
-/**
- * GovernanceArea
- */
-export interface GovernanceArea {
-  name: string;
-  area_type: AreaType;
-  id: number;
-}
 
 
 /**

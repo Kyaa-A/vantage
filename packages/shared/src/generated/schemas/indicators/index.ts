@@ -459,3 +459,9 @@ export type PostIndicatorsValidateFormSchema200 = { [key: string]: unknown };
  * SystemicWeaknessIndicatorId
  */
 export type SystemicWeaknessIndicatorId = number | null;
+
+
+/**
+ * TestBBICalculationRequestIndicatorStatuses
+ */
+export type TestBBICalculationRequestIndicatorStatuses = {[key: string]: string};
