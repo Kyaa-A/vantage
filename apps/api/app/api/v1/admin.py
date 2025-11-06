@@ -10,8 +10,17 @@ from app.schemas.admin import (
     AdminSuccessResponse,
     AuditLogListResponse,
     AuditLogResponse,
+    AssessmentCycleCreate,
+    AssessmentCycleUpdate,
+    AssessmentCycleResponse,
+    DeadlineOverrideCreate,
+    DeadlineOverrideResponse,
+    DeadlineOverrideListResponse,
+    BarangayDeadlineStatusResponse,
+    DeadlineStatusListResponse,
 )
 from app.services.audit_service import audit_service
+from app.services.deadline_service import deadline_service
 from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.orm import Session
 
@@ -275,6 +284,355 @@ async def export_audit_logs_csv(
         media_type="text/csv",
         headers={
             "Content-Disposition": f"attachment; filename=audit_logs_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.csv"
+        },
+    )
+
+
+# ============================================================================
+# Assessment Cycle Management Endpoints
+# ============================================================================
+
+
+@router.post(
+    "/cycles",
+    response_model=AssessmentCycleResponse,
+    tags=["admin"],
+    summary="Create a new assessment cycle",
+    description="Create a new assessment cycle with phase deadlines. Deactivates any existing active cycle. Requires MLGOO_DILG role.",
+    status_code=201,
+)
+async def create_assessment_cycle(
+    cycle_data: AssessmentCycleCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_mlgoo_dilg),
+):
+    """
+    Create a new assessment cycle.
+
+    **Authentication:** Requires MLGOO_DILG role.
+
+    **Validations:**
+    - Deadlines must be in chronological order: phase1 < rework < phase2 < calibration
+    - Automatically deactivates any existing active cycle
+
+    **Returns:**
+    - The newly created assessment cycle
+    """
+    from fastapi import HTTPException, status
+
+    try:
+        cycle = deadline_service.create_assessment_cycle(
+            db=db,
+            name=cycle_data.name,
+            year=cycle_data.year,
+            phase1_deadline=cycle_data.phase1_deadline,
+            rework_deadline=cycle_data.rework_deadline,
+            phase2_deadline=cycle_data.phase2_deadline,
+            calibration_deadline=cycle_data.calibration_deadline,
+        )
+        return AssessmentCycleResponse.model_validate(cycle)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+
+
+@router.get(
+    "/cycles/active",
+    response_model=AssessmentCycleResponse,
+    tags=["admin"],
+    summary="Get the active assessment cycle",
+    description="Retrieve the currently active assessment cycle. Requires MLGOO_DILG role.",
+)
+async def get_active_cycle(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_mlgoo_dilg),
+):
+    """
+    Get the currently active assessment cycle.
+
+    **Authentication:** Requires MLGOO_DILG role.
+
+    **Returns:**
+    - The active assessment cycle, or 404 if no cycle is active
+    """
+    from fastapi import HTTPException, status
+
+    cycle = deadline_service.get_active_cycle(db)
+    if not cycle:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No active assessment cycle found",
+        )
+
+    return AssessmentCycleResponse.model_validate(cycle)
+
+
+@router.put(
+    "/cycles/{cycle_id}",
+    response_model=AssessmentCycleResponse,
+    tags=["admin"],
+    summary="Update an assessment cycle",
+    description="Update cycle metadata and deadlines. Deadline updates only allowed before cycle starts. Requires MLGOO_DILG role.",
+)
+async def update_assessment_cycle(
+    cycle_id: int,
+    cycle_data: AssessmentCycleUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_mlgoo_dilg),
+):
+    """
+    Update an existing assessment cycle.
+
+    **Authentication:** Requires MLGOO_DILG role.
+
+    **Restrictions:**
+    - Deadline updates only allowed if cycle hasn't started yet (phase1_deadline is in the future)
+    - Name and year can always be updated
+
+    **Validations:**
+    - If deadlines are updated, they must remain in chronological order
+
+    **Returns:**
+    - The updated assessment cycle
+    """
+    from fastapi import HTTPException, status
+
+    try:
+        cycle = deadline_service.update_cycle(
+            db=db,
+            cycle_id=cycle_id,
+            name=cycle_data.name,
+            year=cycle_data.year,
+            phase1_deadline=cycle_data.phase1_deadline,
+            rework_deadline=cycle_data.rework_deadline,
+            phase2_deadline=cycle_data.phase2_deadline,
+            calibration_deadline=cycle_data.calibration_deadline,
+        )
+        return AssessmentCycleResponse.model_validate(cycle)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+
+
+# ============================================================================
+# Deadline Status & Override Endpoints
+# ============================================================================
+
+
+@router.get(
+    "/deadlines/status",
+    response_model=DeadlineStatusListResponse,
+    tags=["admin"],
+    summary="Get deadline status for all barangays",
+    description="Get submission status for all barangays across all phases (phase1, rework, phase2, calibration). Requires MLGOO_DILG role.",
+)
+async def get_deadline_status(
+    cycle_id: Optional[int] = Query(None, description="Filter by cycle ID (defaults to active cycle)"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_mlgoo_dilg),
+):
+    """
+    Get deadline status for all barangays across all assessment phases.
+
+    **Authentication:** Requires MLGOO_DILG role.
+
+    **Status Types:**
+    - `submitted_on_time`: Submitted before deadline
+    - `submitted_late`: Submitted after deadline but accepted
+    - `pending`: Not submitted, deadline not yet passed
+    - `overdue`: Not submitted, deadline passed
+
+    **Returns:**
+    - List of barangay deadline statuses with phase-by-phase breakdown
+    - Total count of barangays
+    """
+    status_data = deadline_service.get_deadline_status(db, cycle_id)
+
+    # Convert to response format
+    items = []
+    for status in status_data:
+        items.append(BarangayDeadlineStatusResponse(**status))
+
+    return DeadlineStatusListResponse(items=items, total=len(items))
+
+
+@router.post(
+    "/deadlines/override",
+    response_model=DeadlineOverrideResponse,
+    tags=["admin"],
+    summary="Apply a deadline override",
+    description="Extend a deadline for a specific barangay and indicator. Requires MLGOO_DILG role.",
+    status_code=201,
+)
+async def apply_deadline_override(
+    override_data: DeadlineOverrideCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_mlgoo_dilg),
+):
+    """
+    Apply a deadline override for a specific barangay and indicator.
+
+    **Authentication:** Requires MLGOO_DILG role.
+
+    **Validations:**
+    - New deadline must be in the future
+    - Reason must be at least 10 characters (for audit purposes)
+    - Cycle, barangay, and indicator must exist
+
+    **Audit Trail:**
+    - Records the MLGOO-DILG user who created the override
+    - Captures original deadline, new deadline, and justification reason
+    - Creates audit log entry
+
+    **Returns:**
+    - The created deadline override record
+    """
+    from fastapi import HTTPException, status
+
+    try:
+        override = deadline_service.apply_deadline_override(
+            db=db,
+            cycle_id=override_data.cycle_id,
+            barangay_id=override_data.barangay_id,
+            indicator_id=override_data.indicator_id,
+            new_deadline=override_data.new_deadline,
+            reason=override_data.reason,
+            created_by_user_id=current_user.id,
+        )
+
+        # Build response with related entity details
+        return DeadlineOverrideResponse(
+            id=override.id,
+            cycle_id=override.cycle_id,
+            barangay_id=override.barangay_id,
+            indicator_id=override.indicator_id,
+            created_by=override.created_by,
+            original_deadline=override.original_deadline,
+            new_deadline=override.new_deadline,
+            reason=override.reason,
+            created_at=override.created_at,
+            cycle_name=override.cycle.name,
+            barangay_name=override.barangay.name,
+            indicator_name=override.indicator.name,
+            creator_email=override.creator.email,
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+
+
+@router.get(
+    "/deadlines/overrides",
+    response_model=DeadlineOverrideListResponse,
+    tags=["admin"],
+    summary="List deadline overrides",
+    description="Get all deadline overrides with optional filtering by cycle, barangay, or indicator. Requires MLGOO_DILG role.",
+)
+async def get_deadline_overrides(
+    cycle_id: Optional[int] = Query(None, description="Filter by cycle ID"),
+    barangay_id: Optional[int] = Query(None, description="Filter by barangay ID"),
+    indicator_id: Optional[int] = Query(None, description="Filter by indicator ID"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_mlgoo_dilg),
+):
+    """
+    Get deadline overrides with optional filtering.
+
+    **Authentication:** Requires MLGOO_DILG role.
+
+    **Filters:**
+    - `cycle_id`: Filter by assessment cycle
+    - `barangay_id`: Filter by barangay
+    - `indicator_id`: Filter by indicator
+
+    **Returns:**
+    - List of deadline override records (newest first)
+    - Total count of matching overrides
+    """
+    overrides = deadline_service.get_deadline_overrides(
+        db=db,
+        cycle_id=cycle_id,
+        barangay_id=barangay_id,
+        indicator_id=indicator_id,
+    )
+
+    # Build response with related entity details
+    items = []
+    for override in overrides:
+        items.append(
+            DeadlineOverrideResponse(
+                id=override.id,
+                cycle_id=override.cycle_id,
+                barangay_id=override.barangay_id,
+                indicator_id=override.indicator_id,
+                created_by=override.created_by,
+                original_deadline=override.original_deadline,
+                new_deadline=override.new_deadline,
+                reason=override.reason,
+                created_at=override.created_at,
+                cycle_name=override.cycle.name,
+                barangay_name=override.barangay.name,
+                indicator_name=override.indicator.name,
+                creator_email=override.creator.email,
+            )
+        )
+
+    return DeadlineOverrideListResponse(items=items, total=len(items))
+
+
+@router.get(
+    "/deadlines/overrides/export",
+    tags=["admin"],
+    summary="Export deadline overrides to CSV",
+    description="Export deadline override audit logs to CSV format. Requires MLGOO_DILG role.",
+)
+async def export_deadline_overrides_csv(
+    cycle_id: Optional[int] = Query(None, description="Filter by cycle ID"),
+    barangay_id: Optional[int] = Query(None, description="Filter by barangay ID"),
+    indicator_id: Optional[int] = Query(None, description="Filter by indicator ID"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_mlgoo_dilg),
+):
+    """
+    Export deadline overrides to CSV with optional filtering.
+
+    **Authentication:** Requires MLGOO_DILG role.
+
+    **CSV Columns:**
+    - Override ID
+    - Cycle Name
+    - Barangay Name
+    - Indicator Name
+    - Original Deadline
+    - New Deadline
+    - Extension Duration (Days)
+    - Reason
+    - Created By (email)
+    - Created At
+
+    **Returns:**
+    - CSV file with deadline override data
+    """
+    from fastapi.responses import StreamingResponse
+
+    csv_content = deadline_service.export_overrides_to_csv(
+        db=db,
+        cycle_id=cycle_id,
+        barangay_id=barangay_id,
+        indicator_id=indicator_id,
+    )
+
+    return StreamingResponse(
+        iter([csv_content]),
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename=deadline_overrides_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.csv"
         },
     )
 

@@ -113,45 +113,53 @@
 
 ### Atomic Tasks (8 tasks)
 
-- [ ] **5.3.1** Create admin.py router (if not exists from Epic 6)
+- [x] **5.3.1** Create admin.py router (if not exists from Epic 6) ✅
   - **File:** `apps/api/app/api/v1/admin.py`
   - **Criteria:** APIRouter with /admin prefix, tags=["admin"]
   - **Duration:** 0.5 hours
+  - **Completed:** Router already exists from Epic 4 (BBI), added deadline management endpoints
 
-- [ ] **5.3.2** Implement POST /api/v1/admin/cycles endpoint
+- [x] **5.3.2** Implement POST /api/v1/admin/cycles endpoint ✅
   - **File:** `apps/api/app/api/v1/admin.py`
   - **Criteria:** Create cycle, require MLGOO_DILG role, validate deadlines
   - **Duration:** 1.5 hours
+  - **Completed:** Lines 296-338, creates cycle with chronological validation, returns 201
 
-- [ ] **5.3.3** Implement GET /api/v1/admin/cycles/active endpoint
+- [x] **5.3.3** Implement GET /api/v1/admin/cycles/active endpoint ✅
   - **File:** `apps/api/app/api/v1/admin.py`
   - **Criteria:** Get active cycle, return 404 if none
   - **Duration:** 1 hour
+  - **Completed:** Lines 341-369, fetches active cycle, returns 404 if none exists
 
-- [ ] **5.3.4** Implement PUT /api/v1/admin/cycles/{id} endpoint
+- [x] **5.3.4** Implement PUT /api/v1/admin/cycles/{id} endpoint ✅
   - **File:** `apps/api/app/api/v1/admin.py`
   - **Criteria:** Update cycle deadlines
   - **Duration:** 1.5 hours
+  - **Completed:** Lines 372-418, updates cycle with validation, prevents deadline changes after cycle starts
 
-- [ ] **5.3.5** Implement GET /api/v1/admin/deadlines/status endpoint
+- [x] **5.3.5** Implement GET /api/v1/admin/deadlines/status endpoint ✅
   - **File:** `apps/api/app/api/v1/admin.py`
   - **Criteria:** Get deadline status for all barangays, support filters
   - **Duration:** 2 hours
+  - **Completed:** Lines 426-460, returns status for all barangays across all 4 phases
 
-- [ ] **5.3.6** Implement POST /api/v1/admin/deadlines/override endpoint
+- [x] **5.3.6** Implement POST /api/v1/admin/deadlines/override endpoint ✅
   - **File:** `apps/api/app/api/v1/admin.py`
   - **Criteria:** Apply deadline override, return confirmation
   - **Duration:** 2 hours
+  - **Completed:** Lines 463-527, creates override with audit trail, enriches response with related entities
 
-- [ ] **5.3.7** Implement GET /api/v1/admin/deadlines/overrides endpoint
+- [x] **5.3.7** Implement GET /api/v1/admin/deadlines/overrides endpoint ✅
   - **File:** `apps/api/app/api/v1/admin.py`
   - **Criteria:** List overrides with filters, pagination
   - **Duration:** 1.5 hours
+  - **Completed:** Lines 530-586, flexible filtering by cycle/barangay/indicator, enriched responses
 
-- [ ] **5.3.8** Implement GET /api/v1/admin/deadlines/overrides/export endpoint
+- [x] **5.3.8** Implement GET /api/v1/admin/deadlines/overrides/export endpoint ✅
   - **File:** `apps/api/app/api/v1/admin.py`
   - **Criteria:** Return CSV file response
   - **Duration:** 1 hour
+  - **Completed:** Lines 589-637, exports CSV with StreamingResponse, timestamped filename
 
 ---
 
