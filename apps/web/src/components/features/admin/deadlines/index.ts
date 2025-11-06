@@ -5,3 +5,4 @@
  */
 
 export { DeadlineStatusDashboard } from "./DeadlineStatusDashboard";
+export { DeadlineOverrideModal } from "./DeadlineOverrideModal";

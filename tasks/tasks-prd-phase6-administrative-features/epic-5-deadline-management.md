@@ -261,52 +261,61 @@
 
 ---
 
-## Story 5.6: Frontend Deadline Override Modal & Workflow
+## Story 5.6: Frontend Deadline Override Modal & Workflow ✅
 
 **Duration:** 2 days
 **Dependencies:** 5.5
+**Status:** COMPLETED
 
 ### Atomic Tasks (8 tasks)
 
-- [ ] **5.6.1** Create DeadlineOverrideModal component structure
+- [x] **5.6.1** Create DeadlineOverrideModal component structure ✅
   - **File:** `apps/web/src/components/features/admin/deadlines/DeadlineOverrideModal.tsx`
   - **Criteria:** Multi-step dialog using shadcn/ui Dialog
   - **Duration:** 2 hours
+  - **Completed:** Comprehensive 4-step modal with Dialog component, progress indicator, step management state
 
-- [ ] **5.6.2** Implement Step 1: Select Barangay
-  - **File:** `DeadlineOverrideModal/Step1SelectBarangay.tsx`
+- [x] **5.6.2** Implement Step 1: Select Barangay ✅
+  - **File:** `DeadlineOverrideModal.tsx` (integrated in task 5.6.1)
   - **Criteria:** Searchable dropdown or combobox, show barangay name + region
   - **Duration:** 2 hours
+  - **Completed:** Search input + Select dropdown, filtered barangays, preSelectedBarangayId support
 
-- [ ] **5.6.3** Implement Step 2: Select Indicators
-  - **File:** `DeadlineOverrideModal/Step2SelectIndicators.tsx`
+- [x] **5.6.3** Implement Step 2: Select Indicators ✅
+  - **File:** `DeadlineOverrideModal.tsx` (integrated in task 5.6.1)
   - **Criteria:** Multi-select checkbox list, "Select All" option
   - **Duration:** 2 hours
+  - **Completed:** Checkbox list with descriptions, Select All/Deselect All button, scrollable container, active indicator filtering
 
-- [ ] **5.6.4** Implement Step 3: Set New Deadline & Reason
-  - **File:** `DeadlineOverrideModal/Step3SetDeadline.tsx`
+- [x] **5.6.4** Implement Step 3: Set New Deadline & Reason ✅
+  - **File:** `DeadlineOverrideModal.tsx` (integrated in task 5.6.1)
   - **Criteria:** Date picker (min = today), textarea for reason (required)
   - **Duration:** 2 hours
+  - **Completed:** Datetime-local input with min validation, textarea with character counter, 10-character minimum enforcement
 
-- [ ] **5.6.5** Implement Step 4: Confirmation Summary
-  - **File:** `DeadlineOverrideModal/Step4Confirmation.tsx`
+- [x] **5.6.5** Implement Step 4: Confirmation Summary ✅
+  - **File:** `DeadlineOverrideModal.tsx` (integrated in task 5.6.1)
   - **Criteria:** Display all selections, plain language summary (e.g., "Extending deadline for 3 indicators...")
   - **Duration:** 1.5 hours
+  - **Completed:** Detailed summary card showing barangay, indicators, deadline, reason; plain language summary with blue info box
 
-- [ ] **5.6.6** Implement navigation between steps
-  - **File:** `DeadlineOverrideModal.tsx` (update)
+- [x] **5.6.6** Implement navigation between steps ✅
+  - **File:** `DeadlineOverrideModal.tsx` (integrated in task 5.6.1)
   - **Criteria:** Next/Previous buttons, validation before next, progress indicator
   - **Duration:** 1.5 hours
+  - **Completed:** Progress indicator with 4 steps (numbered/checkmark), Previous/Next buttons, validation with toast notifications, dynamic button states
 
-- [ ] **5.6.7** Implement submit and API integration
-  - **File:** `DeadlineOverrideModal.tsx` (update)
+- [x] **5.6.7** Implement submit and API integration ✅
+  - **File:** `DeadlineOverrideModal.tsx` (integrated in task 5.6.1)
   - **Criteria:** Call POST /api/v1/admin/deadlines/override, handle success/error
   - **Duration:** 2 hours
+  - **Completed:** Promise.all for multiple indicator overrides, error handling with toast, loading state during submission
 
-- [ ] **5.6.8** Add success notification and close
-  - **File:** `DeadlineOverrideModal.tsx` (update)
+- [x] **5.6.8** Add success notification and close ✅
+  - **File:** `DeadlineOverrideModal.tsx` (integrated in task 5.6.1)
   - **Criteria:** Toast notification, close modal, refresh dashboard
   - **Duration:** 1 hour
+  - **Completed:** Success toast with count, automatic modal close, refetchStatus callback, onSuccess prop support, form reset on close
 
 ---
 

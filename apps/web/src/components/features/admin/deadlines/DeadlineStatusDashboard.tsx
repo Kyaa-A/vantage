@@ -14,6 +14,7 @@
 import * as React from "react";
 import { useDeadlines, getStatusBadgeClasses, getStatusLabel } from "@/hooks/useDeadlines";
 import { useCycles } from "@/hooks/useCycles";
+import { DeadlineOverrideModal } from "./DeadlineOverrideModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -53,6 +54,10 @@ export function DeadlineStatusDashboard() {
   // Filter state
   const [barangayFilter, setBarangayFilter] = React.useState("");
   const [phaseFilter, setPhaseFilter] = React.useState<string>("all");
+
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [selectedBarangayId, setSelectedBarangayId] = React.useState<number | undefined>();
 
   // Manual refresh loading state
   const [isRefreshing, setIsRefreshing] = React.useState(false);
@@ -402,8 +407,8 @@ export function DeadlineStatusDashboard() {
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          // TODO: Open DeadlineOverrideModal (Story 5.6)
-                          console.log("Extend deadline for", status.barangay_name);
+                          setSelectedBarangayId(status.barangay_id);
+                          setIsModalOpen(true);
                         }}
                         className="text-xs"
                       >
@@ -436,6 +441,14 @@ export function DeadlineStatusDashboard() {
           <span>Auto-refreshing every 30 seconds</span>
         </div>
       </div>
+
+      {/* Deadline Override Modal */}
+      <DeadlineOverrideModal
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        preSelectedBarangayId={selectedBarangayId}
+        onSuccess={refetchStatus}
+      />
     </div>
   );
 }
