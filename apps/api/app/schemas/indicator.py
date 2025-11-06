@@ -78,7 +78,7 @@ class IndicatorResponse(BaseModel):
     is_active: bool
     is_profiling_only: bool
     is_auto_calculable: bool
-    form_schema: Optional[FormSchema] = Field(None, description="Form schema with validated field types")
+    form_schema: Optional[Dict[str, Any]] = Field(None, description="Form schema (JSON)")
     calculation_schema: Optional[Dict[str, Any]] = None
     remark_schema: Optional[Dict[str, Any]] = None
     technical_notes_text: Optional[str] = None
@@ -115,7 +115,7 @@ class IndicatorHistoryResponse(BaseModel):
     is_active: bool
     is_auto_calculable: bool
     is_profiling_only: bool
-    form_schema: Optional[FormSchema] = Field(None, description="Form schema with validated field types")
+    form_schema: Optional[Dict[str, Any]] = Field(None, description="Form schema (JSON)")
     calculation_schema: Optional[Dict[str, Any]] = None
     remark_schema: Optional[Dict[str, Any]] = None
     technical_notes_text: Optional[str] = None

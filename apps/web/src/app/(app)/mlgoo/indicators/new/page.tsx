@@ -18,8 +18,7 @@ import {
 import { FormSchemaBuilder } from '@/components/features/indicators/FormSchemaBuilder';
 import { SaveFormSchemaButton } from '@/components/features/indicators/SaveFormSchemaButton';
 import { useFormBuilderStore } from '@/store/useFormBuilderStore';
-import { usePostIndicators } from '@vantage/shared';
-import { useGetGovernanceAreas } from '@vantage/shared';
+import { usePostIndicators, useGetLookupsGovernanceAreas } from '@vantage/shared';
 import { useToast } from '@/hooks/use-toast';
 
 interface IndicatorFormData {
@@ -48,7 +47,7 @@ export default function NewIndicatorPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   // Fetch governance areas
-  const { data: governanceAreas } = useGetGovernanceAreas();
+  const { data: governanceAreas } = useGetLookupsGovernanceAreas();
 
   // Form for basic indicator fields
   const {
@@ -57,7 +56,12 @@ export default function NewIndicatorPage() {
     formState: { errors },
     setValue,
     watch,
-  } = useForm<IndicatorFormData>();
+  } = useForm<IndicatorFormData>({
+    defaultValues: {
+      name: '',
+      description: '',
+    },
+  });
 
   const selectedGovernanceAreaId = watch('governance_area_id');
 
@@ -103,6 +107,16 @@ export default function NewIndicatorPage() {
 
   // Handle save & publish (with form_schema)
   const handleSaveAndPublish = handleSubmit(async (data) => {
+    // Validate governance area is selected
+    if (!data.governance_area_id) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please select a Governance Area',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     // Validate that form has fields
     if (fields.length === 0) {
       toast({
@@ -136,7 +150,8 @@ export default function NewIndicatorPage() {
       });
 
       markAsSaved();
-      router.push(`/mlgoo/indicators/${result.id}`);
+      // Redirect to indicators list page
+      router.push(`/mlgoo/indicators`);
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -190,6 +205,16 @@ export default function NewIndicatorPage() {
             <SaveFormSchemaButton
               onSave={async () => {
                 await handleSubmit(async (data) => {
+                  // Validate governance area is selected
+                  if (!data.governance_area_id) {
+                    toast({
+                      title: 'Validation Error',
+                      description: 'Please select a Governance Area',
+                      variant: 'destructive',
+                    });
+                    throw new Error('Governance area is required');
+                  }
+
                   const formSchema = { fields };
                   await createIndicator.mutateAsync({
                     data: {
@@ -201,7 +226,14 @@ export default function NewIndicatorPage() {
                       is_active: true,
                     },
                   });
+
+                  toast({
+                    title: 'Success',
+                    description: 'Indicator created and published successfully',
+                  });
+
                   markAsSaved();
+                  // Redirect to indicators list page
                   router.push(`/mlgoo/indicators`);
                 })();
               }}
@@ -238,9 +270,12 @@ export default function NewIndicatorPage() {
               Governance Area <span className="text-red-600">*</span>
             </Label>
             <Select
-              onValueChange={(value) => setValue('governance_area_id', parseInt(value))}
+              onValueChange={(value) => {
+                setValue('governance_area_id', parseInt(value), { shouldValidate: true });
+              }}
+              required
             >
-              <SelectTrigger>
+              <SelectTrigger className={errors.governance_area_id ? 'border-red-500' : ''}>
                 <SelectValue placeholder="Select governance area" />
               </SelectTrigger>
               <SelectContent>

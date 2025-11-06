@@ -411,6 +411,12 @@ export type IndicatorUpdateTechnicalNotesText = string | null;
 
 
 /**
+ * PostIndicatorsValidateFormSchema200
+ */
+export type PostIndicatorsValidateFormSchema200 = { [key: string]: unknown };
+
+
+/**
  * SystemicWeaknessIndicatorId
  */
 export type SystemicWeaknessIndicatorId = number | null;

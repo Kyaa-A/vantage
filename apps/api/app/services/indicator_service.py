@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.db.models.governance_area import GovernanceArea, Indicator, IndicatorHistory
 from app.db.models.user import User
+from app.schemas.form_schema import FormSchema
 from app.services.form_schema_validator import generate_validation_errors
 
 
@@ -74,11 +75,16 @@ class IndicatorService:
         # Validate form_schema if provided
         form_schema = data.get("form_schema")
         if form_schema:
-            validation_errors = generate_validation_errors(form_schema)
-            if validation_errors:
-                raise ValueError(
-                    f"Form schema validation failed: {'; '.join(validation_errors)}"
-                )
+            # Convert dict to Pydantic model for validation
+            try:
+                form_schema_obj = FormSchema(**form_schema)
+                validation_errors = generate_validation_errors(form_schema_obj)
+                if validation_errors:
+                    raise ValueError(
+                        f"Form schema validation failed: {'; '.join(validation_errors)}"
+                    )
+            except Exception as e:
+                raise ValueError(f"Invalid form schema format: {str(e)}")
 
         # Create indicator with version 1
         indicator = Indicator(

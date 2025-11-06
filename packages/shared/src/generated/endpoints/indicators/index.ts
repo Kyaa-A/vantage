@@ -20,12 +20,14 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  FormSchemaInput,
   GetIndicatorsParams,
   HTTPValidationError,
   IndicatorCreate,
   IndicatorHistoryResponse,
   IndicatorResponse,
-  IndicatorUpdate
+  IndicatorUpdate,
+  PostIndicatorsValidateFormSchema200
 } from '../../schemas';
 
 import { mutator } from '../../../../../../apps/web/src/lib/api';
@@ -197,6 +199,93 @@ export function useGetIndicators<TData = Awaited<ReturnType<typeof getIndicators
 
 
 /**
+ * Validate a form schema without saving it.
+
+**Permissions**: MLGOO_DILG only
+
+**Request Body**:
+- form_schema: FormSchema object with fields to validate
+
+**Returns**:
+- `{"valid": true}` if the schema is valid
+- `{"valid": false, "errors": [...]}` if validation fails with detailed error messages
+
+**Validation Checks**:
+- Field IDs are unique
+- No circular references in conditional logic
+- Conditional MOV references point to existing fields
+- Checkbox/Radio fields have at least one option
+- Fields list is not empty
+
+**Status Codes**:
+- 200: Schema is valid
+- 400: Schema is invalid (returns error details)
+- 401: Unauthorized (not authenticated)
+- 403: Forbidden (not MLGOO_DILG role)
+ * @summary Validate a form schema
+ */
+export const postIndicatorsValidateFormSchema = (
+    formSchemaInput: FormSchemaInput,
+ options?: SecondParameter<typeof mutator>,signal?: AbortSignal
+) => {
+      
+      
+      return mutator<PostIndicatorsValidateFormSchema200>(
+      {url: `http://localhost:8000/api/v1/indicators/validate-form-schema`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: formSchemaInput, signal
+    },
+      options);
+    }
+  
+
+
+export const getPostIndicatorsValidateFormSchemaMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postIndicatorsValidateFormSchema>>, TError,{data: FormSchemaInput}, TContext>, request?: SecondParameter<typeof mutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postIndicatorsValidateFormSchema>>, TError,{data: FormSchemaInput}, TContext> => {
+
+const mutationKey = ['postIndicatorsValidateFormSchema'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postIndicatorsValidateFormSchema>>, {data: FormSchemaInput}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postIndicatorsValidateFormSchema(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostIndicatorsValidateFormSchemaMutationResult = NonNullable<Awaited<ReturnType<typeof postIndicatorsValidateFormSchema>>>
+    export type PostIndicatorsValidateFormSchemaMutationBody = FormSchemaInput
+    export type PostIndicatorsValidateFormSchemaMutationError = HTTPValidationError
+
+    /**
+ * @summary Validate a form schema
+ */
+export const usePostIndicatorsValidateFormSchema = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postIndicatorsValidateFormSchema>>, TError,{data: FormSchemaInput}, TContext>, request?: SecondParameter<typeof mutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof postIndicatorsValidateFormSchema>>,
+        TError,
+        {data: FormSchemaInput},
+        TContext
+      > => {
+
+      const mutationOptions = getPostIndicatorsValidateFormSchemaMutationOptions(options);
+
+      return useMutation(mutationOptions );
+    }
+    /**
  * Get a specific indicator by ID.
 
 **Permissions**: All authenticated users

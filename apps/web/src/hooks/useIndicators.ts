@@ -2,13 +2,13 @@
 // Wraps generated React Query hooks with convenience methods
 
 import {
-  useGetIndicatorsIndicators,
-  useGetIndicatorsIndicatorsIndicatorId,
-  usePostIndicatorsIndicators,
-  usePutIndicatorsIndicatorsIndicatorId,
-  useDeleteIndicatorsIndicatorsIndicatorId,
-  useGetIndicatorsIndicatorsIndicatorIdHistory,
-  type GetIndicatorsIndicatorsParams,
+  useGetIndicators,
+  useGetIndicatorsIndicatorId,
+  usePostIndicators,
+  usePutIndicatorsIndicatorId,
+  useDeleteIndicatorsIndicatorId,
+  useGetIndicatorsIndicatorIdHistory,
+  type GetIndicatorsParams,
   type IndicatorCreate,
   type IndicatorUpdate,
 } from '@vantage/shared';
@@ -16,41 +16,41 @@ import {
 /**
  * Hook to fetch list of indicators with optional filters
  */
-export function useIndicators(params?: GetIndicatorsIndicatorsParams) {
-  return useGetIndicatorsIndicators(params);
+export function useIndicators(params?: GetIndicatorsParams) {
+  return useGetIndicators(params);
 }
 
 /**
  * Hook to fetch a single indicator by ID
  */
 export function useIndicator(indicatorId: number) {
-  return useGetIndicatorsIndicatorsIndicatorId(indicatorId);
+  return useGetIndicatorsIndicatorId(indicatorId);
 }
 
 /**
  * Hook to create a new indicator
  */
 export function useCreateIndicatorMutation() {
-  return usePostIndicatorsIndicators();
+  return usePostIndicators();
 }
 
 /**
  * Hook to update an existing indicator
  */
 export function useUpdateIndicatorMutation() {
-  return usePutIndicatorsIndicatorsIndicatorId();
+  return usePutIndicatorsIndicatorId();
 }
 
 /**
  * Hook to deactivate (soft delete) an indicator
  */
 export function useDeleteIndicatorMutation() {
-  return useDeleteIndicatorsIndicatorsIndicatorId();
+  return useDeleteIndicatorsIndicatorId();
 }
 
 /**
  * Hook to fetch indicator version history
  */
 export function useIndicatorHistory(indicatorId: number) {
-  return useGetIndicatorsIndicatorsIndicatorIdHistory(indicatorId);
+  return useGetIndicatorsIndicatorIdHistory(indicatorId);
 }

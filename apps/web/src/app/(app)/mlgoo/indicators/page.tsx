@@ -80,8 +80,7 @@ export default function IndicatorsPage() {
   }
 
   const handleCreateNew = () => {
-    // TODO: Open create indicator dialog/form (Story 1.6)
-    console.log("Create new indicator clicked");
+    router.push("/mlgoo/indicators/new");
   };
 
   return (

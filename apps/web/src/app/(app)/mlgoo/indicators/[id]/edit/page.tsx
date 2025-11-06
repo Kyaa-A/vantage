@@ -21,7 +21,7 @@ import { useFormBuilderStore } from '@/store/useFormBuilderStore';
 import {
   useGetIndicatorsIndicatorId,
   usePutIndicatorsIndicatorId,
-  useGetGovernanceAreas,
+  useGetLookupsGovernanceAreas,
 } from '@vantage/shared';
 import { useToast } from '@/hooks/use-toast';
 
@@ -58,7 +58,7 @@ export default function EditIndicatorPage() {
   const { data: indicator, isLoading } = useGetIndicatorsIndicatorId(indicatorId);
 
   // Fetch governance areas
-  const { data: governanceAreas } = useGetGovernanceAreas();
+  const { data: governanceAreas } = useGetLookupsGovernanceAreas();
 
   // Form for basic indicator fields
   const {
