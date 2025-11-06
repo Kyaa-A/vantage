@@ -51,50 +51,58 @@
 
 ### Atomic Tasks (9 tasks)
 
-- [ ] **5.2.1** Create deadline_service.py with base structure
+- [x] **5.2.1** Create deadline_service.py with base structure
   - **File:** `apps/api/app/services/deadline_service.py`
   - **Criteria:** DeadlineService class with db session
   - **Duration:** 1 hour
+  - **Completed:** Created DeadlineService class with base structure, imports, and singleton instance
 
 - [ ] **5.2.2** Implement create_assessment_cycle() method
   - **File:** `apps/api/app/services/deadline_service.py`
   - **Criteria:** Create cycle, validate deadlines in chronological order, deactivate previous cycle
   - **Duration:** 3 hours
 
-- [ ] **5.2.3** Implement get_active_cycle() method
+- [x] **5.2.3** Implement get_active_cycle() method ✅
   - **File:** `apps/api/app/services/deadline_service.py`
   - **Criteria:** Fetch currently active cycle
   - **Duration:** 1 hour
+  - **Completed:** Lines 110-120, queries active cycle with is_active=True filter
 
-- [ ] **5.2.4** Implement update_cycle() method
+- [x] **5.2.4** Implement update_cycle() method ✅
   - **File:** `apps/api/app/services/deadline_service.py`
   - **Criteria:** Update deadlines, validate chronological order, only allow if cycle not started
   - **Duration:** 2 hours
+  - **Completed:** Lines 122-218, prevents deadline changes after cycle starts, validates chronological order
 
-- [ ] **5.2.5** Implement get_deadline_status() method
+- [x] **5.2.5** Implement get_deadline_status() method ✅
   - **File:** `apps/api/app/services/deadline_service.py`
   - **Criteria:** For each barangay, check submission status vs deadlines (submitted on time, late, pending, overdue)
   - **Duration:** 4 hours
+  - **Completed:** Lines 220-372, returns comprehensive status for all barangays across all 4 phases with helper method
 
-- [ ] **5.2.6** Implement apply_deadline_override() method
+- [x] **5.2.6** Implement apply_deadline_override() method ✅
   - **File:** `apps/api/app/services/deadline_service.py`
   - **Criteria:** Create override record, validate new_deadline not in past, unlock submission
   - **Duration:** 3 hours
+  - **Completed:** Lines 374-456, validates entities exist, validates future deadline, creates override with audit trail
 
-- [ ] **5.2.7** Implement get_deadline_overrides() method
+- [x] **5.2.7** Implement get_deadline_overrides() method ✅
   - **File:** `apps/api/app/services/deadline_service.py`
   - **Criteria:** Fetch overrides with filters (date range, barangay, user), support pagination
   - **Duration:** 2 hours
+  - **Completed:** Lines 458-495, flexible filtering by cycle_id, barangay_id, indicator_id, ordered by created_at desc
 
-- [ ] **5.2.8** Implement export_overrides_to_csv() method
+- [x] **5.2.8** Implement export_overrides_to_csv() method ✅
   - **File:** `apps/api/app/services/deadline_service.py`
   - **Criteria:** Generate CSV with all override fields
   - **Duration:** 2 hours
+  - **Completed:** Lines 499-561, generates CSV with comprehensive audit info including extension duration calculation
 
-- [ ] **5.2.9** Create Pydantic schemas for cycles and overrides
+- [x] **5.2.9** Create Pydantic schemas for cycles and overrides ✅
   - **File:** `apps/api/app/schemas/admin.py`
   - **Criteria:** CycleCreate, CycleResponse, OverrideRequest, OverrideResponse, DeadlineStatusResponse
   - **Duration:** 2 hours
+  - **Completed:** Lines 107-242, created AssessmentCycleBase/Create/Update/Response, DeadlineOverrideBase/Create/Response, PhaseStatusResponse, BarangayDeadlineStatusResponse
 
 ---
 

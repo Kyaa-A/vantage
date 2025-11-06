@@ -102,3 +102,141 @@ class AdminErrorResponse(BaseModel):
     success: bool = False
     error: str
     detail: Optional[str] = None
+
+
+# ============================================================================
+# Assessment Cycle Schemas
+# ============================================================================
+
+
+class AssessmentCycleBase(BaseModel):
+    """Base assessment cycle schema with common fields."""
+
+    name: str = Field(..., description="Cycle name (e.g., 'SGLGB 2025')")
+    year: int = Field(..., description="Assessment year")
+    phase1_deadline: datetime = Field(..., description="Initial submission deadline")
+    rework_deadline: datetime = Field(..., description="Rework submission deadline")
+    phase2_deadline: datetime = Field(..., description="Final submission deadline")
+    calibration_deadline: datetime = Field(..., description="Calibration/validation deadline")
+
+
+class AssessmentCycleCreate(AssessmentCycleBase):
+    """Schema for creating a new assessment cycle."""
+    pass
+
+
+class AssessmentCycleUpdate(BaseModel):
+    """Schema for updating an assessment cycle (all fields optional)."""
+
+    name: Optional[str] = Field(None, description="Cycle name")
+    year: Optional[int] = Field(None, description="Assessment year")
+    phase1_deadline: Optional[datetime] = Field(None, description="Initial submission deadline")
+    rework_deadline: Optional[datetime] = Field(None, description="Rework submission deadline")
+    phase2_deadline: Optional[datetime] = Field(None, description="Final submission deadline")
+    calibration_deadline: Optional[datetime] = Field(None, description="Calibration/validation deadline")
+
+
+class AssessmentCycleResponse(AssessmentCycleBase):
+    """Schema for assessment cycle API responses."""
+
+    id: int
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AssessmentCycleListResponse(BaseModel):
+    """Schema for list of assessment cycles."""
+
+    items: list[AssessmentCycleResponse]
+    total: int
+
+
+# ============================================================================
+# Deadline Override Schemas
+# ============================================================================
+
+
+class DeadlineOverrideBase(BaseModel):
+    """Base deadline override schema with common fields."""
+
+    new_deadline: datetime = Field(..., description="Extended deadline (must be in future)")
+    reason: str = Field(..., min_length=10, description="Justification for extension (minimum 10 characters)")
+
+
+class DeadlineOverrideCreate(DeadlineOverrideBase):
+    """Schema for creating a deadline override."""
+
+    cycle_id: int = Field(..., description="ID of the assessment cycle")
+    barangay_id: int = Field(..., description="ID of the barangay")
+    indicator_id: int = Field(..., description="ID of the indicator")
+
+
+class DeadlineOverrideResponse(DeadlineOverrideBase):
+    """Schema for deadline override API responses."""
+
+    id: int
+    cycle_id: int
+    barangay_id: int
+    indicator_id: int
+    created_by: int
+    original_deadline: datetime
+    created_at: datetime
+
+    # Related entity details (will be joined)
+    cycle_name: Optional[str] = None
+    barangay_name: Optional[str] = None
+    indicator_name: Optional[str] = None
+    creator_email: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class DeadlineOverrideListResponse(BaseModel):
+    """Schema for list of deadline overrides."""
+
+    items: list[DeadlineOverrideResponse]
+    total: int
+
+
+class DeadlineOverrideFilters(BaseModel):
+    """Schema for deadline override filtering parameters."""
+
+    cycle_id: Optional[int] = None
+    barangay_id: Optional[int] = None
+    indicator_id: Optional[int] = None
+
+
+# ============================================================================
+# Deadline Status Schemas
+# ============================================================================
+
+
+class PhaseStatusResponse(BaseModel):
+    """Schema for a single phase's deadline status."""
+
+    status: str = Field(..., description="Status: submitted_on_time, submitted_late, pending, or overdue")
+    deadline: str = Field(..., description="Deadline in ISO format")
+    submitted_at: Optional[str] = Field(None, description="Submission timestamp in ISO format (if submitted)")
+
+
+class BarangayDeadlineStatusResponse(BaseModel):
+    """Schema for a barangay's deadline status across all phases."""
+
+    barangay_id: int
+    barangay_name: str
+    cycle_id: int
+    cycle_name: str
+    phase1: PhaseStatusResponse
+    rework: PhaseStatusResponse
+    phase2: PhaseStatusResponse
+    calibration: PhaseStatusResponse
+
+
+class DeadlineStatusListResponse(BaseModel):
+    """Schema for list of barangay deadline statuses."""
+
+    items: list[BarangayDeadlineStatusResponse]
+    total: int
