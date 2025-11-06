@@ -693,6 +693,21 @@ class AssessorService:
             print(f"Failed to run classification: {e}")
             classification_result = {"success": False, "error": str(e)}
 
+        # Calculate BBI statuses for all active BBIs
+        from app.services.bbi_service import bbi_service
+
+        try:
+            bbi_results = bbi_service.calculate_all_bbi_statuses(db, assessment_id)
+            bbi_calculation_result = {
+                "success": True,
+                "message": f"Calculated {len(bbi_results)} BBI statuses",
+                "bbi_count": len(bbi_results),
+            }
+        except Exception as e:
+            # Log the error but don't fail the finalization operation
+            print(f"Failed to calculate BBI statuses: {e}")
+            bbi_calculation_result = {"success": False, "error": str(e)}
+
         # Trigger notification asynchronously using Celery
         try:
             from app.workers.notifications import send_validation_complete_notification
@@ -718,6 +733,7 @@ class AssessorService:
             if assessment.validated_at
             else None,
             "classification_result": classification_result,
+            "bbi_calculation_result": bbi_calculation_result,
             "notification_result": notification_result,
         }
 
