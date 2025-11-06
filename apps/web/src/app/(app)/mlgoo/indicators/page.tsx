@@ -86,22 +86,65 @@ export default function IndicatorsPage() {
   return (
     <div className="min-h-screen bg-[var(--background)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Page Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-[var(--foreground)] mb-2">
-            Indicator Management
-          </h1>
-          <p className="text-[var(--muted-foreground)]">
-            Manage assessment indicators and their versioning across all governance areas.
-          </p>
-        </div>
+        <div className="space-y-8">
+          {/* Enhanced Header Section */}
+          <div className="relative overflow-hidden bg-[var(--card)] rounded-sm shadow-lg border border-[var(--border)] p-8">
+            {/* Decorative background elements */}
+            <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-100/40 to-indigo-100/20 rounded-full -translate-y-20 translate-x-20"></div>
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-purple-100/30 to-pink-100/20 rounded-full translate-y-16 -translate-x-16"></div>
 
-        {/* Indicator List Component */}
-        <IndicatorList
-          indicators={indicators || []}
-          onCreateNew={handleCreateNew}
-          isLoading={isLoading}
-        />
+            <div className="relative z-10">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                <div className="space-y-3">
+                  <h1 className="text-3xl font-bold text-[var(--foreground)]">
+                    Indicator{" "}
+                    <span className="bg-gradient-to-r from-[var(--cityscape-yellow)] to-[var(--cityscape-yellow-dark)] bg-clip-text text-transparent">
+                      Management
+                    </span>
+                  </h1>
+                  <p className="text-sm text-[var(--text-secondary)]">
+                    Manage assessment indicators and their versioning across all governance areas.
+                  </p>
+                </div>
+
+                {/* Enhanced Quick Stats */}
+                <div className="flex items-center gap-6">
+                  <div className="bg-[var(--card)]/80 backdrop-blur-sm rounded-sm p-4 text-center shadow-sm border border-[var(--border)]">
+                    <div className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                      {indicators?.filter(i => i.is_active).length || 0}
+                    </div>
+                    <div className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">
+                      Active
+                    </div>
+                  </div>
+                  <div className="bg-[var(--card)]/80 backdrop-blur-sm rounded-sm p-4 text-center shadow-sm border border-[var(--border)]">
+                    <div className="text-3xl font-bold text-[var(--foreground)]">
+                      {indicators?.length || 0}
+                    </div>
+                    <div className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">
+                      Total
+                    </div>
+                  </div>
+                  <div className="bg-[var(--card)]/80 backdrop-blur-sm rounded-sm p-4 text-center shadow-sm border border-[var(--border)]">
+                    <div className="text-3xl font-bold bg-gradient-to-r from-[var(--cityscape-yellow)] to-[var(--cityscape-yellow-dark)] bg-clip-text text-transparent">
+                      {indicators?.filter(i => i.is_auto_calculable).length || 0}
+                    </div>
+                    <div className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">
+                      Auto-Calc
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Indicator List Component */}
+          <IndicatorList
+            indicators={indicators || []}
+            onCreateNew={handleCreateNew}
+            isLoading={isLoading}
+          />
+        </div>
       </div>
     </div>
   );
