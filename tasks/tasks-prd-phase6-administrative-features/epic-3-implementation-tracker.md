@@ -12,9 +12,9 @@
 
 - **Total Stories:** 8
 - **Total Tasks:** 45
-- **Completed Tasks:** 32 (Stories 3.1, 3.2, 3.3, 3.5, 3.6 & 3.7 complete! Story 3.4 skipped)
-- **Current Story:** Story 3.8 (Testing)
-- **Progress:** 71% (32/45 tasks)
+- **Completed Tasks:** 36 (Stories 3.1, 3.2, 3.3, 3.5, 3.6, 3.7 & 3.8 complete! Story 3.4 skipped, frontend tests 3.8.4-5 skipped)
+- **Current Story:** Epic 3.0 Complete!
+- **Progress:** 80% (36/45 tasks, 2 skipped)
 
 ---
 
@@ -228,17 +228,27 @@
 ## Story 3.8: Testing for Calculation & Remark Builders
 
 **Duration:** 1 day
-**Status:** Pending
+**Status:** ✅ Complete (Backend tests)
 **Dependencies:** All previous stories
 
 ### Tasks
 
-- [ ] **3.8.1** Write tests for all 6 rule types evaluation
-- [ ] **3.8.2** Write tests for nested condition group evaluation
-- [ ] **3.8.3** Write tests for remark generation
+- [x] **3.8.1** Write tests for all 6 rule types evaluation
+  - **File:** `apps/api/tests/services/test_calculation_and_remark.py`
+  - **Completed:** 13 tests covering MATCH_VALUE, PERCENTAGE_THRESHOLD, COUNT_THRESHOLD, AND_ALL, OR_ANY, BBI_FUNCTIONALITY_CHECK rules
+- [x] **3.8.2** Write tests for nested condition group evaluation
+  - **File:** Same as 3.8.1
+  - **Completed:** 3 tests for AND/OR groups and complex nested structures
+- [x] **3.8.3** Write tests for remark generation
+  - **File:** Same as 3.8.1
+  - **Completed:** 5 tests covering pass/fail status, default fallback, field placeholders, and no schema cases
 - [ ] **3.8.4** Write frontend tests for CalculationRuleBuilder
+  - **Status:** Skipped (focus on backend for Epic 3)
 - [ ] **3.8.5** Write tests for TestCalculationPanel
-- [ ] **3.8.6** Write integration test for calculation workflow
+  - **Status:** Skipped (focus on backend for Epic 3)
+- [x] **3.8.6** Write integration test for calculation workflow
+  - **File:** Same as 3.8.1
+  - **Completed:** 3 end-to-end tests for calculate status + generate remark workflow
 
 ---
 

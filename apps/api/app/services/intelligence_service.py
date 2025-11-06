@@ -401,6 +401,19 @@ class IntelligenceService:
         else:
             return calculation_schema.output_status_on_fail
 
+    def calculate_indicator_status(
+        self,
+        db: Session,
+        indicator_id: int,
+        assessment_data: Dict[str, Any],
+    ) -> Optional[str]:
+        """
+        Alias for evaluate_indicator_calculation for backwards compatibility.
+
+        Calculate the Pass/Fail status of an auto-calculable indicator.
+        """
+        return self.evaluate_indicator_calculation(db, indicator_id, assessment_data)
+
     def _evaluate_condition_group(
         self, group: ConditionGroup, assessment_data: Dict[str, Any]
     ) -> bool:
