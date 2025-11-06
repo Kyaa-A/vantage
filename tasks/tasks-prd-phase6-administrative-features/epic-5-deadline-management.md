@@ -163,37 +163,43 @@
 
 ---
 
-## Story 5.4: Frontend Assessment Cycle Management Page
+## Story 5.4: Frontend Assessment Cycle Management Page ✅
 
 **Duration:** 1 day
 **Dependencies:** 5.3, `pnpm generate-types`
+**Status:** COMPLETED
 
 ### Atomic Tasks (5 tasks)
 
-- [ ] **5.4.1** Generate TypeScript types
+- [x] **5.4.1** Generate TypeScript types ✅
   - **Command:** `pnpm generate-types`
   - **Criteria:** CycleResponse, OverrideResponse types available
   - **Duration:** 0.5 hours
+  - **Completed:** TypeScript types generated in previous session, hooks available: useGetAdminCyclesActive, usePostAdminCycles, usePutAdminCyclesCycleId
 
-- [ ] **5.4.2** Create useCycles custom hook
+- [x] **5.4.2** Create useCycles custom hook ✅
   - **File:** `apps/web/src/hooks/useCycles.ts`
   - **Criteria:** Wrap TanStack Query hooks (useGetActiveCycle, useCreateCycle, useUpdateCycle)
   - **Duration:** 1.5 hours
+  - **Completed:** Custom hook wraps generated TanStack Query hooks with convenient interface for cycle management
 
-- [ ] **5.4.3** Create cycle management page
-  - **File:** `apps/web/src/app/(app)/admin/cycles/page.tsx`
+- [x] **5.4.3** Create cycle management page ✅
+  - **File:** `apps/web/src/app/(app)/mlgoo/cycles/page.tsx`
   - **Criteria:** Server Component, protected route, displays active cycle + create/edit form
   - **Duration:** 2 hours
+  - **Completed:** Full-featured page with auth protection, active cycle display with deadline grid, conditional form rendering
 
-- [ ] **5.4.4** Create CycleForm component
+- [x] **5.4.4** Create CycleForm component ✅
   - **File:** `apps/web/src/components/features/admin/cycles/CycleForm.tsx`
   - **Criteria:** Form with name, year, 4 deadline date pickers, chronological validation
   - **Duration:** 3 hours
+  - **Completed:** Complete form with all required fields, datetime-local inputs, error handling
 
-- [ ] **5.4.5** Add validation for chronological deadlines
-  - **File:** `CycleForm.tsx` (update)
+- [x] **5.4.5** Add validation for chronological deadlines ✅
+  - **File:** `CycleForm.tsx` (integrated in task 5.4.4)
   - **Criteria:** Client-side validation: phase1 < rework < phase2 < calibration
   - **Duration:** 1 hour
+  - **Completed:** validateDeadlines() function ensures chronological order, phase1 must be in future, inline error messages
 
 ---
 
