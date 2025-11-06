@@ -12,9 +12,9 @@
 
 - **Total Stories:** 8
 - **Total Tasks:** 45
-- **Completed Tasks:** 22 (Stories 3.1, 3.2, 3.3 & 3.5 complete! Story 3.4 skipped)
-- **Current Story:** Story 3.6
-- **Progress:** 49% (22/45 tasks)
+- **Completed Tasks:** 28 (Stories 3.1, 3.2, 3.3, 3.5 & 3.6 complete! Story 3.4 skipped)
+- **Current Story:** Story 3.7
+- **Progress:** 62% (28/45 tasks)
 
 ---
 
@@ -177,16 +177,28 @@
 ## Story 3.6: Frontend Remark Schema Builder
 
 **Duration:** 2 days
-**Status:** Pending
+**Status:** ✅ Complete
 
 ### Tasks
 
-- [ ] **3.6.1** Create Pydantic model for remark_schema
-- [ ] **3.6.2** Create RemarkSchemaBuilder component
-- [ ] **3.6.3** Create condition selector dropdown
-- [ ] **3.6.4** Create template editor with placeholder support
-- [ ] **3.6.5** Create default remark template field
-- [ ] **3.6.6** Add preview of generated remarks
+- [x] **3.6.1** Create Pydantic model for remark_schema
+  - **File:** `apps/api/app/schemas/remark_schema.py`
+  - **Completed:** ConditionalRemark and RemarkSchema models with Jinja2 template support
+- [x] **3.6.2** Create RemarkSchemaBuilder component
+  - **File:** `apps/web/src/components/features/indicators/RemarkSchemaBuilder/RemarkSchemaBuilder.tsx`
+  - **Completed:** Main component with conditional remarks management and onChange callback
+- [x] **3.6.3** Create condition selector dropdown
+  - **File:** `ConditionalRemarkItem.tsx`
+  - **Completed:** Select component for pass/fail conditions with descriptions
+- [x] **3.6.4** Create template editor with placeholder support
+  - **File:** `TemplateEditor.tsx`
+  - **Completed:** Textarea with quick-insert placeholders and reference guide
+- [x] **3.6.5** Create default remark template field
+  - **File:** `DefaultTemplateEditor.tsx`
+  - **Completed:** Required default template editor with validation
+- [x] **3.6.6** Add preview of generated remarks
+  - **File:** `RemarkPreview.tsx`
+  - **Completed:** Mock preview with status selector and rendered output display
 
 ---
 
