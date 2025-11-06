@@ -19,6 +19,9 @@ import { useFormBuilderStore } from '@/store/useFormBuilderStore';
 import { FieldPalette } from './FieldPalette';
 import { FieldCanvasItem } from './FieldCanvasItem';
 import { FieldPropertiesPanel } from './FieldPropertiesPanel';
+import { FormPreview } from './FormPreview';
+import { JsonViewer } from './JsonViewer';
+import { ViewModeToggle, type ViewMode } from './ViewModeToggle';
 
 /**
  * FormSchemaBuilder - Visual form builder for creating indicator form schemas
@@ -43,6 +46,7 @@ export function FormSchemaBuilder() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isPropertiesPanelCollapsed, setIsPropertiesPanelCollapsed] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('builder');
 
   // Configure drag sensors
   const sensors = useSensors(
@@ -78,12 +82,32 @@ export function FormSchemaBuilder() {
   const activeField = activeId ? fields.find((f) => f.field_id === activeId) : null;
 
   return (
-    <DndContext
-      sensors={sensors}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
-    <div className="flex h-full min-h-[600px] w-full">
+    <div className="flex h-full flex-col">
+      {/* View Mode Toggle */}
+      <div className="border-b border-gray-200 bg-white px-6 py-4">
+        <ViewModeToggle value={viewMode} onChange={setViewMode} />
+      </div>
+
+      {/* Conditional Rendering Based on View Mode */}
+      {viewMode === 'preview' && (
+        <div className="flex-1 overflow-auto">
+          <FormPreview />
+        </div>
+      )}
+
+      {viewMode === 'json' && (
+        <div className="flex-1 overflow-auto">
+          <JsonViewer />
+        </div>
+      )}
+
+      {viewMode === 'builder' && (
+        <DndContext
+          sensors={sensors}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="flex h-full min-h-[600px] w-full flex-1">
       {/* Left Sidebar - Field Palette */}
       <aside
         className={`
@@ -266,21 +290,23 @@ export function FormSchemaBuilder() {
           </svg>
         </button>
       )}
-    </div>
-
-      {/* Drag Overlay - Shows dragged item */}
-      <DragOverlay>
-        {activeField ? (
-          <div className="rounded-lg border border-gray-300 bg-white p-4 shadow-lg opacity-90">
-            <p className="text-sm font-medium text-gray-900">
-              {activeField.label}
-            </p>
-            <p className="text-xs text-gray-500">
-              {activeField.field_type}
-            </p>
           </div>
-        ) : null}
-      </DragOverlay>
-    </DndContext>
+
+          {/* Drag Overlay - Shows dragged item */}
+          <DragOverlay>
+            {activeField ? (
+              <div className="rounded-lg border border-gray-300 bg-white p-4 shadow-lg opacity-90">
+                <p className="text-sm font-medium text-gray-900">
+                  {activeField.label}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {activeField.field_type}
+                </p>
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+      )}
+    </div>
   );
 }
