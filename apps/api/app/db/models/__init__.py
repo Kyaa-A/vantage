@@ -6,6 +6,7 @@ from ..base import Base
 from .admin import AuditLog
 from .assessment import MOV, Assessment, AssessmentResponse, FeedbackComment
 from .barangay import Barangay
+from .bbi import BBI, BBIResult
 from .governance_area import GovernanceArea, Indicator
 from .user import User
 
@@ -20,4 +21,6 @@ __all__ = [
     "MOV",
     "FeedbackComment",
     "AuditLog",
+    "BBI",
+    "BBIResult",
 ]

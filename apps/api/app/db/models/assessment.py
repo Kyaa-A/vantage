@@ -58,6 +58,9 @@ class Assessment(Base):
     responses = relationship(
         "AssessmentResponse", back_populates="assessment", cascade="all, delete-orphan"
     )
+    bbi_results = relationship(
+        "BBIResult", back_populates="assessment", cascade="all, delete-orphan"
+    )
 
 
 class AssessmentResponse(Base):
