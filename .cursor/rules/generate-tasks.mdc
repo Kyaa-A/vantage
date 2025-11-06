@@ -59,39 +59,67 @@ Consulting the workspace rules is essential for creating tasks that are consiste
 ## Output
 
 - **Format:** Markdown (`.md`)
-- **Location:** `/tasks/`
-- **Filename:** `tasks-[prd-file-name].md`
+- **Location:** `/tasks/tasks-[prd-file-name]/`
+- **Structure:** Multi-file organization with one file per epic
+  - `README.md` - Overview with PRD traceability matrix and epic list
+  - `epic-1-[epic-name].md` - Detailed tasks for Epic 1
+  - `epic-2-[epic-name].md` - Detailed tasks for Epic 2
+  - `epic-N-[epic-name].md` - Detailed tasks for Epic N
+
+**Rationale:** Splitting epics into separate files improves:
+- Organization and discoverability
+- Parallel work on different epics
+- Easier tracking of epic-level progress
+- Reduced file size for complex features
 
 ## Three-Tier Process
 
 1.  **Receive PRD Reference:** User points to a specific PRD file.
 2.  **Analyze PRD:** Read and map functional requirements to implementation domains.
-3.  **Phase 1: Generate Epic Tasks** - Create file with high-level epics (3-5 epics) directly mapped
-    to PRD functional requirements.
+3.  **Phase 1: Generate Epic Tasks** - Create `README.md` with:
+    - PRD traceability matrix
+    - High-level epics (3-5 epics) directly mapped to PRD functional requirements
+    - Overview of the task structure
 4.  **Wait for Confirmation:** Pause for user approval with "Go".
-5.  **Phase 2: Generate Story Tasks** - Break epics into tech-stack specific implementation areas
-    (Frontend, API, Database, etc.).
-6.  **Phase 3: Generate Atomic Tasks** - Create granular, file-specific tasks with explicit
-    acceptance criteria.
-7.  **PRD Traceability Mapping** - Create explicit mapping between PRD requirements and tasks.
-8.  **Save Task List** - Save with complete three-tier structure.
+5.  **Phase 2: Generate Story Tasks** - For each epic, create `epic-N-[name].md` with:
+    - Stories broken down into tech-stack specific implementation areas (Frontend, API, Database, etc.)
+    - **Testing Story included in each epic** to ensure features are tested before moving forward
+6.  **Phase 3: Generate Atomic Tasks** - Expand each story with:
+    - Granular, file-specific tasks with explicit acceptance criteria
+    - Test atomic tasks for each feature being implemented
+7.  **PRD Traceability Mapping** - Create explicit mapping between PRD requirements and tasks in README.
+8.  **Save Task List** - Save with complete three-tier structure across multiple files.
 
 ## Output Format
 
-The generated task list _must_ follow this three-tier structure:
+The generated task list _must_ follow this multi-file structure:
+
+### README.md Structure
 
 ```markdown
+# Tasks: [Feature Name from PRD]
+
+## Overview
+
+Brief description of the feature and its purpose based on the PRD.
+
 ## PRD Traceability Matrix
 
-Map each functional requirement to specific tasks:
+Map each functional requirement to specific epics:
 
 - **FR-01** User Registration & BLGU Management → Epic 1.0
 - **FR-02** Assessment Submission & Validation → Epic 2.0
 - **FR-03** Reports Generation → Epic 3.0
 
+## Epic Files
+
+- [Epic 1.0: User Registration & BLGU Management System](./epic-1-user-registration-blgu-management.md) _(FR-01)_
+- [Epic 2.0: Assessment Submission & Validation](./epic-2-assessment-submission-validation.md) _(FR-02)_
+- [Epic 3.0: Reports Generation](./epic-3-reports-generation.md) _(FR-03)_
+
 ## Relevant Files
 
-Tech-stack specific file structure for a full-stack feature:
+Tech-stack specific file structure for this feature:
 
 - `apps/api/app/db/models/user.py` - SQLAlchemy model for users.
 - `apps/api/app/schemas/user.py` - Pydantic schemas for user data.
@@ -109,54 +137,76 @@ Tech-stack specific file structure for a full-stack feature:
 - **Frontend Testing:** Place test files alongside components (`.test.tsx`). Use Vitest and React Testing Library.
 - **Type Safety:** Import auto-generated types from `@vantage/shared` to ensure frontend and backend are in sync.
 - **Run Tests:** Use `pnpm test` from the root, which will run tests for all workspaces.
+- **Test-First Approach:** Each epic MUST include a dedicated testing story to ensure all features are tested before proceeding to the next phase.
+```
 
-## Tasks
+### Epic File Structure (epic-N-[name].md)
+
+Each epic file should follow this structure:
+
+```markdown
+# Epic N.0: [Epic Name]
+
+**PRD Reference:** FR-0N - [Requirement description]
+
+**Objective:** [Clear statement of what this epic achieves]
+
+## Stories
 
 ### Three-Tier Structure: Epic → Story → Atomic
 
-- [ ] **1.0 Epic: User Registration & BLGU Management System** _(FR-01)_
-  - [ ] **1.1 Story: Database Schema Setup**
-    - [ ] **1.1.1 Atomic:** Create Alembic migration for `users` and `barangays` tables.
-      - **Files:** `apps/api/alembic/versions/xxxx_create_initial_tables.py`
-      - **Dependencies:** None.
-      - **Acceptance:** Migration runs successfully, creating tables with correct columns (e.g.,
-        `barangay_id` for governance area linkage) and relationships.
-      - **Tech:** Alembic, SQLAlchemy models.
-  - [ ] **1.2 Story: Backend Registration API**
-    - [ ] **1.2.1 Atomic:** Implement `/auth/register` endpoint in FastAPI.
-      - **Files:** `apps/api/app/api/v1/auth.py`, `apps/api/app/services/user_service.py`
-      - **Dependencies:** Database schema (1.1) is complete.
-      - **Acceptance:** Endpoint accepts POST with user data, validates it using Pydantic,
-        hashes password using Passlib, creates records in `users` table, and returns a JWT
-        via python-jose. Returns appropriate 4xx errors on failure.
-      - **Tech:** FastAPI, SQLAlchemy, Pydantic, Passlib, python-jose.
-  - [ ] **1.3 Story: Frontend Registration Interface**
-    - [ ] **1.3.1 Atomic:** Create `RegisterForm.tsx` component.
-      - **Files:** `apps/web/src/components/features/auth/RegisterForm.tsx`
-      - **Dependencies:** None.
-      - **Acceptance:** Form includes fields for email, password, full name, and role. It performs
-        client-side validation for inputs.
-      - **Tech:** React Hook Form, Zod for validation, shadcn/ui components (`Input`, `Button`),
-        Tailwind CSS.
-    - [ ] **1.3.2 Atomic:** Build the registration page and wire up the API call.
-      - **Files:** `apps/web/src/app/(auth)/register/page.tsx`
-      - **Dependencies:** Backend API (1.2) is deployed; Orval client is generated.
-      - **Acceptance:** Page renders the `RegisterForm`. On submission, it uses a TanStack Query
-        mutation to call the Orval-generated function for the `/auth/register` endpoint. Handles
-        success (redirects to dashboard) and error states (displays error message).
-      - **Tech:** Next.js App Router, TanStack Query, Orval, Axios.
+- [ ] **N.1 Story: Database Schema Setup**
+  - [ ] **N.1.1 Atomic:** Create Alembic migration for required tables.
+    - **Files:** `apps/api/alembic/versions/xxxx_create_tables.py`
+    - **Dependencies:** None.
+    - **Acceptance:** Migration runs successfully, creating tables with correct columns and relationships.
+    - **Tech:** Alembic, SQLAlchemy models.
 
-- [ ] **2.0 Epic: Assessment Submission & Validation** _(FR-02)_
-  - [ ] **2.1 Story: Assessment Data Model & API**
-    - [ ] **2.1.1 Atomic:** [Detailed atomic task...]
-  - [ ] **2.2 Story: Assessment Form UI**
-    - [ ] **2.2.1 Atomic:** [Detailed atomic task...]
+- [ ] **N.2 Story: Backend API Implementation**
+  - [ ] **N.2.1 Atomic:** Implement service layer for business logic.
+    - **Files:** `apps/api/app/services/feature_service.py`
+    - **Dependencies:** Database schema (N.1) is complete.
+    - **Acceptance:** Service methods handle all CRUD operations with proper error handling.
+    - **Tech:** SQLAlchemy, Pydantic.
+  - [ ] **N.2.2 Atomic:** Create API endpoints.
+    - **Files:** `apps/api/app/api/v1/feature.py`
+    - **Dependencies:** Service layer (N.2.1) is complete.
+    - **Acceptance:** Endpoints are accessible, properly tagged, and call service methods.
+    - **Tech:** FastAPI, Pydantic validation.
 
-- [ ] **3.0 Epic: Reports Generation** _(FR-03)_
-  - [ ] **3.1 Story: Backend Report Generation Service**
-    - [ ] **3.1.1 Atomic:** [Detailed atomic task...]
-  - [ ] **3.2 Story: Frontend Reports Dashboard**
-    - [ ] **3.2.1 Atomic:** [Detailed atomic task...]
+- [ ] **N.3 Story: Frontend Implementation**
+  - [ ] **N.3.1 Atomic:** Create feature components.
+    - **Files:** `apps/web/src/components/features/[feature]/ComponentName.tsx`
+    - **Dependencies:** None.
+    - **Acceptance:** Components render correctly with proper props and validation.
+    - **Tech:** React, shadcn/ui, Tailwind CSS.
+  - [ ] **N.3.2 Atomic:** Create page and wire up API.
+    - **Files:** `apps/web/src/app/(app)/[feature]/page.tsx`
+    - **Dependencies:** Backend API (N.2) is complete; types are generated.
+    - **Acceptance:** Page uses TanStack Query hooks to fetch/mutate data, handles loading/error states.
+    - **Tech:** Next.js App Router, TanStack Query, Orval.
+
+- [ ] **N.4 Story: Testing & Validation** ⚠️ **REQUIRED BEFORE NEXT EPIC**
+  - [ ] **N.4.1 Atomic:** Write backend service tests.
+    - **Files:** `apps/api/tests/services/test_feature_service.py`
+    - **Dependencies:** Service implementation (N.2.1) is complete.
+    - **Acceptance:** All service methods have unit tests with edge cases covered. Run `pytest -vv`.
+    - **Tech:** Pytest, SQLAlchemy test fixtures.
+  - [ ] **N.4.2 Atomic:** Write backend API endpoint tests.
+    - **Files:** `apps/api/tests/api/v1/test_feature.py`
+    - **Dependencies:** API implementation (N.2.2) is complete.
+    - **Acceptance:** All endpoints tested for success/failure cases, auth validation. Run `pytest -vv`.
+    - **Tech:** Pytest, FastAPI TestClient.
+  - [ ] **N.4.3 Atomic:** Write frontend component tests.
+    - **Files:** `apps/web/src/components/features/[feature]/ComponentName.test.tsx`
+    - **Dependencies:** Component implementation (N.3.1) is complete.
+    - **Acceptance:** Components render correctly, user interactions work as expected.
+    - **Tech:** Vitest, React Testing Library.
+  - [ ] **N.4.4 Atomic:** Integration testing and smoke tests.
+    - **Files:** Various test files as needed.
+    - **Dependencies:** All feature implementations complete.
+    - **Acceptance:** Full user flow works end-to-end. Types are in sync. No console errors.
+    - **Tech:** Full stack testing.
 ```
 
 ## Task Specificity Requirements
@@ -194,6 +244,8 @@ Tech-stack specific file structure for a full-stack feature:
 - [ ] All PRD functional requirements are covered.
 - [ ] No functional requirement spans multiple epics.
 - [ ] Epic titles clearly indicate the feature boundary.
+- [ ] Each epic has its own dedicated file (epic-N-[name].md).
+- [ ] **Each epic includes a Testing & Validation story as the final story.**
 
 ### Story Review Checklist
 
@@ -201,6 +253,7 @@ Tech-stack specific file structure for a full-stack feature:
 - [ ] Each story represents a cohesive implementation domain.
 - [ ] Dependencies between stories are clearly identified.
 - [ ] Stories can be worked on sequentially to build the feature.
+- [ ] **Final story in every epic is dedicated to Testing & Validation.**
 
 ### Atomic Review Checklist
 
@@ -209,16 +262,79 @@ Tech-stack specific file structure for a full-stack feature:
 - [ ] Acceptance criteria are testable and specific.
 - [ ] Tech requirements specify exact tools/patterns from our stack.
 - [ ] Dependencies are clearly stated.
+- [ ] **Test tasks include specific test file paths and testing approaches.**
+
+### Testing Requirements Checklist ⚠️ **CRITICAL**
+
+Every epic MUST include a comprehensive Testing & Validation story that covers:
+
+- [ ] **Backend Service Tests:** Unit tests for all service layer methods
+  - File location: `apps/api/tests/services/test_[feature]_service.py`
+  - Coverage: All CRUD operations, edge cases, error handling
+  - Run command: `pytest -vv --log-cli-level=DEBUG`
+
+- [ ] **Backend API Tests:** Integration tests for all endpoints
+  - File location: `apps/api/tests/api/v1/test_[feature].py`
+  - Coverage: Success cases, failure cases, auth validation, input validation
+  - Run command: `pytest -vv --log-cli-level=DEBUG`
+
+- [ ] **Frontend Component Tests:** Unit tests for feature components
+  - File location: `apps/web/src/components/features/[feature]/[Component].test.tsx`
+  - Coverage: Rendering, user interactions, prop validation
+  - Run command: `pnpm test`
+
+- [ ] **Integration Tests:** End-to-end user flow validation
+  - Coverage: Full feature workflow, type safety, error states
+  - Verification: No console errors, types in sync via `@vantage/shared`
+
+**Testing Story Position:** The Testing & Validation story MUST be the last story in each epic and MUST be completed before proceeding to the next epic. This ensures quality gates are met at each phase.
+
+## File Organization Pattern
+
+The task list should be organized as a directory with multiple files:
+
+```
+tasks/tasks-prd-[feature-name]/
+├── README.md                          # Overview, traceability matrix, epic links
+├── epic-1-[short-name].md             # Epic 1 with stories and atomic tasks
+├── epic-2-[short-name].md             # Epic 2 with stories and atomic tasks
+├── epic-3-[short-name].md             # Epic 3 with stories and atomic tasks
+└── epic-N-[short-name].md             # Epic N with stories and atomic tasks
+```
+
+**Example from existing project:**
+```
+tasks/tasks-prd-phase6-administrative-features/
+├── README.md
+├── epic-1-indicator-crud-versioning.md
+├── epic-2-form-schema-builder.md
+├── epic-3-calculation-remark-builders.md
+├── epic-4-bbi-configuration.md
+├── epic-5-deadline-management.md
+└── epic-6-audit-security.md
+```
+
+**File Naming Convention:**
+- Directory: `tasks-prd-[prd-file-name]` (matches PRD filename without extension)
+- Epic files: `epic-[N]-[kebab-case-short-name].md` (where N is the epic number)
+- Short names should be 2-4 words describing the epic's focus
 
 ## Interaction Model
 
 **Three-Phase Generation:**
 
-1. **Phase 1:** Generate epics only, wait for "Go" confirmation.
-2. **Phase 2:** Generate stories for each epic, wait for "Go" confirmation.
-3. **Phase 3:** Generate atomic tasks for each story.
+1. **Phase 1:** Generate `README.md` with epics only, wait for "Go" confirmation.
+2. **Phase 2:** For each epic, create `epic-N-[name].md` with stories, wait for "Go" confirmation.
+3. **Phase 3:** Expand each epic file with atomic tasks for all stories.
 
 This staged approach ensures alignment at each level before adding complexity.
+
+**Multi-File Benefits:**
+- Clear separation of concerns (one epic per file)
+- Easier navigation and tracking of progress
+- Parallel work on different epics
+- Reduced cognitive load when reviewing tasks
+- Better git diff tracking when updating specific epics
 
 ## Target Audience
 
