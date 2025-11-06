@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.db.models.governance_area import GovernanceArea, Indicator, IndicatorHistory
 from app.db.models.user import User
 from app.schemas.form_schema import FormSchema
+from app.schemas.calculation_schema import CalculationSchema
 from app.services.form_schema_validator import generate_validation_errors
 
 
@@ -85,6 +86,16 @@ class IndicatorService:
                     )
             except Exception as e:
                 raise ValueError(f"Invalid form schema format: {str(e)}")
+
+        # Validate calculation_schema if provided
+        calculation_schema = data.get("calculation_schema")
+        if calculation_schema:
+            # Convert dict to Pydantic model for validation
+            try:
+                calculation_schema_obj = CalculationSchema(**calculation_schema)
+                # Pydantic validation already happened, schema structure is valid
+            except Exception as e:
+                raise ValueError(f"Invalid calculation schema format: {str(e)}")
 
         # Create indicator with version 1
         indicator = Indicator(
@@ -215,6 +226,15 @@ class IndicatorService:
                 raise ValueError(
                     f"Form schema validation failed: {'; '.join(validation_errors)}"
                 )
+
+        # Validate calculation_schema if being updated
+        calculation_schema = data.get("calculation_schema")
+        if calculation_schema is not None:
+            try:
+                calculation_schema_obj = CalculationSchema(**calculation_schema)
+                # Pydantic validation already happened, schema structure is valid
+            except Exception as e:
+                raise ValueError(f"Invalid calculation schema format: {str(e)}")
 
         # Check if schema fields changed (requiring versioning)
         schema_changed = any(

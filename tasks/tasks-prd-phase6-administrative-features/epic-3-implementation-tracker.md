@@ -12,8 +12,8 @@
 
 - **Total Stories:** 8
 - **Total Tasks:** 45
-- **Completed Tasks:** 8 (Story 3.1 complete!)
-- **Current Story:** Story 3.2
+- **Completed Tasks:** 12 (Stories 3.1 & 3.2 complete!)
+- **Current Story:** Story 3.3
 
 ---
 
@@ -78,15 +78,28 @@
 ## Story 3.2: Backend Calculation Schema Validation & Test Endpoint
 
 **Duration:** 1 day
-**Status:** Pending
+**Status:** ✅ Complete
 **Dependencies:** Story 3.1
 
 ### Tasks
 
-- [ ] **3.2.1** Create validation endpoint for calculation_schema
-- [ ] **3.2.2** Create test calculation endpoint
-- [ ] **3.2.3** Integrate validation with update_indicator service
-- [ ] **3.2.4** Add is_auto_calculable flag logic
+- [x] **3.2.1** Create validation endpoint for calculation_schema
+  - **File:** `apps/api/app/api/v1/indicators.py`
+  - **Endpoint:** `POST /api/v1/indicators/validate-calculation-schema`
+  - **Completed:** Created validation endpoint that leverages Pydantic's built-in validation
+
+- [x] **3.2.2** Create test calculation endpoint
+  - **File:** `apps/api/app/api/v1/indicators.py`
+  - **Endpoint:** `POST /api/v1/indicators/test-calculation`
+  - **Completed:** Created endpoint to test calculation schemas with sample data, returns Pass/Fail with explanation
+
+- [x] **3.2.3** Integrate validation with update_indicator service
+  - **File:** `apps/api/app/services/indicator_service.py`
+  - **Completed:** Added calculation_schema validation to both create_indicator() and update_indicator() methods
+
+- [x] **3.2.4** Add is_auto_calculable flag logic
+  - **File:** `apps/api/app/services/intelligence_service.py`
+  - **Completed:** Created evaluate_indicator_calculation() method that checks is_auto_calculable flag before evaluation
 
 ---
 
@@ -193,10 +206,10 @@
 ### Backend Files
 - `apps/api/app/schemas/calculation_schema.py` - Calculation rule Pydantic models (✅ created - 6 rule types with discriminated unions)
 - `apps/api/app/schemas/remark_schema.py` - Remark schema Pydantic models (to be created)
-- `apps/api/app/services/intelligence_service.py` - Rule evaluation logic (✅ extended - complete evaluation engine with all 6 rule types)
-- `apps/api/app/services/indicator_service.py` - Indicator service (to be updated)
+- `apps/api/app/services/intelligence_service.py` - Rule evaluation logic (✅ complete - evaluation engine + evaluate_indicator_calculation())
+- `apps/api/app/services/indicator_service.py` - Indicator service (✅ updated - calculation_schema validation in create/update)
 - `apps/api/app/services/assessment_service.py` - Assessment workflow (to be updated)
-- `apps/api/app/api/v1/indicators.py` - Indicator endpoints (to be extended)
+- `apps/api/app/api/v1/indicators.py` - Indicator endpoints (✅ extended - validate-calculation-schema & test-calculation endpoints)
 - `apps/api/app/db/models/assessment.py` - Assessment models (to be updated)
 
 ### Frontend Files

@@ -338,6 +338,69 @@ class IntelligenceService:
                 return False
         return True
 
+    def evaluate_indicator_calculation(
+        self,
+        db: Session,
+        indicator_id: int,
+        assessment_data: Dict[str, Any],
+    ) -> Optional[str]:
+        """
+        Evaluate an indicator's calculation schema if is_auto_calculable is True.
+
+        This is the main entry point for automatic Pass/Fail calculation during
+        the assessment workflow. It checks the is_auto_calculable flag and only
+        evaluates if the flag is true.
+
+        Args:
+            db: Database session
+            indicator_id: ID of the indicator to evaluate
+            assessment_data: Dictionary containing assessment response data
+
+        Returns:
+            "Pass" or "Fail" if is_auto_calculable is True and calculation succeeds,
+            None if is_auto_calculable is False or calculation_schema is not defined
+
+        Raises:
+            ValueError: If indicator not found or evaluation fails
+        """
+        # Get the indicator with its calculation schema
+        indicator = db.query(Indicator).filter(Indicator.id == indicator_id).first()
+        if not indicator:
+            raise ValueError(f"Indicator with ID {indicator_id} not found")
+
+        # Check is_auto_calculable flag
+        if not indicator.is_auto_calculable:
+            # Not auto-calculable, return None (manual validation required)
+            return None
+
+        # Check if calculation_schema exists
+        if not indicator.calculation_schema:
+            # No schema defined, return None
+            logger.warning(
+                f"Indicator {indicator_id} is marked as auto-calculable but has no calculation_schema"
+            )
+            return None
+
+        # Parse calculation_schema
+        try:
+            calculation_schema = CalculationSchema(**indicator.calculation_schema)
+        except Exception as e:
+            raise ValueError(
+                f"Invalid calculation_schema for indicator {indicator_id}: {str(e)}"
+            )
+
+        # Evaluate the schema
+        evaluation_result = self.evaluate_calculation_schema(
+            calculation_schema=calculation_schema,
+            assessment_data=assessment_data,
+        )
+
+        # Return status based on evaluation result
+        if evaluation_result:
+            return calculation_schema.output_status_on_pass
+        else:
+            return calculation_schema.output_status_on_fail
+
     def _evaluate_condition_group(
         self, group: ConditionGroup, assessment_data: Dict[str, Any]
     ) -> bool:

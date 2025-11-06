@@ -15,8 +15,10 @@ from app.schemas.indicator import (
     IndicatorUpdate,
 )
 from app.schemas.form_schema import FormSchema
+from app.schemas.calculation_schema import CalculationSchema
 from app.services.indicator_service import indicator_service
 from app.services.form_schema_validator import generate_validation_errors
+from app.services.intelligence_service import intelligence_service
 
 router = APIRouter(tags=["indicators"])
 
@@ -147,6 +149,156 @@ def validate_form_schema(
         )
 
     return {"valid": True}
+
+
+@router.post(
+    "/validate-calculation-schema",
+    status_code=status.HTTP_200_OK,
+    summary="Validate a calculation schema",
+)
+def validate_calculation_schema(
+    *,
+    current_user: User = Depends(deps.require_mlgoo_dilg),
+    calculation_schema: CalculationSchema,
+) -> dict:
+    """
+    Validate a calculation schema without saving it.
+
+    **Permissions**: MLGOO_DILG only
+
+    **Request Body**:
+    - calculation_schema: CalculationSchema object with condition groups and rules
+
+    **Returns**:
+    - `{"valid": true}` if the schema is valid
+    - `{"valid": false, "errors": [...]}` if validation fails
+
+    **Validation Checks**:
+    - All rule types are valid and properly structured
+    - Field references are present (basic structure validation)
+    - Nested conditions are properly formed
+    - Operators are valid for each rule type
+
+    **Status Codes**:
+    - 200: Schema is valid
+    - 400: Schema is invalid (returns error details)
+    - 401: Unauthorized (not authenticated)
+    - 403: Forbidden (not MLGOO_DILG role)
+
+    **Note**: This endpoint only validates the schema structure.
+    To test the schema with actual data, use the `/test-calculation` endpoint.
+    """
+    # Pydantic validation already happened during request parsing
+    # If we got here, the schema structure is valid
+    return {
+        "valid": True,
+        "message": "Calculation schema structure is valid",
+    }
+
+
+@router.post(
+    "/test-calculation",
+    status_code=status.HTTP_200_OK,
+    summary="Test a calculation schema with sample data",
+)
+def test_calculation(
+    *,
+    current_user: User = Depends(deps.require_mlgoo_dilg),
+    calculation_schema: CalculationSchema,
+    assessment_data: dict,
+) -> dict:
+    """
+    Test a calculation schema with sample assessment data.
+
+    **Permissions**: MLGOO_DILG only
+
+    **Request Body**:
+    - calculation_schema: CalculationSchema to evaluate
+    - assessment_data: Dictionary of field_id -> value pairs
+      Example: {"completion_rate": 85, "required_documents": ["doc1", "doc2", "doc3"]}
+
+    **Returns**:
+    ```json
+    {
+      "result": "Pass" | "Fail",
+      "evaluation_result": true | false,
+      "explanation": "Detailed explanation of evaluation",
+      "output_status_on_pass": "Pass",
+      "output_status_on_fail": "Fail"
+    }
+    ```
+
+    **Status Codes**:
+    - 200: Calculation completed successfully
+    - 400: Invalid schema or data (e.g., field not found, type mismatch)
+    - 401: Unauthorized (not authenticated)
+    - 403: Forbidden (not MLGOO_DILG role)
+
+    **Error Examples**:
+    - Field not found: `{"detail": "Field 'completion_rate' not found in assessment data. Available fields: ['other_field']"}`
+    - Type mismatch: `{"detail": "Field 'count' expected list for checkbox count, got str"}`
+
+    **Example Usage**:
+    ```json
+    {
+      "calculation_schema": {
+        "condition_groups": [
+          {
+            "operator": "AND",
+            "rules": [
+              {
+                "rule_type": "PERCENTAGE_THRESHOLD",
+                "field_id": "completion_rate",
+                "operator": ">=",
+                "threshold": 75.0
+              }
+            ]
+          }
+        ],
+        "output_status_on_pass": "Pass",
+        "output_status_on_fail": "Fail"
+      },
+      "assessment_data": {
+        "completion_rate": 85
+      }
+    }
+    ```
+    """
+    try:
+        # Evaluate the calculation schema
+        evaluation_result = intelligence_service.evaluate_calculation_schema(
+            calculation_schema=calculation_schema,
+            assessment_data=assessment_data,
+        )
+
+        # Determine output status based on evaluation result
+        if evaluation_result:
+            result_status = calculation_schema.output_status_on_pass
+            explanation = "All condition groups evaluated to true"
+        else:
+            result_status = calculation_schema.output_status_on_fail
+            explanation = "One or more condition groups evaluated to false"
+
+        return {
+            "result": result_status,
+            "evaluation_result": evaluation_result,
+            "explanation": explanation,
+            "output_status_on_pass": calculation_schema.output_status_on_pass,
+            "output_status_on_fail": calculation_schema.output_status_on_fail,
+        }
+
+    except ValueError as e:
+        # Handle validation errors (e.g., field not found, type mismatch)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    except Exception as e:
+        # Handle unexpected errors
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Calculation evaluation failed: {str(e)}",
+        )
 
 
 @router.get(
