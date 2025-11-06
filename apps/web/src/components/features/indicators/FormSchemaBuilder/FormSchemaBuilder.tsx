@@ -1,7 +1,23 @@
 'use client';
 
 import { useState } from 'react';
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable';
 import { useFormBuilderStore } from '@/store/useFormBuilderStore';
+import { FieldPalette } from './FieldPalette';
+import { FieldCanvasItem } from './FieldCanvasItem';
 
 /**
  * FormSchemaBuilder - Visual form builder for creating indicator form schemas
@@ -22,11 +38,50 @@ import { useFormBuilderStore } from '@/store/useFormBuilderStore';
  * - Validation before save
  */
 export function FormSchemaBuilder() {
-  const { fields, selectedFieldId, isDirty } = useFormBuilderStore();
+  const { fields, selectedFieldId, isDirty, reorderFields } = useFormBuilderStore();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isPropertiesPanelCollapsed, setIsPropertiesPanelCollapsed] = useState(false);
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  // Configure drag sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Require 8px movement before drag starts
+      },
+    })
+  );
+
+  // Handle drag start
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
+  // Handle drag end
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = fields.findIndex((field) => field.field_id === active.id);
+      const newIndex = fields.findIndex((field) => field.field_id === over.id);
+
+      if (oldIndex !== -1 && newIndex !== -1) {
+        reorderFields(oldIndex, newIndex);
+      }
+    }
+
+    setActiveId(null);
+  };
+
+  // Get the active field for drag overlay
+  const activeField = activeId ? fields.find((f) => f.field_id === activeId) : null;
 
   return (
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
     <div className="flex h-full min-h-[600px] w-full">
       {/* Left Sidebar - Field Palette */}
       <aside
@@ -59,14 +114,8 @@ export function FormSchemaBuilder() {
             </button>
           </div>
 
-          {/* FieldPalette will be inserted here in task 2.3.3 */}
-          <div className="space-y-2">
-            <div className="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center text-sm text-gray-500">
-              Field Palette
-              <br />
-              (Component in task 2.3.3)
-            </div>
-          </div>
+          {/* FieldPalette component */}
+          <FieldPalette />
         </div>
       </aside>
 
@@ -138,21 +187,22 @@ export function FormSchemaBuilder() {
                 </svg>
                 <h3 className="mt-2 text-sm font-medium text-gray-900">No fields yet</h3>
                 <p className="mt-1 text-sm text-gray-500">
-                  Drag field types from the left palette to get started
+                  Click field types from the left palette to get started
                 </p>
               </div>
             </div>
           ) : (
-            // Fields list
-            <div className="space-y-3">
-              <div className="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center text-sm text-gray-500">
-                Canvas Drop Zone
-                <br />
-                {fields.length} field(s) added
-                <br />
-                (Drag-and-drop in task 2.3.4)
+            // Fields list with sortable context
+            <SortableContext
+              items={fields.map((f) => f.field_id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="space-y-3">
+                {fields.map((field) => (
+                  <FieldCanvasItem key={field.field_id} field={field} />
+                ))}
               </div>
-            </div>
+            </SortableContext>
           )}
         </div>
       </main>
@@ -246,5 +296,20 @@ export function FormSchemaBuilder() {
         </button>
       )}
     </div>
+
+      {/* Drag Overlay - Shows dragged item */}
+      <DragOverlay>
+        {activeField ? (
+          <div className="rounded-lg border border-gray-300 bg-white p-4 shadow-lg opacity-90">
+            <p className="text-sm font-medium text-gray-900">
+              {activeField.label}
+            </p>
+            <p className="text-xs text-gray-500">
+              {activeField.field_type}
+            </p>
+          </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 }
