@@ -146,7 +146,7 @@
 
 ### Atomic Tasks
 
-- [ ] **2.3.1 Atomic: Create Zustand store for form builder state**
+- [x] **2.3.1 Atomic: Create Zustand store for form builder state**
   - **Files:**
     - `apps/web/src/store/formBuilderStore.ts`
   - **Dependencies:** 2.1.4
@@ -159,7 +159,7 @@
   - **Tech:** Zustand, TypeScript, Immer
   - **Duration:** 2 hours
 
-- [ ] **2.3.2 Atomic: Create FormSchemaBuilder main component structure**
+- [x] **2.3.2 Atomic: Create FormSchemaBuilder main component structure**
   - **Files:**
     - `apps/web/src/components/features/admin/indicators/FormSchemaBuilder.tsx`
   - **Dependencies:** 2.3.1
