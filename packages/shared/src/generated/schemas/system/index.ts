@@ -10,6 +10,7 @@ import type { AreaBreakdown } from '../common';
 import type { FailedIndicator } from '../indicators';
 import type { BarangayRanking } from '../common';
 import type { TrendData } from '../common';
+import type { DeadlineOverrideResponse } from '../deadlineoverride';
 import type { ChartData } from '../common';
 import type { MapData } from '../common';
 import type { TableData } from '../common';
@@ -103,6 +104,21 @@ export type AuditLogResponseIpAddress = string | null;
 
 
 /**
+ * BarangayDeadlineStatusResponse
+ */
+export interface BarangayDeadlineStatusResponse {
+  barangay_id: number;
+  barangay_name: string;
+  cycle_id: number;
+  cycle_name: string;
+  phase1: PhaseStatusResponse;
+  rework: PhaseStatusResponse;
+  phase2: PhaseStatusResponse;
+  calibration: PhaseStatusResponse;
+}
+
+
+/**
  * DashboardKPIResponse
  */
 export interface DashboardKPIResponse {
@@ -124,6 +140,42 @@ export interface DashboardKPIResponse {
    * @maxItems 3
    */
   trends?: TrendData[];
+}
+
+
+/**
+ * DeadlineOverrideListResponse
+ */
+export interface DeadlineOverrideListResponse {
+  items: DeadlineOverrideResponse[];
+  total: number;
+}
+
+
+/**
+ * DeadlineOverrideResponseBarangayName
+ */
+export type DeadlineOverrideResponseBarangayName = string | null;
+
+
+/**
+ * DeadlineOverrideResponseCreatorEmail
+ */
+export type DeadlineOverrideResponseCreatorEmail = string | null;
+
+
+/**
+ * DeadlineOverrideResponseCycleName
+ */
+export type DeadlineOverrideResponseCycleName = string | null;
+
+
+/**
+ * DeadlineStatusListResponse
+ */
+export interface DeadlineStatusListResponse {
+  items: BarangayDeadlineStatusResponse[];
+  total: number;
 }
 
 
@@ -185,6 +237,25 @@ export type MOVUploadResponseMovId = number | null;
  * MOVUploadResponseStoragePath
  */
 export type MOVUploadResponseStoragePath = string | null;
+
+
+/**
+ * PhaseStatusResponse
+ */
+export interface PhaseStatusResponse {
+  /** Status: submitted_on_time, submitted_late, pending, or overdue */
+  status: string;
+  /** Deadline in ISO format */
+  deadline: string;
+  /** Submission timestamp in ISO format (if submitted) */
+  submitted_at?: PhaseStatusResponseSubmittedAt;
+}
+
+
+/**
+ * PhaseStatusResponseSubmittedAt
+ */
+export type PhaseStatusResponseSubmittedAt = string | null;
 
 
 /**

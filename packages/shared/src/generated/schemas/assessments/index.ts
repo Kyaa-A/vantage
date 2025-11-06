@@ -7,6 +7,103 @@ import type { ProgressSummary } from '../common';
 import type { GovernanceAreaProgress } from '../common';
 
 /**
+ * AssessmentCycleCreate
+ */
+export interface AssessmentCycleCreate {
+  /** Cycle name (e.g., 'SGLGB 2025') */
+  name: string;
+  /** Assessment year */
+  year: number;
+  /** Initial submission deadline */
+  phase1_deadline: string;
+  /** Rework submission deadline */
+  rework_deadline: string;
+  /** Final submission deadline */
+  phase2_deadline: string;
+  /** Calibration/validation deadline */
+  calibration_deadline: string;
+}
+
+
+/**
+ * AssessmentCycleResponse
+ */
+export interface AssessmentCycleResponse {
+  /** Cycle name (e.g., 'SGLGB 2025') */
+  name: string;
+  /** Assessment year */
+  year: number;
+  /** Initial submission deadline */
+  phase1_deadline: string;
+  /** Rework submission deadline */
+  rework_deadline: string;
+  /** Final submission deadline */
+  phase2_deadline: string;
+  /** Calibration/validation deadline */
+  calibration_deadline: string;
+  id: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+
+/**
+ * AssessmentCycleUpdate
+ */
+export interface AssessmentCycleUpdate {
+  /** Cycle name */
+  name?: AssessmentCycleUpdateName;
+  /** Assessment year */
+  year?: AssessmentCycleUpdateYear;
+  /** Initial submission deadline */
+  phase1_deadline?: AssessmentCycleUpdatePhase1Deadline;
+  /** Rework submission deadline */
+  rework_deadline?: AssessmentCycleUpdateReworkDeadline;
+  /** Final submission deadline */
+  phase2_deadline?: AssessmentCycleUpdatePhase2Deadline;
+  /** Calibration/validation deadline */
+  calibration_deadline?: AssessmentCycleUpdateCalibrationDeadline;
+}
+
+
+/**
+ * AssessmentCycleUpdateCalibrationDeadline
+ */
+export type AssessmentCycleUpdateCalibrationDeadline = string | null;
+
+
+/**
+ * AssessmentCycleUpdateName
+ */
+export type AssessmentCycleUpdateName = string | null;
+
+
+/**
+ * AssessmentCycleUpdatePhase1Deadline
+ */
+export type AssessmentCycleUpdatePhase1Deadline = string | null;
+
+
+/**
+ * AssessmentCycleUpdatePhase2Deadline
+ */
+export type AssessmentCycleUpdatePhase2Deadline = string | null;
+
+
+/**
+ * AssessmentCycleUpdateReworkDeadline
+ */
+export type AssessmentCycleUpdateReworkDeadline = string | null;
+
+
+/**
+ * AssessmentCycleUpdateYear
+ */
+export type AssessmentCycleUpdateYear = number | null;
+
+
+/**
  * AssessmentDashboardResponse
  */
 export interface AssessmentDashboardResponse {

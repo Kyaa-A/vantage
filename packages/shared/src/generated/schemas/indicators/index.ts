@@ -24,6 +24,12 @@ export type BodyTestCalculationApiV1IndicatorsTestCalculationPostAssessmentData 
 
 
 /**
+ * DeadlineOverrideResponseIndicatorName
+ */
+export type DeadlineOverrideResponseIndicatorName = string | null;
+
+
+/**
  * FailedIndicator
  */
 export interface FailedIndicator {

@@ -6,21 +6,35 @@
  * 
  */
 import {
+  useMutation,
   useQuery
 } from '@tanstack/react-query';
 import type {
+  MutationFunction,
   QueryFunction,
   QueryKey,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
   AdminSuccessResponse,
+  AssessmentCycleCreate,
+  AssessmentCycleResponse,
+  AssessmentCycleUpdate,
   AuditLogListResponse,
   AuditLogResponse,
+  DeadlineOverrideCreate,
+  DeadlineOverrideListResponse,
+  DeadlineOverrideResponse,
+  DeadlineStatusListResponse,
   GetAdminAuditLogsExportParams,
   GetAdminAuditLogsParams,
+  GetAdminDeadlinesOverridesExportParams,
+  GetAdminDeadlinesOverridesParams,
+  GetAdminDeadlinesStatusParams,
   HTTPValidationError
 } from '../../schemas';
 
@@ -287,6 +301,460 @@ export function useGetAdminAuditLogsExport<TData = Awaited<ReturnType<typeof get
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetAdminAuditLogsExportQueryOptions(params,options)
+
+  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+/**
+ * Create a new assessment cycle with phase deadlines. Deactivates any existing active cycle. Requires MLGOO_DILG role.
+ * @summary Create a new assessment cycle
+ */
+export const postAdminCycles = (
+    assessmentCycleCreate: AssessmentCycleCreate,
+ options?: SecondParameter<typeof mutator>,signal?: AbortSignal
+) => {
+      
+      
+      return mutator<AssessmentCycleResponse>(
+      {url: `http://localhost:8000/api/v1/admin/cycles`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: assessmentCycleCreate, signal
+    },
+      options);
+    }
+  
+
+
+export const getPostAdminCyclesMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAdminCycles>>, TError,{data: AssessmentCycleCreate}, TContext>, request?: SecondParameter<typeof mutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postAdminCycles>>, TError,{data: AssessmentCycleCreate}, TContext> => {
+
+const mutationKey = ['postAdminCycles'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAdminCycles>>, {data: AssessmentCycleCreate}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postAdminCycles(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostAdminCyclesMutationResult = NonNullable<Awaited<ReturnType<typeof postAdminCycles>>>
+    export type PostAdminCyclesMutationBody = AssessmentCycleCreate
+    export type PostAdminCyclesMutationError = HTTPValidationError
+
+    /**
+ * @summary Create a new assessment cycle
+ */
+export const usePostAdminCycles = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAdminCycles>>, TError,{data: AssessmentCycleCreate}, TContext>, request?: SecondParameter<typeof mutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof postAdminCycles>>,
+        TError,
+        {data: AssessmentCycleCreate},
+        TContext
+      > => {
+
+      const mutationOptions = getPostAdminCyclesMutationOptions(options);
+
+      return useMutation(mutationOptions );
+    }
+    /**
+ * Retrieve the currently active assessment cycle. Requires MLGOO_DILG role.
+ * @summary Get the active assessment cycle
+ */
+export const getAdminCyclesActive = (
+    
+ options?: SecondParameter<typeof mutator>,signal?: AbortSignal
+) => {
+      
+      
+      return mutator<AssessmentCycleResponse>(
+      {url: `http://localhost:8000/api/v1/admin/cycles/active`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+export const getGetAdminCyclesActiveQueryKey = () => {
+    return [`http://localhost:8000/api/v1/admin/cycles/active`] as const;
+    }
+
+    
+export const getGetAdminCyclesActiveQueryOptions = <TData = Awaited<ReturnType<typeof getAdminCyclesActive>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminCyclesActive>>, TError, TData>, request?: SecondParameter<typeof mutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAdminCyclesActiveQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminCyclesActive>>> = ({ signal }) => getAdminCyclesActive(requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn,   staleTime: 300000, refetchOnWindowFocus: false,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAdminCyclesActive>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAdminCyclesActiveQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminCyclesActive>>>
+export type GetAdminCyclesActiveQueryError = unknown
+
+
+/**
+ * @summary Get the active assessment cycle
+ */
+
+export function useGetAdminCyclesActive<TData = Awaited<ReturnType<typeof getAdminCyclesActive>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminCyclesActive>>, TError, TData>, request?: SecondParameter<typeof mutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAdminCyclesActiveQueryOptions(options)
+
+  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+/**
+ * Update cycle metadata and deadlines. Deadline updates only allowed before cycle starts. Requires MLGOO_DILG role.
+ * @summary Update an assessment cycle
+ */
+export const putAdminCycles$CycleId = (
+    cycleId: number,
+    assessmentCycleUpdate: AssessmentCycleUpdate,
+ options?: SecondParameter<typeof mutator>,) => {
+      
+      
+      return mutator<AssessmentCycleResponse>(
+      {url: `http://localhost:8000/api/v1/admin/cycles/${cycleId}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: assessmentCycleUpdate
+    },
+      options);
+    }
+  
+
+
+export const getPutAdminCyclesCycleIdMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putAdminCycles$CycleId>>, TError,{cycleId: number;data: AssessmentCycleUpdate}, TContext>, request?: SecondParameter<typeof mutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof putAdminCycles$CycleId>>, TError,{cycleId: number;data: AssessmentCycleUpdate}, TContext> => {
+
+const mutationKey = ['putAdminCyclesCycleId'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putAdminCycles$CycleId>>, {cycleId: number;data: AssessmentCycleUpdate}> = (props) => {
+          const {cycleId,data} = props ?? {};
+
+          return  putAdminCycles$CycleId(cycleId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutAdminCyclesCycleIdMutationResult = NonNullable<Awaited<ReturnType<typeof putAdminCycles$CycleId>>>
+    export type PutAdminCyclesCycleIdMutationBody = AssessmentCycleUpdate
+    export type PutAdminCyclesCycleIdMutationError = HTTPValidationError
+
+    /**
+ * @summary Update an assessment cycle
+ */
+export const usePutAdminCyclesCycleId = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putAdminCycles$CycleId>>, TError,{cycleId: number;data: AssessmentCycleUpdate}, TContext>, request?: SecondParameter<typeof mutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof putAdminCycles$CycleId>>,
+        TError,
+        {cycleId: number;data: AssessmentCycleUpdate},
+        TContext
+      > => {
+
+      const mutationOptions = getPutAdminCyclesCycleIdMutationOptions(options);
+
+      return useMutation(mutationOptions );
+    }
+    /**
+ * Get submission status for all barangays across all phases (phase1, rework, phase2, calibration). Requires MLGOO_DILG role.
+ * @summary Get deadline status for all barangays
+ */
+export const getAdminDeadlinesStatus = (
+    params?: GetAdminDeadlinesStatusParams,
+ options?: SecondParameter<typeof mutator>,signal?: AbortSignal
+) => {
+      
+      
+      return mutator<DeadlineStatusListResponse>(
+      {url: `http://localhost:8000/api/v1/admin/deadlines/status`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getGetAdminDeadlinesStatusQueryKey = (params?: GetAdminDeadlinesStatusParams,) => {
+    return [`http://localhost:8000/api/v1/admin/deadlines/status`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getGetAdminDeadlinesStatusQueryOptions = <TData = Awaited<ReturnType<typeof getAdminDeadlinesStatus>>, TError = HTTPValidationError>(params?: GetAdminDeadlinesStatusParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminDeadlinesStatus>>, TError, TData>, request?: SecondParameter<typeof mutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAdminDeadlinesStatusQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminDeadlinesStatus>>> = ({ signal }) => getAdminDeadlinesStatus(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn,   staleTime: 300000, refetchOnWindowFocus: false,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAdminDeadlinesStatus>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAdminDeadlinesStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminDeadlinesStatus>>>
+export type GetAdminDeadlinesStatusQueryError = HTTPValidationError
+
+
+/**
+ * @summary Get deadline status for all barangays
+ */
+
+export function useGetAdminDeadlinesStatus<TData = Awaited<ReturnType<typeof getAdminDeadlinesStatus>>, TError = HTTPValidationError>(
+ params?: GetAdminDeadlinesStatusParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminDeadlinesStatus>>, TError, TData>, request?: SecondParameter<typeof mutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAdminDeadlinesStatusQueryOptions(params,options)
+
+  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+/**
+ * Extend a deadline for a specific barangay and indicator. Requires MLGOO_DILG role.
+ * @summary Apply a deadline override
+ */
+export const postAdminDeadlinesOverride = (
+    deadlineOverrideCreate: DeadlineOverrideCreate,
+ options?: SecondParameter<typeof mutator>,signal?: AbortSignal
+) => {
+      
+      
+      return mutator<DeadlineOverrideResponse>(
+      {url: `http://localhost:8000/api/v1/admin/deadlines/override`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: deadlineOverrideCreate, signal
+    },
+      options);
+    }
+  
+
+
+export const getPostAdminDeadlinesOverrideMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAdminDeadlinesOverride>>, TError,{data: DeadlineOverrideCreate}, TContext>, request?: SecondParameter<typeof mutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postAdminDeadlinesOverride>>, TError,{data: DeadlineOverrideCreate}, TContext> => {
+
+const mutationKey = ['postAdminDeadlinesOverride'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAdminDeadlinesOverride>>, {data: DeadlineOverrideCreate}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postAdminDeadlinesOverride(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostAdminDeadlinesOverrideMutationResult = NonNullable<Awaited<ReturnType<typeof postAdminDeadlinesOverride>>>
+    export type PostAdminDeadlinesOverrideMutationBody = DeadlineOverrideCreate
+    export type PostAdminDeadlinesOverrideMutationError = HTTPValidationError
+
+    /**
+ * @summary Apply a deadline override
+ */
+export const usePostAdminDeadlinesOverride = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAdminDeadlinesOverride>>, TError,{data: DeadlineOverrideCreate}, TContext>, request?: SecondParameter<typeof mutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof postAdminDeadlinesOverride>>,
+        TError,
+        {data: DeadlineOverrideCreate},
+        TContext
+      > => {
+
+      const mutationOptions = getPostAdminDeadlinesOverrideMutationOptions(options);
+
+      return useMutation(mutationOptions );
+    }
+    /**
+ * Get all deadline overrides with optional filtering by cycle, barangay, or indicator. Requires MLGOO_DILG role.
+ * @summary List deadline overrides
+ */
+export const getAdminDeadlinesOverrides = (
+    params?: GetAdminDeadlinesOverridesParams,
+ options?: SecondParameter<typeof mutator>,signal?: AbortSignal
+) => {
+      
+      
+      return mutator<DeadlineOverrideListResponse>(
+      {url: `http://localhost:8000/api/v1/admin/deadlines/overrides`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getGetAdminDeadlinesOverridesQueryKey = (params?: GetAdminDeadlinesOverridesParams,) => {
+    return [`http://localhost:8000/api/v1/admin/deadlines/overrides`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getGetAdminDeadlinesOverridesQueryOptions = <TData = Awaited<ReturnType<typeof getAdminDeadlinesOverrides>>, TError = HTTPValidationError>(params?: GetAdminDeadlinesOverridesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminDeadlinesOverrides>>, TError, TData>, request?: SecondParameter<typeof mutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAdminDeadlinesOverridesQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminDeadlinesOverrides>>> = ({ signal }) => getAdminDeadlinesOverrides(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn,   staleTime: 300000, refetchOnWindowFocus: false,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAdminDeadlinesOverrides>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAdminDeadlinesOverridesQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminDeadlinesOverrides>>>
+export type GetAdminDeadlinesOverridesQueryError = HTTPValidationError
+
+
+/**
+ * @summary List deadline overrides
+ */
+
+export function useGetAdminDeadlinesOverrides<TData = Awaited<ReturnType<typeof getAdminDeadlinesOverrides>>, TError = HTTPValidationError>(
+ params?: GetAdminDeadlinesOverridesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminDeadlinesOverrides>>, TError, TData>, request?: SecondParameter<typeof mutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAdminDeadlinesOverridesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+/**
+ * Export deadline override audit logs to CSV format. Requires MLGOO_DILG role.
+ * @summary Export deadline overrides to CSV
+ */
+export const getAdminDeadlinesOverridesExport = (
+    params?: GetAdminDeadlinesOverridesExportParams,
+ options?: SecondParameter<typeof mutator>,signal?: AbortSignal
+) => {
+      
+      
+      return mutator<unknown>(
+      {url: `http://localhost:8000/api/v1/admin/deadlines/overrides/export`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getGetAdminDeadlinesOverridesExportQueryKey = (params?: GetAdminDeadlinesOverridesExportParams,) => {
+    return [`http://localhost:8000/api/v1/admin/deadlines/overrides/export`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getGetAdminDeadlinesOverridesExportQueryOptions = <TData = Awaited<ReturnType<typeof getAdminDeadlinesOverridesExport>>, TError = HTTPValidationError>(params?: GetAdminDeadlinesOverridesExportParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminDeadlinesOverridesExport>>, TError, TData>, request?: SecondParameter<typeof mutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAdminDeadlinesOverridesExportQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminDeadlinesOverridesExport>>> = ({ signal }) => getAdminDeadlinesOverridesExport(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn,   staleTime: 300000, refetchOnWindowFocus: false,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAdminDeadlinesOverridesExport>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAdminDeadlinesOverridesExportQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminDeadlinesOverridesExport>>>
+export type GetAdminDeadlinesOverridesExportQueryError = HTTPValidationError
+
+
+/**
+ * @summary Export deadline overrides to CSV
+ */
+
+export function useGetAdminDeadlinesOverridesExport<TData = Awaited<ReturnType<typeof getAdminDeadlinesOverridesExport>>, TError = HTTPValidationError>(
+ params?: GetAdminDeadlinesOverridesExportParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminDeadlinesOverridesExport>>, TError, TData>, request?: SecondParameter<typeof mutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAdminDeadlinesOverridesExportQueryOptions(params,options)
 
   const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

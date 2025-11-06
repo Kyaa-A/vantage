@@ -83,6 +83,55 @@ end_date?: string | null;
 
 
 /**
+ * GetAdminDeadlinesOverridesExportParams
+ */
+export type GetAdminDeadlinesOverridesExportParams = {
+/**
+ * Filter by cycle ID
+ */
+cycle_id?: number | null;
+/**
+ * Filter by barangay ID
+ */
+barangay_id?: number | null;
+/**
+ * Filter by indicator ID
+ */
+indicator_id?: number | null;
+};
+
+
+/**
+ * GetAdminDeadlinesOverridesParams
+ */
+export type GetAdminDeadlinesOverridesParams = {
+/**
+ * Filter by cycle ID
+ */
+cycle_id?: number | null;
+/**
+ * Filter by barangay ID
+ */
+barangay_id?: number | null;
+/**
+ * Filter by indicator ID
+ */
+indicator_id?: number | null;
+};
+
+
+/**
+ * GetAdminDeadlinesStatusParams
+ */
+export type GetAdminDeadlinesStatusParams = {
+/**
+ * Filter by cycle ID (defaults to active cycle)
+ */
+cycle_id?: number | null;
+};
+
+
+/**
  * UserAdminCreate
  */
 export interface UserAdminCreate {
