@@ -29,6 +29,7 @@ class Settings(BaseSettings):
 
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = [
+        # Development
         "http://localhost:3000",
         "http://localhost:3001",
         "https://localhost:3000",
@@ -36,6 +37,9 @@ class Settings(BaseSettings):
         # Docker internal network access
         "http://vantage-web:3000",
         "http://172.25.0.40:3000",
+        # Production (add your production domain here)
+        # "https://vantage.dilg.gov.ph",
+        # "https://www.vantage.dilg.gov.ph",
     ]
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
