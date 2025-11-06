@@ -164,10 +164,50 @@ export default function ReportsPage() {
     <div className="min-h-screen bg-[var(--background)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="space-y-8">
+          {/* Enhanced Header Section */}
+          <div className="relative overflow-hidden bg-[var(--card)] rounded-sm shadow-lg border border-[var(--border)] p-8">
+            {/* Decorative background elements */}
+            <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-100/40 to-indigo-100/20 rounded-full -translate-y-20 translate-x-20"></div>
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-purple-100/30 to-pink-100/20 rounded-full translate-y-16 -translate-x-16"></div>
+
+            <div className="relative z-10">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                <div>
+                  <h1 className="text-3xl font-bold text-[var(--foreground)]">
+                    Analytics &{" "}
+                    <span className="bg-gradient-to-r from-[var(--cityscape-yellow)] to-[var(--cityscape-yellow-dark)] bg-clip-text text-transparent">
+                      Reports
+                    </span>
+                  </h1>
+                </div>
+
+                {/* Quick Stats */}
+                <div className="flex items-center gap-6">
+                  <div className="bg-[var(--card)]/80 backdrop-blur-sm rounded-sm p-4 text-center shadow-sm border border-[var(--border)]">
+                    <div className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                      {analyticsData.officialPerformance.passRate}%
+                    </div>
+                    <div className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">
+                      Pass Rate
+                    </div>
+                  </div>
+                  <div className="bg-[var(--card)]/80 backdrop-blur-sm rounded-sm p-4 text-center shadow-sm border border-[var(--border)]">
+                    <div className="text-3xl font-bold text-[var(--foreground)]">
+                      {analyticsData.officialPerformance.totalBarangays}
+                    </div>
+                    <div className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">
+                      Barangays
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Global Filters */}
           <div className="bg-[var(--card)] border border-[var(--border)] rounded-sm shadow-lg p-6">
             <div className="flex items-center gap-3 mb-4">
-              <Filter className="h-5 w-5" style={{ color: 'var(--kpi-blue-text)' }} />
+              <Filter className="h-5 w-5" style={{ color: 'var(--cityscape-yellow)' }} />
               <h2 className="text-lg font-semibold text-[var(--foreground)]">Global Filters</h2>
             </div>
             
@@ -180,10 +220,10 @@ export default function ReportsPage() {
                   </SelectTrigger>
                   <SelectContent className="bg-[var(--card)] border border-[var(--border)] shadow-xl rounded-sm z-50">
                     {analyticsData.globalFilters.availablePeriods.map((period) => (
-                      <SelectItem 
-                        key={period} 
+                      <SelectItem
+                        key={period}
                         value={period.toLowerCase().replace(' ', '-')}
-                        className="text-[var(--foreground)] hover:bg-[var(--kpi-blue-from)] cursor-pointer px-3 py-2"
+                        className="text-[var(--foreground)] hover:bg-[var(--cityscape-yellow)]/10 cursor-pointer px-3 py-2"
                       >
                         {period}
                       </SelectItem>
@@ -352,8 +392,7 @@ export default function ReportsPage() {
             <div>
               <div className="bg-[var(--card)] border border-[var(--border)] rounded-sm shadow-lg overflow-hidden">
                 <div className="p-6 border-b border-[var(--border)]">
-                  <h3 className="text-lg font-bold text-[var(--foreground)] mb-1">Municipality-Wide Performance Hotspots</h3>
-                  <p className="text-sm text-[var(--muted-foreground)]">Top 5 most commonly failed indicators based on historical results</p>
+                  <h3 className="text-lg font-bold text-[var(--foreground)]">Municipality-Wide Performance Hotspots</h3>
                 </div>
                 
                 <div className="p-6 space-y-4">
@@ -489,10 +528,10 @@ export default function ReportsPage() {
                     </SelectTrigger>
                     <SelectContent className="bg-[var(--card)] border border-[var(--border)] shadow-xl rounded-sm z-50">
                       {analyticsData.aiReport.availableBarangays.map((barangay) => (
-                        <SelectItem 
-                          key={barangay} 
+                        <SelectItem
+                          key={barangay}
                           value={barangay}
-                          className="text-[var(--foreground)] hover:bg-[var(--kpi-purple-from)] cursor-pointer px-3 py-2"
+                          className="text-[var(--foreground)] hover:bg-[var(--cityscape-yellow)]/10 cursor-pointer px-3 py-2"
                         >
                           {barangay}
                         </SelectItem>
@@ -501,8 +540,12 @@ export default function ReportsPage() {
                   </Select>
                 </div>
                 
-                <Button 
-                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-sm shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
+                <Button
+                  className="px-8 h-11 font-semibold hover:shadow-lg transition-all duration-200 flex items-center gap-2 rounded-sm"
+                  style={{
+                    background: 'linear-gradient(to bottom right, var(--cityscape-yellow), var(--cityscape-yellow-dark))',
+                    color: 'var(--foreground)',
+                  }}
                   disabled={!selectedBarangay}
                 >
                   <Zap className="h-4 w-4" />

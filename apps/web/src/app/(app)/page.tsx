@@ -10,8 +10,8 @@ export default function RootPage() {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      const isAdmin = user.role === 'SUPERADMIN' || user.role === 'MLGOO_DILG';
-      const isAssessor = user.role === 'AREA_ASSESSOR';
+      const isAdmin = user.role === 'MLGOO_DILG' as any;
+      const isAssessor = user.role === 'ASSESSOR' as any;
       
       let dashboardPath;
       if (isAdmin) {

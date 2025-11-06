@@ -106,6 +106,9 @@ export function useCurrentAssessment() {
     id: number;
     name: string;
     description: string;
+    form_schema?: Record<string, unknown> & {
+      required?: string[];
+    };
     response?: {
       id?: number;
       is_completed?: boolean;
@@ -125,7 +128,11 @@ export function useCurrentAssessment() {
     children?: Array<IndicatorNode>;
   }
 
-  const mapIndicatorTree = (areaId: number, indicator: IndicatorNode) => {
+  type MappedIndicator = Record<string, unknown> & {
+    children?: MappedIndicator[];
+  };
+  
+  const mapIndicatorTree = (areaId: number, indicator: IndicatorNode): MappedIndicator => {
     const mapped = {
       id: indicator.id.toString(),
       // Preserve backend link to real DB indicator for synthetic children

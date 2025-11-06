@@ -84,7 +84,7 @@ export function FormSchemaBuilder() {
   return (
     <div className="flex h-full flex-col">
       {/* View Mode Toggle */}
-      <div className="border-b border-gray-200 bg-white px-6 py-4">
+      <div className="border-b border-[var(--border)] bg-[var(--card)] px-6 py-4">
         <ViewModeToggle value={viewMode} onChange={setViewMode} />
       </div>
 
@@ -111,16 +111,16 @@ export function FormSchemaBuilder() {
       {/* Left Sidebar - Field Palette */}
       <aside
         className={`
-          border-r border-gray-200 bg-gray-50 transition-all duration-300
+          border-r border-[var(--border)] bg-[var(--muted)]/20 transition-all duration-300
           ${isSidebarCollapsed ? 'w-0 overflow-hidden' : 'w-64'}
         `}
       >
         <div className="h-full p-4">
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="font-semibold text-gray-900">Field Types</h3>
+            <h3 className="font-semibold text-[var(--foreground)]">Field Types</h3>
             <button
               onClick={() => setIsSidebarCollapsed(true)}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
               aria-label="Collapse sidebar"
             >
               <svg
@@ -148,11 +148,11 @@ export function FormSchemaBuilder() {
       {isSidebarCollapsed && (
         <button
           onClick={() => setIsSidebarCollapsed(false)}
-          className="flex h-full w-8 items-center justify-center border-r border-gray-200 bg-gray-50 hover:bg-gray-100"
+          className="flex h-full w-8 items-center justify-center border-r border-[var(--border)] bg-[var(--muted)]/20 hover:bg-[var(--muted)]/30"
           aria-label="Expand sidebar"
         >
           <svg
-            className="h-5 w-5 text-gray-500"
+            className="h-5 w-5 text-[var(--muted-foreground)]"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -168,21 +168,21 @@ export function FormSchemaBuilder() {
       )}
 
       {/* Center - Canvas (Drop Zone) */}
-      <main className="flex-1 overflow-auto bg-white">
+      <main className="flex-1 overflow-auto bg-[var(--background)]">
         <div className="p-6">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Form Builder</h2>
-              <p className="mt-1 text-sm text-gray-500">
+              <h2 className="text-2xl font-bold text-[var(--foreground)]">Form Builder</h2>
+              <p className="mt-1 text-sm text-[var(--text-secondary)]">
                 Drag fields from the palette to build your form
               </p>
             </div>
 
             {/* Dirty indicator */}
             {isDirty && (
-              <span className="inline-flex items-center rounded-full bg-yellow-100 px-3 py-1 text-xs font-medium text-yellow-800">
+              <span className="inline-flex items-center rounded-full bg-[var(--cityscape-yellow)]/20 px-3 py-1 text-xs font-medium text-[var(--cityscape-yellow)]">
                 <svg
-                  className="-ml-0.5 mr-1.5 h-2 w-2 fill-yellow-400"
+                  className="-ml-0.5 mr-1.5 h-2 w-2 fill-[var(--cityscape-yellow)]"
                   viewBox="0 0 8 8"
                 >
                   <circle cx={4} cy={4} r={3} />
@@ -195,10 +195,10 @@ export function FormSchemaBuilder() {
           {/* Canvas content */}
           {fields.length === 0 ? (
             // Empty state
-            <div className="flex min-h-[400px] items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50">
+            <div className="flex min-h-[400px] items-center justify-center rounded-lg border-2 border-dashed border-[var(--border)] bg-[var(--muted)]/10">
               <div className="text-center">
                 <svg
-                  className="mx-auto h-12 w-12 text-gray-400"
+                  className="mx-auto h-12 w-12 text-[var(--muted-foreground)]"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -210,8 +210,8 @@ export function FormSchemaBuilder() {
                     d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
                 </svg>
-                <h3 className="mt-2 text-sm font-medium text-gray-900">No fields yet</h3>
-                <p className="mt-1 text-sm text-gray-500">
+                <h3 className="mt-2 text-sm font-medium text-[var(--foreground)]">No fields yet</h3>
+                <p className="mt-1 text-sm text-[var(--text-secondary)]">
                   Click field types from the left palette to get started
                 </p>
               </div>
@@ -235,16 +235,16 @@ export function FormSchemaBuilder() {
       {/* Right Sidebar - Field Properties Panel */}
       <aside
         className={`
-          border-l border-gray-200 bg-gray-50 transition-all duration-300
+          border-l border-[var(--border)] bg-[var(--muted)]/20 transition-all duration-300
           ${isPropertiesPanelCollapsed ? 'w-0 overflow-hidden' : 'w-80'}
         `}
       >
         <div className="h-full p-4">
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="font-semibold text-gray-900">Field Properties</h3>
+            <h3 className="font-semibold text-[var(--foreground)]">Field Properties</h3>
             <button
               onClick={() => setIsPropertiesPanelCollapsed(true)}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
               aria-label="Collapse properties panel"
             >
               <svg
@@ -272,11 +272,11 @@ export function FormSchemaBuilder() {
       {isPropertiesPanelCollapsed && (
         <button
           onClick={() => setIsPropertiesPanelCollapsed(false)}
-          className="flex h-full w-8 items-center justify-center border-l border-gray-200 bg-gray-50 hover:bg-gray-100"
+          className="flex h-full w-8 items-center justify-center border-l border-[var(--border)] bg-[var(--muted)]/20 hover:bg-[var(--muted)]/30"
           aria-label="Expand properties panel"
         >
           <svg
-            className="h-5 w-5 text-gray-500"
+            className="h-5 w-5 text-[var(--muted-foreground)]"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -295,11 +295,11 @@ export function FormSchemaBuilder() {
           {/* Drag Overlay - Shows dragged item */}
           <DragOverlay>
             {activeField ? (
-              <div className="rounded-lg border border-gray-300 bg-white p-4 shadow-lg opacity-90">
-                <p className="text-sm font-medium text-gray-900">
+              <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-4 shadow-lg opacity-90">
+                <p className="text-sm font-medium text-[var(--foreground)]">
                   {activeField.label}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-[var(--text-secondary)]">
                   {activeField.field_type}
                 </p>
               </div>

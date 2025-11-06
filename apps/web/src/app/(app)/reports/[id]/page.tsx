@@ -82,7 +82,7 @@ export default function ReportDetailsPage() {
           'Business-Friendliness and Competitiveness': 'Failed',
           'Environmental Management': 'Failed',
         },
-        ai_recommendations: null,
+        ai_recommendations: undefined,
         blgu_user: {
           name: 'Sample User',
           barangay: {
@@ -183,7 +183,7 @@ export default function ReportDetailsPage() {
           )}
 
           {/* Error State */}
-          {generationError && (
+          {(generationError as any) && (
             <div className="p-4 bg-destructive/10 rounded-md border border-destructive/20">
               <p className="text-sm text-destructive">
                 Failed to generate insights. Please try again.
@@ -193,7 +193,7 @@ export default function ReportDetailsPage() {
 
           {/* Display Insights */}
           {assessment.ai_recommendations && (
-            <AIInsightsDisplay insights={assessment.ai_recommendations} />
+            <AIInsightsDisplay insights={assessment.ai_recommendations as any} />
           )}
         </div>
       </div>

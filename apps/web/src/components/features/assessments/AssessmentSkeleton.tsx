@@ -17,11 +17,8 @@ export function AssessmentSkeleton() {
               <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-8">
                 {/* Left side - Title and Status */}
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <Skeleton className="w-2 h-8 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-sm" />
-                    <Skeleton className="h-9 w-96" />
-                  </div>
-                  
+                  <Skeleton className="h-9 w-96" />
+
                   <div className="flex items-center gap-4 flex-wrap">
                     <Skeleton className="h-8 w-32" />
                     <Skeleton className="h-8 w-64" />

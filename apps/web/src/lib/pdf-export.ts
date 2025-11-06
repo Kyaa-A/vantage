@@ -1,6 +1,6 @@
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
 import { ReportsDataResponse } from "@vantage/shared";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 export interface FilterState {
   cycle_id?: number;
@@ -113,20 +113,20 @@ export async function exportReportToPDF(
     // Date Range
     if (metadata.dateRange) {
       pdf.text(`Report Period:`, margin, yPos);
-      pdf.setFont(undefined, "normal");
+      pdf.setFont("helvetica", "normal");
       pdf.text(
         `${new Date(metadata.dateRange.start).toLocaleDateString()} - ${new Date(metadata.dateRange.end).toLocaleDateString()}`,
         margin + 120,
         yPos
       );
       yPos += 25;
-      pdf.setFont(undefined, "bold");
+      pdf.setFont("helvetica", "bold");
     }
 
     // Applied Filters
     pdf.text(`Applied Filters:`, margin, yPos);
     yPos += 20;
-    pdf.setFont(undefined, "normal");
+    pdf.setFont("helvetica", "normal");
     pdf.setFontSize(10);
 
     const filterLines: string[] = [];
@@ -154,10 +154,10 @@ export async function exportReportToPDF(
     yPos += 20;
 
     // Generation Info
-    pdf.setFont(undefined, "bold");
+    pdf.setFont("helvetica", "bold");
     pdf.setFontSize(12);
     pdf.text(`Report Generated:`, margin, yPos);
-    pdf.setFont(undefined, "normal");
+    pdf.setFont("helvetica", "normal");
     pdf.setFontSize(10);
     yPos += 20;
     pdf.text(
@@ -173,10 +173,10 @@ export async function exportReportToPDF(
 
     // Summary Statistics
     yPos += 40;
-    pdf.setFont(undefined, "bold");
+    pdf.setFont("helvetica", "bold");
     pdf.setFontSize(12);
     pdf.text(`Summary Statistics:`, margin, yPos);
-    pdf.setFont(undefined, "normal");
+    pdf.setFont("helvetica", "normal");
     pdf.setFontSize(10);
     yPos += 20;
 
@@ -185,11 +185,11 @@ export async function exportReportToPDF(
     yPos += 18;
 
     const passCount =
-      data.chart_data.pie_chart.find((item) => item.name === "Pass")?.value || 0;
+      data.chart_data.pie_chart?.find((item) => item.status === "Pass")?.count || 0;
     const failCount =
-      data.chart_data.pie_chart.find((item) => item.name === "Fail")?.value || 0;
+      data.chart_data.pie_chart?.find((item) => item.status === "Fail")?.count || 0;
     const inProgressCount =
-      data.chart_data.pie_chart.find((item) => item.name === "In Progress")?.value ||
+      data.chart_data.pie_chart?.find((item) => item.status === "In Progress")?.count ||
       0;
 
     pdf.text(`• Pass: ${passCount}`, margin + 10, yPos);
@@ -223,7 +223,7 @@ export async function exportReportToPDF(
       // Add title
       pdf.setFontSize(16);
       pdf.setTextColor(0, 0, 0);
-      pdf.setFont(undefined, "bold");
+      pdf.setFont("helvetica", "bold");
       pdf.text(chart.title, pageWidth / 2, margin + 20, { align: "center" });
 
       // Capture chart as image
@@ -279,7 +279,7 @@ export async function exportReportToPDF(
     // Add title
     pdf.setFontSize(16);
     pdf.setTextColor(0, 0, 0);
-    pdf.setFont(undefined, "bold");
+    pdf.setFont("helvetica", "bold");
     pdf.text("Assessment Data Table", pageWidth / 2, margin + 20, {
       align: "center",
     });
@@ -287,7 +287,7 @@ export async function exportReportToPDF(
     // Table headers
     let tableYPos = margin + 60;
     pdf.setFontSize(10);
-    pdf.setFont(undefined, "bold");
+    pdf.setFont("helvetica", "bold");
 
     const colWidths = {
       barangay: 180,
@@ -313,7 +313,7 @@ export async function exportReportToPDF(
     tableYPos += 20;
 
     // Table rows
-    pdf.setFont(undefined, "normal");
+    pdf.setFont("helvetica", "normal");
     const rows = data.table_data.rows || [];
     const maxRowsPerPage = 30; // Approximate, adjust as needed
     let rowCount = 0;
@@ -329,7 +329,7 @@ export async function exportReportToPDF(
         rowCount = 0;
 
         // Repeat headers on new page
-        pdf.setFont(undefined, "bold");
+        pdf.setFont("helvetica", "bold");
         pdf.text("Barangay Name", margin, tableYPos);
         pdf.text("Governance Area", margin + colWidths.barangay, tableYPos);
         pdf.text(
@@ -344,7 +344,7 @@ export async function exportReportToPDF(
         );
         pdf.line(margin, tableYPos + 5, pageWidth - margin, tableYPos + 5);
         tableYPos += 20;
-        pdf.setFont(undefined, "normal");
+        pdf.setFont("helvetica", "normal");
       }
 
       // Truncate long text to fit

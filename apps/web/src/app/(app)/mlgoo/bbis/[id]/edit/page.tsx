@@ -136,15 +136,11 @@ export default function EditBBIPage() {
                 <h3 className="text-lg font-semibold text-[var(--foreground)]">
                   Functionality Mapping Rules
                 </h3>
-                <p className="text-sm text-[var(--muted-foreground)] mt-1">
-                  Define the conditions that determine whether this BBI is Functional or Non-Functional
-                  based on indicator assessment results.
-                </p>
               </div>
 
               <BBIMappingBuilder
                 governanceAreaId={bbi.governance_area_id}
-                initialMappingRules={bbi.mapping_rules || undefined}
+                initialMappingRules={bbi.mapping_rules as any}
                 onSave={handleSaveMappingRules}
                 isSaving={updateBBIMutation.isPending}
               />

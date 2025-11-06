@@ -80,6 +80,10 @@ export default function AssessorAnalyticsPage() {
   }
 
   // assessorData will be non-null after loading completes and if no error occurred
+  // TypeScript needs explicit check or assertion
+  if (!assessorData) {
+    return null;
+  }
 
   return (
     <div className="space-y-8">

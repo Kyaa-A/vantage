@@ -1,14 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { useCalculationRuleStore } from '@/store/useCalculationRuleStore';
-import type { FormSchema } from '@vantage/shared';
-import { usePostIndicatorsTestCalculation } from '@vantage/shared';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Play, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useCalculationRuleStore } from '@/store/useCalculationRuleStore';
+import type { FormSchema, HTTPValidationError } from '@vantage/shared';
+import { usePostIndicatorsTestCalculation } from '@vantage/shared';
+import { AlertCircle, CheckCircle2, Loader2, Play, XCircle } from 'lucide-react';
+import { useState } from 'react';
 import { DynamicFormInput } from './DynamicFormInput';
 
 interface TestCalculationPanelProps {
@@ -58,12 +58,46 @@ export function TestCalculationPanel({ formSchema }: TestCalculationPanelProps) 
   };
 
   // Check if test can be run
-  const canRunTest = isSchemaValid() && formSchema && formSchema.input_fields?.length > 0;
+  const canRunTest = isSchemaValid() && formSchema && (formSchema as any).input_fields?.length > 0;
 
   // Get result data
   const result = testCalculationMutation.data;
   const isLoading = testCalculationMutation.isPending;
   const error = testCalculationMutation.error;
+
+  // Helper function to extract error message
+  const getErrorMessage = (err: unknown): string => {
+    // Handle HTTPValidationError (has detail array)
+    if (err && typeof err === 'object' && 'detail' in err) {
+      const validationError = err as HTTPValidationError;
+      if (validationError.detail && Array.isArray(validationError.detail) && validationError.detail.length > 0) {
+        return validationError.detail.map((e) => e.msg).join(', ');
+      }
+    }
+    
+    // Handle standard Error objects
+    if (err && typeof err === 'object' && 'message' in err) {
+      return (err as Error).message;
+    }
+    
+    // Fallback
+    return 'An error occurred while testing the calculation';
+  };
+
+  // Helper function to safely get string value from result
+  const getStringValue = (value: unknown): string => {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+    return '';
+  };
+
+  // Helper function to safely get boolean value from result
+  const getBooleanValue = (value: unknown): boolean => {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'string') return value.toLowerCase() === 'true';
+    return false;
+  };
 
   return (
     <Card>
@@ -94,7 +128,7 @@ export function TestCalculationPanel({ formSchema }: TestCalculationPanelProps) 
           </Alert>
         )}
 
-        {formSchema && formSchema.input_fields?.length === 0 && (
+        {formSchema && (formSchema as any).input_fields?.length === 0 && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
@@ -114,7 +148,7 @@ export function TestCalculationPanel({ formSchema }: TestCalculationPanelProps) 
             </div>
 
             <div className="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
-              {formSchema!.input_fields!.map((field) => (
+              {(formSchema as any)!.input_fields!.map((field: any) => (
                 <DynamicFormInput
                   key={field.field_id}
                   field={field}
@@ -150,8 +184,7 @@ export function TestCalculationPanel({ formSchema }: TestCalculationPanelProps) 
           <Alert variant="destructive">
             <XCircle className="h-4 w-4" />
             <AlertDescription>
-              <strong>Test Failed:</strong>{' '}
-              {error.message || 'An error occurred while testing the calculation'}
+              <strong>Test Failed:</strong> {getErrorMessage(error)}
             </AlertDescription>
           </Alert>
         )}
@@ -163,7 +196,7 @@ export function TestCalculationPanel({ formSchema }: TestCalculationPanelProps) 
               <div className="space-y-1">
                 <h3 className="text-sm font-semibold text-muted-foreground">Test Result</h3>
                 <div className="flex items-center gap-3">
-                  {result.result === 'Pass' ? (
+                  {getStringValue(result.result) === 'Pass' ? (
                     <>
                       <CheckCircle2 className="h-8 w-8 text-green-600" />
                       <div>
@@ -194,7 +227,7 @@ export function TestCalculationPanel({ formSchema }: TestCalculationPanelProps) 
               <div className="text-right">
                 <p className="text-xs text-muted-foreground">Evaluation Result</p>
                 <p className="text-2xl font-bold">
-                  {result.evaluation_result ? 'True' : 'False'}
+                  {getBooleanValue(result.evaluation_result) ? 'True' : 'False'}
                 </p>
               </div>
             </div>
@@ -202,25 +235,25 @@ export function TestCalculationPanel({ formSchema }: TestCalculationPanelProps) 
             {/* Detailed Explanation */}
             <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
               <h4 className="text-sm font-semibold mb-2">Explanation</h4>
-              <p className="text-sm text-gray-700">{result.explanation}</p>
+              <p className="text-sm text-gray-700">{getStringValue(result.explanation)}</p>
 
               <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-muted-foreground">If conditions pass:</span>
                   <Badge
-                    variant={result.output_status_on_pass === 'Pass' ? 'default' : 'destructive'}
+                    variant={getStringValue(result.output_status_on_pass) === 'Pass' ? 'default' : 'destructive'}
                     className="ml-2"
                   >
-                    {result.output_status_on_pass}
+                    {getStringValue(result.output_status_on_pass)}
                   </Badge>
                 </div>
                 <div>
                   <span className="text-muted-foreground">If conditions fail:</span>
                   <Badge
-                    variant={result.output_status_on_fail === 'Fail' ? 'destructive' : 'default'}
+                    variant={getStringValue(result.output_status_on_fail) === 'Fail' ? 'destructive' : 'default'}
                     className="ml-2"
                   >
-                    {result.output_status_on_fail}
+                    {getStringValue(result.output_status_on_fail)}
                   </Badge>
                 </div>
               </div>

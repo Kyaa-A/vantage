@@ -5,8 +5,8 @@
  * Wraps TanStack Query hooks for querying and exporting override history.
  */
 
-import { useGetAdminDeadlinesOverrides } from '@vantage/shared';
 import type { DeadlineOverrideListResponse } from '@vantage/shared';
+import { useGetAdminDeadlinesOverrides } from '@vantage/shared';
 
 interface UseDeadlineAuditLogOptions {
   cycleId?: number;
@@ -48,7 +48,7 @@ export function useDeadlineAuditLog(options?: UseDeadlineAuditLogOptions) {
       query: {
         // Always enabled - will return empty list if no filters match
         enabled: true,
-      },
+      } as any,
     }
   );
 

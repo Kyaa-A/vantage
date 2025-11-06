@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { useFormBuilderStore, isTextInputField } from '@/store/useFormBuilderStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { isTextInputField, useFormBuilderStore } from '@/store/useFormBuilderStore';
 import type { TextInputField } from '@vantage/shared';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 
 interface TextInputPropertiesProps {
   fieldId: string;
@@ -43,9 +43,9 @@ export function TextInputProperties({ fieldId }: TextInputPropertiesProps) {
       field_id: field.field_id,
       required: field.required,
       help_text: field.help_text || '',
-      max_length: field.max_length,
-      placeholder: field.placeholder,
-      default_value: field.default_value,
+      max_length: field.max_length ?? undefined,
+      placeholder: field.placeholder ?? undefined,
+      default_value: field.default_value ?? undefined,
     },
   });
 

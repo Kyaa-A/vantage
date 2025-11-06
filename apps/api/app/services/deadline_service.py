@@ -16,6 +16,7 @@ from app.db.models.governance_area import Indicator
 from app.db.models.user import User
 from app.db.models.assessment import Assessment
 from app.db.enums import AssessmentStatus
+from app.workers.notifications import send_deadline_extension_notification
 
 
 class DeadlineStatusType(str, Enum):
@@ -454,6 +455,29 @@ class DeadlineService:
         db.add(override)
         db.commit()
         db.refresh(override)
+
+        # Trigger notification task asynchronously
+        # Note: This sends one notification per override. If multiple overrides are created
+        # for the same barangay, multiple notifications will be sent. Consider using
+        # apply_deadline_overrides_bulk() instead for batch operations.
+        try:
+            send_deadline_extension_notification.delay(
+                barangay_id=barangay_id,
+                indicator_ids=[indicator_id],
+                new_deadline=new_deadline.isoformat(),
+                reason=reason,
+                created_by_user_id=created_by_user_id,
+            )
+        except Exception as e:
+            # Log error but don't fail the override creation
+            # (notification failures shouldn't block the main operation)
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(
+                "Failed to trigger deadline extension notification for override %s: %s",
+                override.id,
+                str(e),
+            )
 
         return override
 

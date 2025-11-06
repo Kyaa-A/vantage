@@ -1,13 +1,13 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { BarangayMap } from "@/components/features/analytics";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { ReportsDataResponse } from "@vantage/shared";
 import {
   AreaBreakdownBarChart,
   ComplianceStatusPieChart,
   TrendLineChart,
 } from "./ChartComponents";
-import { BarangayMap } from "@/components/features/analytics";
 import { AssessmentDataTable } from "./DataTable";
 
 interface VisualizationGridProps {
@@ -55,7 +55,7 @@ export function VisualizationGrid({ data, isLoading }: VisualizationGridProps) {
               <CardTitle>Assessment Results by Area</CardTitle>
             </CardHeader>
             <CardContent id="bar-chart-container">
-              <AreaBreakdownBarChart data={data.chart_data.bar_chart} />
+              <AreaBreakdownBarChart data={data.chart_data.bar_chart || []} />
             </CardContent>
           </Card>
 
@@ -65,7 +65,7 @@ export function VisualizationGrid({ data, isLoading }: VisualizationGridProps) {
               <CardTitle>Status Distribution</CardTitle>
             </CardHeader>
             <CardContent id="pie-chart-container">
-              <ComplianceStatusPieChart data={data.chart_data.pie_chart} />
+              <ComplianceStatusPieChart data={data.chart_data.pie_chart || []} />
             </CardContent>
           </Card>
 
@@ -75,7 +75,7 @@ export function VisualizationGrid({ data, isLoading }: VisualizationGridProps) {
               <CardTitle>Trends Over Time</CardTitle>
             </CardHeader>
             <CardContent id="line-chart-container">
-              <TrendLineChart data={data.chart_data.line_chart} />
+              <TrendLineChart data={data.chart_data.line_chart || []} />
             </CardContent>
           </Card>
         </div>
@@ -89,7 +89,7 @@ export function VisualizationGrid({ data, isLoading }: VisualizationGridProps) {
             <CardTitle>Barangay Performance Map</CardTitle>
           </CardHeader>
           <CardContent id="map-container">
-            <BarangayMap barangays={data.map_data.barangays} />
+            <BarangayMap barangays={data.map_data.barangays || []} />
           </CardContent>
         </Card>
       </section>
@@ -102,7 +102,7 @@ export function VisualizationGrid({ data, isLoading }: VisualizationGridProps) {
             <CardTitle>Assessment Data</CardTitle>
           </CardHeader>
           <CardContent>
-            <AssessmentDataTable data={data.table_data} />
+            <AssessmentDataTable data={data.table_data || []} />
           </CardContent>
         </Card>
       </section>
@@ -112,9 +112,11 @@ export function VisualizationGrid({ data, isLoading }: VisualizationGridProps) {
         <div>
           Report generated: {new Date(data.metadata.generated_at).toLocaleString()}
         </div>
-        <div>
-          Applied filters: {data.metadata.applied_filters_count} active
-        </div>
+        {data.metadata.cycle_id && (
+          <div>
+            Cycle ID: {data.metadata.cycle_id}
+          </div>
+        )}
       </div>
     </div>
   );

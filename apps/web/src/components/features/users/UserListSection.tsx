@@ -111,77 +111,54 @@ export default function UserListSection() {
 
   return (
     <div className="space-y-8">
-      {/* Enhanced Stats and Actions Header */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* User Statistics Cards */}
-        <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-[var(--card)] border border-[var(--border)] shadow-lg rounded-sm p-6 hover:shadow-xl transition-shadow duration-300">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-[var(--muted-foreground)]">
-                  Total Users
-                </p>
-                <p className="text-3xl font-bold text-[var(--foreground)]">
+      {/* Enhanced Header Section */}
+      <div className="relative overflow-hidden bg-[var(--card)] rounded-sm shadow-lg border border-[var(--border)] p-8">
+        {/* Decorative background elements */}
+        <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-100/40 to-indigo-100/20 rounded-full -translate-y-20 translate-x-20"></div>
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-purple-100/30 to-pink-100/20 rounded-full translate-y-16 -translate-x-16"></div>
+
+        <div className="relative z-10">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div className="space-y-3">
+              <h1 className="text-3xl font-bold text-[var(--foreground)]">
+                User{" "}
+                <span className="bg-gradient-to-r from-[var(--cityscape-yellow)] to-[var(--cityscape-yellow-dark)] bg-clip-text text-transparent">
+                  Management
+                </span>
+              </h1>
+              <p className="text-sm text-[var(--text-secondary)]">
+                Manage user accounts, roles, and permissions across the platform
+              </p>
+            </div>
+
+            {/* Enhanced Quick Stats */}
+            <div className="flex items-center gap-6">
+              <div className="bg-[var(--card)]/80 backdrop-blur-sm rounded-sm p-4 text-center shadow-sm border border-[var(--border)]">
+                <div className="text-3xl font-bold text-[var(--foreground)]">
                   {data.total || data.users.length}
-                </p>
+                </div>
+                <div className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">
+                  Total
+                </div>
               </div>
-              <div 
-                className="w-12 h-12 rounded-sm flex items-center justify-center"
-                style={{ backgroundColor: 'var(--kpi-blue-from)' }}
-              >
-                <Users className="h-6 w-6" style={{ color: 'var(--kpi-blue-text)' }} />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-[var(--card)] border border-[var(--border)] shadow-lg rounded-sm p-6 hover:shadow-xl transition-shadow duration-300">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-[var(--muted-foreground)]">
-                  Active Users
-                </p>
-                <p className="text-3xl font-bold text-[var(--foreground)]">
+              <div className="bg-[var(--card)]/80 backdrop-blur-sm rounded-sm p-4 text-center shadow-sm border border-[var(--border)]">
+                <div className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                   {data.users.filter((u) => u.is_active).length}
-                </p>
+                </div>
+                <div className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">
+                  Active
+                </div>
               </div>
-              <div 
-                className="w-12 h-12 rounded-sm flex items-center justify-center"
-                style={{ backgroundColor: 'var(--analytics-success-bg)' }}
-              >
-                <UserCheck className="h-6 w-6" style={{ color: 'var(--analytics-success-text)' }} />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-[var(--card)] border border-[var(--border)] shadow-lg rounded-sm p-6 hover:shadow-xl transition-shadow duration-300">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-[var(--muted-foreground)]">
-                  BLGU Users
-                </p>
-                <p className="text-3xl font-bold text-[var(--foreground)]">
+              <div className="bg-[var(--card)]/80 backdrop-blur-sm rounded-sm p-4 text-center shadow-sm border border-[var(--border)]">
+                <div className="text-3xl font-bold bg-gradient-to-r from-[var(--cityscape-yellow)] to-[var(--cityscape-yellow-dark)] bg-clip-text text-transparent">
                   {data.users.filter((u) => u.role === "BLGU_USER").length}
-                </p>
-              </div>
-              <div 
-                className="w-12 h-12 rounded-sm flex items-center justify-center"
-                style={{ backgroundColor: 'var(--kpi-purple-from)' }}
-              >
-                <Building className="h-6 w-6" style={{ color: 'var(--kpi-purple-text)' }} />
+                </div>
+                <div className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">
+                  BLGU
+                </div>
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Add User Button */}
-        <div className="flex items-center justify-center lg:justify-end">
-          <Button
-            onClick={() => setIsFormOpen(true)}
-            className="h-14 px-8 text-base font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-sm shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-3"
-          >
-            <Plus className="h-5 w-5" />
-            Add New User
-          </Button>
         </div>
       </div>
 
@@ -190,51 +167,56 @@ export default function UserListSection() {
         <div className="p-6 border-b border-[var(--border)]">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-              <div className="flex items-center gap-3">
-                <div className="w-1 h-6 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-sm"></div>
-                <h2 className="text-xl font-bold text-[var(--foreground)]">
-                  User Accounts
-                </h2>
-              </div>
-              <p className="text-[var(--muted-foreground)] mt-1">
-                Manage user accounts, roles, and permissions
+              <h2 className="text-xl font-bold text-[var(--foreground)]">
+                User Accounts
+              </h2>
+              <p className="text-[var(--text-secondary)] mt-1 text-sm">
+                {filteredAndPaginatedUsers.allFilteredUsers?.length || data.users.length} user{(filteredAndPaginatedUsers.allFilteredUsers?.length || data.users.length) !== 1 ? 's' : ''} registered
               </p>
             </div>
 
-            {/* Search Bar */}
-            <div className="relative w-full lg:w-80">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-[var(--muted-foreground)]" />
+            {/* Search Bar and Add User Button */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+              <div className="relative w-full sm:w-80">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="h-5 w-5 text-[var(--muted-foreground)]" />
+                </div>
+                <Input
+                  type="text"
+                  placeholder="Search users by name, email, or role..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-4 py-2 w-full bg-[var(--background)] border-[var(--border)] rounded-sm focus:border-[var(--cityscape-yellow)] focus:ring-[var(--cityscape-yellow)]/20 transition-all duration-200"
+                />
               </div>
-              <Input
-                type="text"
-                placeholder="Search users by name, email, or role..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full bg-[var(--background)] border-[var(--border)] rounded-sm focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-200"
-              />
+              <Button
+                onClick={() => setIsFormOpen(true)}
+                className="px-6 py-2.5 font-semibold hover:shadow-lg transition-all duration-200"
+                style={{
+                  background: 'linear-gradient(to bottom right, var(--cityscape-yellow), var(--cityscape-yellow-dark))',
+                  color: 'var(--foreground)',
+                }}
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                Add New User
+              </Button>
             </div>
           </div>
 
           {/* Search Results Info */}
           {searchQuery && (
-            <div className="mt-4 flex items-center gap-2 text-sm text-[var(--muted-foreground)]">
+            <div className="mt-4 flex items-center gap-2 text-sm text-[var(--text-secondary)]">
               <span>
-                Showing {filteredAndPaginatedUsers.totalUsers} result
-                {filteredAndPaginatedUsers.totalUsers !== 1 ? "s" : ""}
+                Found {filteredAndPaginatedUsers.allFilteredUsers?.length || 0} result
+                {(filteredAndPaginatedUsers.allFilteredUsers?.length || 0) !== 1 ? "s" : ""}
                 {searchQuery && ` for "${searchQuery}"`}
               </span>
-              {searchQuery && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setSearchQuery("")}
-                  className="h-6 px-2 text-xs hover:bg-[var(--kpi-blue-from)]"
-                  style={{ color: 'var(--kpi-blue-text)' }}
-                >
-                  Clear search
-                </Button>
-              )}
+              <button
+                onClick={() => setSearchQuery("")}
+                className="text-[var(--cityscape-yellow)] hover:text-[var(--cityscape-yellow-dark)] font-medium transition-colors text-xs"
+              >
+                Clear search
+              </button>
             </div>
           )}
         </div>
@@ -247,14 +229,14 @@ export default function UserListSection() {
 
           {/* Pagination Controls */}
           {filteredAndPaginatedUsers.totalPages > 1 && (
-            <div className="mt-8 flex items-center justify-between">
-              <div className="text-sm text-[var(--muted-foreground)]">
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="text-sm text-[var(--text-secondary)]">
                 Showing {(currentPage - 1) * usersPerPage + 1} to{" "}
                 {Math.min(
                   currentPage * usersPerPage,
-                  filteredAndPaginatedUsers.totalUsers
+                  filteredAndPaginatedUsers.allFilteredUsers?.length || 0
                 )}{" "}
-                of {filteredAndPaginatedUsers.totalUsers} users
+                of {filteredAndPaginatedUsers.allFilteredUsers?.length || 0} users
               </div>
 
               <div className="flex items-center gap-2">
@@ -265,7 +247,7 @@ export default function UserListSection() {
                     setCurrentPage((prev) => Math.max(prev - 1, 1))
                   }
                   disabled={currentPage === 1}
-                  className="flex items-center gap-2 bg-[var(--background)] hover:bg-[var(--hover)] border-[var(--border)] rounded-sm"
+                  className="flex items-center gap-2 bg-[var(--background)] hover:bg-[var(--muted)]/20 border-[var(--border)] rounded-sm transition-colors"
                 >
                   <ChevronLeft className="h-4 w-4" />
                   Previous
@@ -285,7 +267,7 @@ export default function UserListSection() {
 
                     if (!showPage && pageNum === 2 && currentPage > 4) {
                       return (
-                        <span key={pageNum} className="px-2 text-gray-400">
+                        <span key={pageNum} className="px-2 text-[var(--muted-foreground)]">
                           ...
                         </span>
                       );
@@ -297,7 +279,7 @@ export default function UserListSection() {
                       currentPage < filteredAndPaginatedUsers.totalPages - 3
                     ) {
                       return (
-                        <span key={pageNum} className="px-2 text-gray-400">
+                        <span key={pageNum} className="px-2 text-[var(--muted-foreground)]">
                           ...
                         </span>
                       );
@@ -306,21 +288,24 @@ export default function UserListSection() {
                     if (!showPage) return null;
 
                     return (
-                      <Button
+                      <button
                         key={pageNum}
-                        variant={
-                          currentPage === pageNum ? "default" : "outline"
-                        }
-                        size="sm"
                         onClick={() => setCurrentPage(pageNum)}
-                        className={`w-10 h-10 rounded-sm ${
+                        className={`w-10 h-10 rounded-sm font-medium transition-all duration-200 ${
                           currentPage === pageNum
-                            ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
-                            : "bg-[var(--background)] hover:bg-[var(--hover)] border-[var(--border)]"
+                            ? "shadow-md text-[var(--foreground)]"
+                            : "bg-[var(--background)] hover:bg-[var(--muted)]/20 border border-[var(--border)] text-[var(--foreground)]"
                         }`}
+                        style={
+                          currentPage === pageNum
+                            ? {
+                                background: 'linear-gradient(to bottom right, var(--cityscape-yellow), var(--cityscape-yellow-dark))',
+                              }
+                            : undefined
+                        }
                       >
                         {pageNum}
-                      </Button>
+                      </button>
                     );
                   })}
                 </div>
@@ -336,7 +321,7 @@ export default function UserListSection() {
                   disabled={
                     currentPage === filteredAndPaginatedUsers.totalPages
                   }
-                  className="flex items-center gap-2 bg-[var(--background)] hover:bg-[var(--hover)] border-[var(--border)] rounded-sm"
+                  className="flex items-center gap-2 bg-[var(--background)] hover:bg-[var(--muted)]/20 border-[var(--border)] rounded-sm transition-colors"
                 >
                   Next
                   <ChevronRight className="h-4 w-4" />
@@ -348,23 +333,26 @@ export default function UserListSection() {
           {/* No Results Message */}
           {filteredAndPaginatedUsers.users.length === 0 && searchQuery && (
             <div className="text-center py-12">
-              <div className="w-16 h-16 bg-[var(--hover)] rounded-sm flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-[var(--muted)]/20 rounded-sm flex items-center justify-center mx-auto mb-4">
                 <Search className="h-8 w-8 text-[var(--muted-foreground)]" />
               </div>
               <h3 className="text-lg font-semibold text-[var(--foreground)] mb-2">
                 No users found
               </h3>
-              <p className="text-[var(--muted-foreground)] mb-4">
+              <p className="text-[var(--text-secondary)] mb-4">
                 No users match your search for &quot;{searchQuery}&quot;. Try
                 adjusting your search terms.
               </p>
-              <Button
-                variant="outline"
+              <button
                 onClick={() => setSearchQuery("")}
-                className="bg-[var(--background)] hover:bg-[var(--hover)] border-[var(--border)] rounded-sm"
+                className="px-4 py-2 rounded-sm font-medium hover:shadow-lg transition-all duration-200"
+                style={{
+                  background: 'linear-gradient(to bottom right, var(--cityscape-yellow), var(--cityscape-yellow-dark))',
+                  color: 'var(--foreground)',
+                }}
               >
                 Clear search
-              </Button>
+              </button>
             </div>
           )}
         </div>

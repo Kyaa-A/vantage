@@ -15,10 +15,7 @@ export function AdminDashboardSkeleton() {
             <div className="relative z-10">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <Skeleton className="w-2 h-8 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-sm" />
-                    <Skeleton className="h-9 w-96" />
-                  </div>
+                  <Skeleton className="h-9 w-96" />
                   <div className="flex items-center gap-8">
                     <Skeleton className="h-8 w-48" />
                     <Skeleton className="h-8 w-48" />
@@ -94,10 +91,7 @@ export function AdminDashboardSkeleton() {
             <div className="space-y-8">
               {/* System Status Card Skeleton */}
               <div className="bg-[var(--card)] border border-[var(--border)] rounded-sm shadow-lg p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <Skeleton className="w-1 h-6 bg-gradient-to-b from-green-500 to-emerald-600 rounded-sm" />
-                  <Skeleton className="h-6 w-32" />
-                </div>
+                <Skeleton className="h-6 w-32 mb-4" />
                 <div className="space-y-5">
                   {Array.from({ length: 3 }).map((_, i) => (
                     <div key={i} className="flex items-center justify-between p-4 bg-[var(--hover)] rounded-sm">
@@ -110,10 +104,7 @@ export function AdminDashboardSkeleton() {
 
               {/* Quick Actions Card Skeleton */}
               <div className="bg-[var(--card)] border border-[var(--border)] rounded-sm shadow-lg p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <Skeleton className="w-1 h-6 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-sm" />
-                  <Skeleton className="h-6 w-32" />
-                </div>
+                <Skeleton className="h-6 w-32 mb-4" />
                 <div className="space-y-4">
                   {Array.from({ length: 3 }).map((_, i) => (
                     <div key={i} className="p-5 rounded-sm bg-[var(--hover)] border border-[var(--border)]">

@@ -192,7 +192,7 @@ export function IndicatorAccordion({
                 onChange={(data: Record<string, any>) => {
                   if (!isLocked && indicator.id && updateAssessmentData) {
                     // Determine completion locally based on required answers
-                    const required = indicator.formSchema?.required || [];
+                    const required = (indicator.formSchema as any)?.required || [];
                     const allAnswered = required.every((f: string) =>
                       typeof data[f] === 'string' && ['yes','no','na'].includes(String(data[f]))
                     );

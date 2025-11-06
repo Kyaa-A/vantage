@@ -98,16 +98,13 @@ export default function BBIsPage() {
 
             <div className="relative z-10">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                <div className="space-y-3">
+                <div>
                   <h1 className="text-3xl font-bold text-[var(--foreground)]">
                     BBI{" "}
                     <span className="bg-gradient-to-r from-[var(--cityscape-yellow)] to-[var(--cityscape-yellow-dark)] bg-clip-text text-transparent">
                       Configuration
                     </span>
                   </h1>
-                  <p className="text-sm text-[var(--text-secondary)]">
-                    Manage Barangay-based Institutions (BBIs) and their functionality mapping rules.
-                  </p>
                 </div>
 
                 {/* Enhanced Quick Stats */}

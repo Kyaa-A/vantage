@@ -71,8 +71,7 @@ export default function ChangePasswordPage() {
         setMustChangePassword(false);
 
         // Redirect to appropriate dashboard based on user role
-        const isAdmin =
-          user?.role === "SUPERADMIN" || user?.role === "MLGOO_DILG";
+        const isAdmin = user?.role === "MLGOO_DILG";
         const dashboardPath = isAdmin ? "/mlgoo/dashboard" : "/blgu/dashboard";
         router.replace(dashboardPath);
       },

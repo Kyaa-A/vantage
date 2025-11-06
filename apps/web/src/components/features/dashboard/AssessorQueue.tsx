@@ -54,16 +54,13 @@ export function AssessorQueue({ data }: AssessorQueueProps) {
     <Card className="bg-[var(--card)] border border-[var(--border)] shadow-lg hover:shadow-xl transition-shadow duration-300">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-1 h-6 bg-gradient-to-b from-purple-500 to-violet-600 rounded-sm"></div>
-            <div>
-              <CardTitle className="text-xl font-bold text-[var(--foreground)]">
-                Assessor Queue
-              </CardTitle>
-              <p className="text-sm text-[var(--muted-foreground)] mt-1">
-                Current workload and performance metrics
-              </p>
-            </div>
+          <div>
+            <CardTitle className="text-xl font-bold text-[var(--foreground)]">
+              Assessor Queue
+            </CardTitle>
+            <p className="text-sm text-[var(--muted-foreground)] mt-1">
+              Current workload and performance metrics
+            </p>
           </div>
           <div className="bg-[var(--card)]/80 backdrop-blur-sm rounded-sm p-4 text-center shadow-sm border border-[var(--border)]">
             <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-violet-600 bg-clip-text text-transparent">

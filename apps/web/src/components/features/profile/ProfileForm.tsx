@@ -132,10 +132,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
         <Card className="relative overflow-hidden bg-[var(--card)] border border-[var(--border)] shadow-lg hover:shadow-xl transition-all duration-300 h-full">
           
           <CardHeader className="relative z-10 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-1 h-6 bg-gradient-to-b from-[var(--cityscape-yellow)] to-[var(--cityscape-yellow-dark)] rounded-sm"></div>
-              <CardTitle className="text-xl font-semibold text-[var(--foreground)]">User Details</CardTitle>
-            </div>
+            <CardTitle className="text-xl font-semibold text-[var(--foreground)]">User Details</CardTitle>
             <CardDescription className="text-[var(--text-secondary)]">
               Your account information and assigned role details
             </CardDescription>
@@ -168,7 +165,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
                    </div>
                  </div>
                  
-                 {user?.role !== 'SUPERADMIN' && user?.role !== 'AREA_ASSESSOR' && (
+                 {user?.role !== 'MLGOO_DILG' && user?.role !== 'ASSESSOR' && (
                    <div className="space-y-3">
                      <label className="text-sm font-semibold text-[var(--foreground)] flex items-center gap-2">
                        <MapPin className="h-4 w-4 text-[var(--cityscape-yellow)]" />
@@ -182,7 +179,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
                    </div>
                  )}
                  
-                 {user?.role === 'AREA_ASSESSOR' && (
+                 {user?.role === 'ASSESSOR' && (
                    <div className="space-y-3">
                      <label className="text-sm font-semibold text-[var(--foreground)] flex items-center gap-2">
                        <MapPin className="h-4 w-4 text-[var(--cityscape-yellow)]" />
@@ -215,7 +212,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
                    </label>
                    <div className="bg-[var(--hover)] backdrop-blur-sm rounded-sm p-4 border border-[var(--border)]">
                      <div className="text-base font-medium text-[var(--text-secondary)]">
-                       {user?.role === 'AREA_ASSESSOR' ? 'Area Assessor' : user?.role ? user.role.replace(/_/g, ' ') : 'N/A'}
+                       {user?.role === 'ASSESSOR' ? 'Area Assessor' : user?.role ? user.role.replace(/_/g, ' ') : 'N/A'}
                      </div>
                    </div>
                  </div>
@@ -237,10 +234,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
                  <Card className="relative overflow-hidden bg-[var(--card)] border border-[var(--border)] shadow-lg hover:shadow-xl transition-all duration-300">
           
           <CardHeader className="relative z-10 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-1 h-6 bg-gradient-to-b from-[var(--cityscape-yellow)] to-[var(--cityscape-yellow-dark)] rounded-sm"></div>
-              <CardTitle className="text-lg font-semibold text-[var(--foreground)]">Change Password</CardTitle>
-            </div>
+            <CardTitle className="text-lg font-semibold text-[var(--foreground)]">Change Password</CardTitle>
             <CardDescription className="text-[var(--text-secondary)]">
               Update your password to keep your account secure
             </CardDescription>

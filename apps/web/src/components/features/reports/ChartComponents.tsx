@@ -1,20 +1,20 @@
+import { BarChartData, PieChartData, TrendData } from "@vantage/shared";
 import {
-  BarChart,
   Bar,
-  PieChart,
-  Pie,
+  BarChart,
+  CartesianGrid,
   Cell,
-  LineChart,
+  Legend,
   Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  TooltipProps,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  TooltipProps,
 } from "recharts";
-import { BarChartData, PieChartData, TrendData } from "@vantage/shared";
 
 // Color constants for consistent theming
 const COLORS = {
@@ -28,7 +28,7 @@ interface AreaBreakdownBarChartProps {
 }
 
 // Custom tooltip component for better formatting
-const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string> & { payload?: Array<{ dataKey?: string; value?: number }>; label?: string }) => {
   if (active && payload && payload.length) {
     const passedData = payload.find((p) => p.dataKey === "passed");
     const failedData = payload.find((p) => p.dataKey === "failed");
@@ -177,7 +177,7 @@ const renderCustomLabel = ({
 };
 
 // Custom tooltip for pie chart
-const PieTooltip = ({ active, payload }: TooltipProps<number, string>) => {
+const PieTooltip = ({ active, payload }: TooltipProps<number, string> & { payload?: Array<{ payload?: PieChartData }> }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload as PieChartData;
     return (
@@ -207,11 +207,11 @@ export function ComplianceStatusPieChart({ data }: ComplianceStatusPieChartProps
     <ResponsiveContainer width="100%" height={300}>
       <PieChart aria-label="Pie chart showing compliance status distribution">
         <Pie
-          data={data}
+          data={data as any}
           cx="50%"
           cy="50%"
           labelLine={false}
-          label={renderCustomLabel}
+          label={renderCustomLabel as any}
           outerRadius={100}
           fill="#8884d8"
           dataKey="count"
@@ -245,7 +245,7 @@ interface TrendLineChartProps {
 }
 
 // Custom tooltip for line chart
-const TrendTooltip = ({ active, payload }: TooltipProps<number, string>) => {
+const TrendTooltip = ({ active, payload }: TooltipProps<number, string> & { payload?: Array<{ payload?: TrendData; value?: number }> }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload as TrendData;
     return (

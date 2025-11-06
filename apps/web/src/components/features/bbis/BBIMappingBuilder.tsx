@@ -110,7 +110,7 @@ export default function BBIMappingBuilder({
     try {
       const result = await testCalculationMutation.mutateAsync({
         data: {
-          mapping_rules: mappingRules,
+          mapping_rules: mappingRules as any,
           indicator_statuses: sampleStatuses,
         },
       });

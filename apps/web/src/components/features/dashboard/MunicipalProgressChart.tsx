@@ -35,16 +35,13 @@ export function MunicipalProgressChart({ data, totalBarangays }: MunicipalProgre
   return (
     <Card className="bg-[var(--card)] border border-[var(--border)] shadow-lg hover:shadow-xl transition-shadow duration-300">
       <CardHeader className="pb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-1 h-6 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-sm"></div>
-          <div>
-            <CardTitle className="text-xl font-bold text-[var(--foreground)]">
-              Live Status of All Barangays
-            </CardTitle>
-            <p className="text-sm text-[var(--muted-foreground)] mt-1">
-              Distribution of {totalBarangays} barangays across assessment stages
-            </p>
-          </div>
+        <div>
+          <CardTitle className="text-xl font-bold text-[var(--foreground)]">
+            Live Status of All Barangays
+          </CardTitle>
+          <p className="text-sm text-[var(--muted-foreground)] mt-1">
+            Distribution of {totalBarangays} barangays across assessment stages
+          </p>
         </div>
       </CardHeader>
       <CardContent>

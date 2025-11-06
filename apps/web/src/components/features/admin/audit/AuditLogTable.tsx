@@ -1,7 +1,5 @@
 'use client';
 
-import * as React from 'react';
-import { useAuditLogs } from '@/hooks/useAuditLogs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,17 +10,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useAuditLogs } from '@/hooks/useAuditLogs';
+import type { AuditLogResponse } from '@vantage/shared';
 import {
-  Calendar,
-  User,
-  FileText,
   Activity,
-  Filter,
+  Calendar,
   ChevronLeft,
   ChevronRight,
+  FileText,
+  Filter,
   Globe,
+  User,
 } from 'lucide-react';
-import type { AuditLogResponse } from '@vantage/shared';
+import * as React from 'react';
 
 /**
  * Audit Log Table Component

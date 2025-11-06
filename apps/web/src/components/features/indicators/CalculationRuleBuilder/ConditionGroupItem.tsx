@@ -189,7 +189,7 @@ function RuleDisplay({
   // Helper to get field label from form_schema
   const getFieldLabel = (fieldId: string): string => {
     if (!formSchema) return fieldId;
-    const field = formSchema.input_fields?.find((f) => f.field_id === fieldId);
+    const field = (formSchema as any).input_fields?.find((f: any) => f.field_id === fieldId);
     return field?.label || fieldId;
   };
 

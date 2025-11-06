@@ -164,12 +164,9 @@ export default function BLGUDashboardPage() {
             <div className="space-y-6">
               {/* Quick Actions Card with enhanced design */}
               <div className="bg-[var(--card)] rounded-sm shadow-lg border border-[var(--border)] p-6 hover:shadow-xl transition-shadow duration-300">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-1 h-6 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-sm"></div>
-                  <h3 className="text-lg font-semibold text-[var(--foreground)]">
-                    Quick Actions
-                  </h3>
-                </div>
+                <h3 className="text-lg font-semibold text-[var(--foreground)] mb-4">
+                  Quick Actions
+                </h3>
                 <div className="space-y-3">
                   <button
                     onClick={() => router.push("/blgu/assessments")}
@@ -198,12 +195,9 @@ export default function BLGUDashboardPage() {
 
               {/* Enhanced Assessment Summary */}
               <div className="bg-[var(--card)] rounded-sm shadow-lg border border-[var(--border)] p-6 hover:shadow-xl transition-shadow duration-300">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-1 h-6 bg-gradient-to-b from-[var(--cityscape-yellow)] to-[var(--cityscape-yellow-dark)] rounded-sm"></div>
-                  <h3 className="text-lg font-semibold text-[var(--foreground)]">
-                    Assessment Summary
-                  </h3>
-                </div>
+                <h3 className="text-lg font-semibold text-[var(--foreground)] mb-4">
+                  Assessment Summary
+                </h3>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center p-3 bg-[var(--hover)] rounded-sm border border-[var(--border)]">
                     <span className="text-sm font-medium text-[var(--text-secondary)]">
@@ -254,12 +248,9 @@ export default function BLGUDashboardPage() {
 
               {/* New: Recent Activity Card */}
               <div className="bg-[var(--card)] rounded-sm shadow-lg border border-[var(--border)] p-6 hover:shadow-xl transition-shadow duration-300">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-1 h-6 bg-gradient-to-b from-[var(--cityscape-yellow)] to-[var(--cityscape-yellow-dark)] rounded-sm"></div>
-                  <h3 className="text-lg font-semibold text-[var(--foreground)]">
-                    Recent Activity
-                  </h3>
-                </div>
+                <h3 className="text-lg font-semibold text-[var(--foreground)] mb-4">
+                  Recent Activity
+                </h3>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3 p-3 bg-[var(--hover)] rounded-sm border border-[var(--border)]">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>

@@ -88,7 +88,7 @@ export function DeadlineOverrideModal({
   const filteredBarangays = React.useMemo(() => {
     if (!barangays) return [];
     if (!barangaySearch) return barangays;
-    return barangays.filter((b: any) =>
+    return (barangays as any).filter((b: any) =>
       b.name.toLowerCase().includes(barangaySearch.toLowerCase())
     );
   }, [barangays, barangaySearch]);
@@ -194,7 +194,7 @@ export function DeadlineOverrideModal({
   };
 
   // Get selected barangay and indicators for display
-  const selectedBarangay = barangays?.find((b: any) => b.id === formData.barangayId);
+  const selectedBarangay = (barangays as any)?.find((b: any) => b.id === formData.barangayId);
   const selectedIndicators = activeIndicators.filter((i: any) =>
     formData.indicatorIds.includes(i.id)
   );

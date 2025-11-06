@@ -207,10 +207,50 @@ export default function AdminSubmissionsPage() {
     <div className="min-h-screen bg-[var(--background)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="space-y-8">
+          {/* Enhanced Header Section */}
+          <div className="relative overflow-hidden bg-[var(--card)] rounded-sm shadow-lg border border-[var(--border)] p-8">
+            {/* Decorative background elements */}
+            <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-100/40 to-indigo-100/20 rounded-full -translate-y-20 translate-x-20"></div>
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-purple-100/30 to-pink-100/20 rounded-full translate-y-16 -translate-x-16"></div>
+
+            <div className="relative z-10">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                <div>
+                  <h1 className="text-3xl font-bold text-[var(--foreground)]">
+                    Assessment{" "}
+                    <span className="bg-gradient-to-r from-[var(--cityscape-yellow)] to-[var(--cityscape-yellow-dark)] bg-clip-text text-transparent">
+                      Submissions
+                    </span>
+                  </h1>
+                </div>
+
+                {/* Quick Stats */}
+                <div className="flex items-center gap-6">
+                  <div className="bg-[var(--card)]/80 backdrop-blur-sm rounded-sm p-4 text-center shadow-sm border border-[var(--border)]">
+                    <div className="text-3xl font-bold text-[var(--foreground)]">
+                      {filteredSubmissions.length}
+                    </div>
+                    <div className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">
+                      Submissions
+                    </div>
+                  </div>
+                  <div className="bg-[var(--card)]/80 backdrop-blur-sm rounded-sm p-4 text-center shadow-sm border border-[var(--border)]">
+                    <div className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                      {submissionsData.filter(s => s.currentStatus === "Validated").length}
+                    </div>
+                    <div className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">
+                      Validated
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Filters & Search */}
           <div className="bg-[var(--card)] border border-[var(--border)] rounded-sm shadow-lg p-6">
             <div className="flex items-center gap-3 mb-6">
-              <Filter className="h-5 w-5" style={{ color: 'var(--kpi-blue-text)' }} />
+              <Filter className="h-5 w-5" style={{ color: 'var(--cityscape-yellow)' }} />
               <h2 className="text-lg font-semibold text-[var(--foreground)]">
                 Filters & Search
               </h2>
@@ -232,7 +272,7 @@ export default function AdminSubmissionsPage() {
                       placeholder="Search by Barangay Name"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 h-10 bg-[var(--background)] border-[var(--border)] rounded-sm focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-200"
+                      className="pl-10 h-10 bg-[var(--background)] border-[var(--border)] rounded-sm focus:border-[var(--cityscape-yellow)] focus:ring-[var(--cityscape-yellow)]/20 transition-all duration-200"
                     />
                   </div>
                 </div>
@@ -250,43 +290,43 @@ export default function AdminSubmissionsPage() {
                       value={statusFilter}
                       onValueChange={setStatusFilter}
                     >
-                      <SelectTrigger className="h-10 bg-[var(--background)] border-[var(--border)] rounded-sm focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-200">
+                      <SelectTrigger className="h-10 bg-[var(--background)] border-[var(--border)] rounded-sm focus:border-[var(--cityscape-yellow)] focus:ring-[var(--cityscape-yellow)]/20 transition-all duration-200">
                         <SelectValue placeholder="All Statuses" />
                       </SelectTrigger>
                       <SelectContent className="bg-[var(--card)] border border-[var(--border)] shadow-xl rounded-sm z-50">
                         <SelectItem
                           value="all"
-                          className="text-[var(--foreground)] hover:bg-[var(--kpi-blue-from)] cursor-pointer px-3 py-2"
+                          className="text-[var(--foreground)] hover:bg-[var(--cityscape-yellow)]/10 cursor-pointer px-3 py-2"
                         >
                           All Statuses
                         </SelectItem>
                         <SelectItem
                           value="submitted"
-                          className="text-[var(--foreground)] hover:bg-[var(--kpi-blue-from)] cursor-pointer px-3 py-2"
+                          className="text-[var(--foreground)] hover:bg-[var(--cityscape-yellow)]/10 cursor-pointer px-3 py-2"
                         >
                           Submitted for Review
                         </SelectItem>
                         <SelectItem
                           value="progress"
-                          className="text-[var(--foreground)] hover:bg-[var(--kpi-blue-from)] cursor-pointer px-3 py-2"
+                          className="text-[var(--foreground)] hover:bg-[var(--cityscape-yellow)]/10 cursor-pointer px-3 py-2"
                         >
                           In Progress
                         </SelectItem>
                         <SelectItem
                           value="finalized"
-                          className="text-[var(--foreground)] hover:bg-[var(--kpi-blue-from)] cursor-pointer px-3 py-2"
+                          className="text-[var(--foreground)] hover:bg-[var(--cityscape-yellow)]/10 cursor-pointer px-3 py-2"
                         >
                           Finalized
                         </SelectItem>
                         <SelectItem
                           value="rework"
-                          className="text-[var(--foreground)] hover:bg-[var(--kpi-blue-from)] cursor-pointer px-3 py-2"
+                          className="text-[var(--foreground)] hover:bg-[var(--cityscape-yellow)]/10 cursor-pointer px-3 py-2"
                         >
                           Needs Rework
                         </SelectItem>
                         <SelectItem
                           value="validated"
-                          className="text-[var(--foreground)] hover:bg-[var(--kpi-blue-from)] cursor-pointer px-3 py-2"
+                          className="text-[var(--foreground)] hover:bg-[var(--cityscape-yellow)]/10 cursor-pointer px-3 py-2"
                         >
                           Validated
                         </SelectItem>
@@ -300,31 +340,31 @@ export default function AdminSubmissionsPage() {
                       Filter by Governance Area
                     </label>
                     <Select value={areaFilter} onValueChange={setAreaFilter}>
-                      <SelectTrigger className="h-10 bg-[var(--background)] border-[var(--border)] rounded-sm focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-200">
+                      <SelectTrigger className="h-10 bg-[var(--background)] border-[var(--border)] rounded-sm focus:border-[var(--cityscape-yellow)] focus:ring-[var(--cityscape-yellow)]/20 transition-all duration-200">
                         <SelectValue placeholder="All Areas" />
                       </SelectTrigger>
                       <SelectContent className="bg-[var(--card)] border border-[var(--border)] shadow-xl rounded-sm z-50">
                         <SelectItem
                           value="all"
-                          className="text-[var(--foreground)] hover:bg-[var(--kpi-blue-from)] cursor-pointer px-3 py-2"
+                          className="text-[var(--foreground)] hover:bg-[var(--cityscape-yellow)]/10 cursor-pointer px-3 py-2"
                         >
                           All Areas
                         </SelectItem>
                         <SelectItem
                           value="financial"
-                          className="text-[var(--foreground)] hover:bg-[var(--kpi-blue-from)] cursor-pointer px-3 py-2"
+                          className="text-[var(--foreground)] hover:bg-[var(--cityscape-yellow)]/10 cursor-pointer px-3 py-2"
                         >
                           Financial Administration
                         </SelectItem>
                         <SelectItem
                           value="disaster"
-                          className="text-[var(--foreground)] hover:bg-[var(--kpi-blue-from)] cursor-pointer px-3 py-2"
+                          className="text-[var(--foreground)] hover:bg-[var(--cityscape-yellow)]/10 cursor-pointer px-3 py-2"
                         >
                           Disaster Preparedness
                         </SelectItem>
                         <SelectItem
                           value="safety"
-                          className="text-[var(--foreground)] hover:bg-[var(--kpi-blue-from)] cursor-pointer px-3 py-2"
+                          className="text-[var(--foreground)] hover:bg-[var(--cityscape-yellow)]/10 cursor-pointer px-3 py-2"
                         >
                           Safety & Peace Order
                         </SelectItem>
@@ -341,25 +381,25 @@ export default function AdminSubmissionsPage() {
                       value={assessorFilter}
                       onValueChange={setAssessorFilter}
                     >
-                      <SelectTrigger className="h-10 bg-[var(--background)] border-[var(--border)] rounded-sm focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-200">
+                      <SelectTrigger className="h-10 bg-[var(--background)] border-[var(--border)] rounded-sm focus:border-[var(--cityscape-yellow)] focus:ring-[var(--cityscape-yellow)]/20 transition-all duration-200">
                         <SelectValue placeholder="All Assessors" />
                       </SelectTrigger>
                       <SelectContent className="bg-[var(--card)] border border-[var(--border)] shadow-xl rounded-sm z-50">
                         <SelectItem
                           value="all"
-                          className="text-[var(--foreground)] hover:bg-[var(--kpi-blue-from)] cursor-pointer px-3 py-2"
+                          className="text-[var(--foreground)] hover:bg-[var(--cityscape-yellow)]/10 cursor-pointer px-3 py-2"
                         >
                           All Assessors
                         </SelectItem>
                         <SelectItem
                           value="john"
-                          className="text-[var(--foreground)] hover:bg-[var(--kpi-blue-from)] cursor-pointer px-3 py-2"
+                          className="text-[var(--foreground)] hover:bg-[var(--cityscape-yellow)]/10 cursor-pointer px-3 py-2"
                         >
                           John Doe
                         </SelectItem>
                         <SelectItem
                           value="jane"
-                          className="text-[var(--foreground)] hover:bg-[var(--kpi-blue-from)] cursor-pointer px-3 py-2"
+                          className="text-[var(--foreground)] hover:bg-[var(--cityscape-yellow)]/10 cursor-pointer px-3 py-2"
                         >
                           Jane Smith
                         </SelectItem>
@@ -382,38 +422,38 @@ export default function AdminSubmissionsPage() {
           <div className="bg-[var(--card)] border border-[var(--border)] rounded-sm shadow-lg overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-[var(--hover)] border-b border-[var(--border)]">
+                <thead className="bg-[var(--muted)]/20 border-b border-[var(--border)]">
                   <tr>
                     <th className="px-6 py-4 text-left">
-                      <div className="flex items-center gap-2 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wide">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
                         Barangay Name
                         <ChevronDown className="h-4 w-4" />
                       </div>
                     </th>
                     <th className="px-6 py-4 text-left">
-                      <div className="flex items-center gap-2 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wide">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
                         Overall Progress
                         <ChevronDown className="h-4 w-4" />
                       </div>
                     </th>
                     <th className="px-6 py-4 text-left">
-                      <div className="flex items-center gap-2 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wide">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
                         Current Status
                         <ChevronDown className="h-4 w-4" />
                       </div>
                     </th>
                     <th className="px-6 py-4 text-left">
-                      <div className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wide">
+                      <div className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
                         Assigned Assessors
                       </div>
                     </th>
                     <th className="px-6 py-4 text-left">
-                      <div className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wide">
+                      <div className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
                         Last Updated
                       </div>
                     </th>
                     <th className="px-6 py-4 text-left">
-                      <div className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wide">
+                      <div className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
                         Actions
                       </div>
                     </th>
@@ -429,7 +469,7 @@ export default function AdminSubmissionsPage() {
                     return (
                       <tr
                         key={submission.id}
-                        className="hover:bg-[var(--hover)] transition-colors"
+                        className="hover:bg-[var(--cityscape-yellow)]/5 transition-colors"
                       >
                         <td className="px-6 py-4">
                           <div className="text-sm font-medium text-[var(--foreground)]">
@@ -495,7 +535,7 @@ export default function AdminSubmissionsPage() {
                               variant="outline"
                               size="sm"
                               onClick={() => handleViewDetails(submission)}
-                              className="bg-[var(--background)] hover:bg-[var(--kpi-blue-from)] border-[var(--border)] text-[var(--foreground)] rounded-sm font-medium transition-colors duration-200"
+                              className="bg-[var(--background)] hover:bg-[var(--cityscape-yellow)]/10 hover:border-[var(--cityscape-yellow)] border-[var(--border)] text-[var(--foreground)] rounded-sm font-medium transition-all duration-200"
                             >
                               <Eye className="h-4 w-4 mr-1" />
                               View
@@ -504,7 +544,7 @@ export default function AdminSubmissionsPage() {
                               variant="outline"
                               size="sm"
                               onClick={() => handleSendReminder(submission)}
-                              className="bg-[var(--background)] hover:bg-[var(--analytics-warning-bg)] border-[var(--border)] text-[var(--foreground)] rounded-sm font-medium transition-colors duration-200"
+                              className="bg-[var(--background)] hover:bg-[var(--cityscape-yellow)]/10 hover:border-[var(--cityscape-yellow)] border-[var(--border)] text-[var(--foreground)] rounded-sm font-medium transition-all duration-200"
                             >
                               <Send className="h-4 w-4 mr-1" />
                               Remind

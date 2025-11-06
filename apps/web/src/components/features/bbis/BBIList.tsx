@@ -262,7 +262,7 @@ export default function BBIList({
                           Active
                         </Badge>
                       ) : (
-                        <Badge variant="secondary">
+                        <Badge variant="default" className="bg-red-500/10 text-red-700 border-red-500/20">
                           Inactive
                         </Badge>
                       )}

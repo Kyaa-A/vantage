@@ -34,32 +34,37 @@ export default function NewBBIPage() {
   return (
     <div className="min-h-screen bg-[var(--background)]">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Header */}
-        <div className="mb-8">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to BBIs
-          </button>
-          <h1 className="text-3xl font-bold text-[var(--foreground)]">
-            Create New{" "}
-            <span className="bg-gradient-to-r from-[var(--cityscape-yellow)] to-[var(--cityscape-yellow-dark)] bg-clip-text text-transparent">
-              BBI
-            </span>
-          </h1>
-          <p className="text-[var(--muted-foreground)] mt-2">
-            Create a new Barangay-based Institution configuration. You can configure mapping rules after creation.
-          </p>
-        </div>
+        <div className="space-y-8">
+          {/* Enhanced Header Section */}
+          <div className="relative overflow-hidden bg-[var(--card)] rounded-sm shadow-lg border border-[var(--border)] p-8">
+            {/* Decorative background elements */}
+            <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-100/40 to-indigo-100/20 rounded-full -translate-y-20 translate-x-20"></div>
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-purple-100/30 to-pink-100/20 rounded-full translate-y-16 -translate-x-16"></div>
 
-        {/* Form */}
-        <BBIForm
-          onSubmit={handleSubmit}
-          onCancel={handleCancel}
-          isSubmitting={createBBIMutation.isPending}
-        />
+            <div className="relative z-10">
+              <button
+                onClick={() => router.back()}
+                className="flex items-center gap-1.5 px-3 py-1.5 mb-4 rounded-sm text-sm bg-[var(--muted)]/20 border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--foreground)] hover:bg-[var(--cityscape-yellow)]/10 hover:border-[var(--cityscape-yellow)] transition-all duration-200"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                <span>Back to BBIs</span>
+              </button>
+              <h1 className="text-3xl font-bold text-[var(--foreground)]">
+                Create New{" "}
+                <span className="bg-gradient-to-r from-[var(--cityscape-yellow)] to-[var(--cityscape-yellow-dark)] bg-clip-text text-transparent">
+                  BBI
+                </span>
+              </h1>
+            </div>
+          </div>
+
+          {/* Form */}
+          <BBIForm
+            onSubmit={handleSubmit as any}
+            onCancel={handleCancel}
+            isSubmitting={createBBIMutation.isPending}
+          />
+        </div>
       </div>
     </div>
   );

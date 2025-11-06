@@ -167,7 +167,7 @@ export function DeadlineAuditLog() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Barangays</SelectItem>
-                {barangays?.map((barangay: any) => (
+                {(barangays as any)?.map((barangay: any) => (
                   <SelectItem key={barangay.id} value={barangay.id.toString()}>
                     {barangay.name}
                   </SelectItem>

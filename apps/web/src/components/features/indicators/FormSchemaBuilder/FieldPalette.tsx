@@ -25,18 +25,14 @@ const FIELD_TYPES = [
         label: 'Checkbox Group',
         icon: CheckSquare,
         description: 'Multiple selection with checkboxes',
-        color: 'text-blue-600',
-        bgColor: 'bg-blue-50 hover:bg-blue-100',
-        borderColor: 'border-blue-200',
+        colorStyle: { backgroundColor: 'rgb(59, 130, 246, 0.1)', color: 'rgb(59, 130, 246)', borderColor: 'rgb(59, 130, 246, 0.3)' },
       },
       {
         type: 'radio_button',
         label: 'Radio Button',
         icon: Circle,
         description: 'Single selection with radio buttons',
-        color: 'text-purple-600',
-        bgColor: 'bg-purple-50 hover:bg-purple-100',
-        borderColor: 'border-purple-200',
+        colorStyle: { backgroundColor: 'rgb(147, 51, 234, 0.1)', color: 'rgb(147, 51, 234)', borderColor: 'rgb(147, 51, 234, 0.3)' },
       },
     ],
   },
@@ -49,36 +45,28 @@ const FIELD_TYPES = [
         label: 'Number Input',
         icon: Hash,
         description: 'Numeric input field with validation',
-        color: 'text-green-600',
-        bgColor: 'bg-green-50 hover:bg-green-100',
-        borderColor: 'border-green-200',
+        colorStyle: { backgroundColor: 'rgb(34, 197, 94, 0.1)', color: 'rgb(34, 197, 94)', borderColor: 'rgb(34, 197, 94, 0.3)' },
       },
       {
         type: 'text_input',
         label: 'Text Input',
         icon: Type,
         description: 'Single-line text field',
-        color: 'text-orange-600',
-        bgColor: 'bg-orange-50 hover:bg-orange-100',
-        borderColor: 'border-orange-200',
+        colorStyle: { backgroundColor: 'rgb(249, 115, 22, 0.1)', color: 'rgb(249, 115, 22)', borderColor: 'rgb(249, 115, 22, 0.3)' },
       },
       {
         type: 'text_area',
         label: 'Text Area',
         icon: AlignLeft,
         description: 'Multi-line text field',
-        color: 'text-yellow-600',
-        bgColor: 'bg-yellow-50 hover:bg-yellow-100',
-        borderColor: 'border-yellow-200',
+        colorStyle: { backgroundColor: 'rgb(234, 179, 8, 0.1)', color: 'rgb(234, 179, 8)', borderColor: 'rgb(234, 179, 8, 0.3)' },
       },
       {
         type: 'date_picker',
         label: 'Date Picker',
         icon: Calendar,
         description: 'Date selection field',
-        color: 'text-indigo-600',
-        bgColor: 'bg-indigo-50 hover:bg-indigo-100',
-        borderColor: 'border-indigo-200',
+        colorStyle: { backgroundColor: 'rgb(99, 102, 241, 0.1)', color: 'rgb(99, 102, 241)', borderColor: 'rgb(99, 102, 241, 0.3)' },
       },
     ],
   },
@@ -91,9 +79,7 @@ const FIELD_TYPES = [
         label: 'File Upload',
         icon: Upload,
         description: 'File upload field with MOV support',
-        color: 'text-red-600',
-        bgColor: 'bg-red-50 hover:bg-red-100',
-        borderColor: 'border-red-200',
+        colorStyle: { backgroundColor: 'rgb(239, 68, 68, 0.1)', color: 'rgb(239, 68, 68)', borderColor: 'rgb(239, 68, 68, 0.3)' },
       },
     ],
   },
@@ -190,7 +176,7 @@ export function FieldPalette() {
       {FIELD_TYPES.map((category) => (
         <div key={category.category}>
           {/* Category Header */}
-          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
             {category.category}
           </h4>
 
@@ -202,26 +188,24 @@ export function FieldPalette() {
                 <button
                   key={field.type}
                   onClick={() => handleAddField(field.type)}
-                  className={`
-                    group relative flex w-full items-center gap-3 rounded-lg border-2
-                    ${field.borderColor} ${field.bgColor}
-                    p-3 text-left transition-all duration-200
-                    hover:scale-105 hover:shadow-md
-                    active:scale-95
-                  `}
+                  className="group relative flex w-full items-center gap-3 rounded-lg border-2 p-3 text-left transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
+                  style={{
+                    backgroundColor: field.colorStyle.backgroundColor,
+                    borderColor: field.colorStyle.borderColor,
+                  }}
                   title={field.description}
                 >
                   {/* Icon */}
-                  <div className={`flex-shrink-0 ${field.color}`}>
+                  <div className="flex-shrink-0" style={{ color: field.colorStyle.color }}>
                     <Icon className="h-5 w-5" />
                   </div>
 
                   {/* Label */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-medium text-[var(--foreground)]">
                       {field.label}
                     </p>
-                    <p className="text-xs text-gray-500 truncate">
+                    <p className="text-xs text-[var(--text-secondary)] truncate">
                       {field.description}
                     </p>
                   </div>
@@ -229,7 +213,7 @@ export function FieldPalette() {
                   {/* Drag Handle (visual only for now, will be functional in 2.3.4) */}
                   <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                     <svg
-                      className="h-4 w-4 text-gray-400"
+                      className="h-4 w-4 text-[var(--muted-foreground)]"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"

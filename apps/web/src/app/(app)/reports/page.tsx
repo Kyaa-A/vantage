@@ -52,7 +52,7 @@ export default function ReportsPage() {
 
           <Alert variant="destructive">
             <AlertDescription>
-              Failed to load reports data: {error.message || "Unknown error"}
+              Failed to load reports data: {(error as any)?.message || "Unknown error"}
             </AlertDescription>
           </Alert>
         </div>
@@ -77,7 +77,7 @@ export default function ReportsPage() {
           {userRole === "MLGOO_DILG" && data && (
             <div className="flex-shrink-0">
               <ExportControls
-                tableData={data.table_data.rows}
+                tableData={data.table_data.rows || []}
                 currentFilters={{
                   cycle_id: filters.cycle_id,
                   start_date: filters.start_date,
@@ -95,7 +95,7 @@ export default function ReportsPage() {
         {/* Filter Controls */}
         <FilterControls
           filters={filters}
-          onFilterChange={handleFilterChange}
+          onFilterChange={handleFilterChange as any}
           userRole={userRole}
         />
 

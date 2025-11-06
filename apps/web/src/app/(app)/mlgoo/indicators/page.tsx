@@ -95,16 +95,13 @@ export default function IndicatorsPage() {
 
             <div className="relative z-10">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                <div className="space-y-3">
+                <div>
                   <h1 className="text-3xl font-bold text-[var(--foreground)]">
                     Indicator{" "}
                     <span className="bg-gradient-to-r from-[var(--cityscape-yellow)] to-[var(--cityscape-yellow-dark)] bg-clip-text text-transparent">
                       Management
                     </span>
                   </h1>
-                  <p className="text-sm text-[var(--text-secondary)]">
-                    Manage assessment indicators and their versioning across all governance areas.
-                  </p>
                 </div>
 
                 {/* Enhanced Quick Stats */}

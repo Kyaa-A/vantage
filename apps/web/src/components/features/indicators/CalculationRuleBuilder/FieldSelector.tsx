@@ -33,7 +33,7 @@ export function FieldSelector({
 }: FieldSelectorProps) {
   // Get available fields filtered by type
   const availableFields =
-    formSchema?.input_fields?.filter((field) => {
+    (formSchema as any)?.input_fields?.filter((field: any) => {
       if (fieldTypes.length === 0) return true;
       return fieldTypes.includes(field.field_type || '');
     }) || [];
@@ -78,7 +78,7 @@ export function FieldSelector({
           <SelectValue placeholder="Select a field" />
         </SelectTrigger>
         <SelectContent>
-          {availableFields.map((field) => (
+          {availableFields.map((field: any) => (
             <SelectItem key={field.field_id} value={field.field_id}>
               <div className="flex items-center gap-2">
                 <span className="font-medium">{field.label}</span>

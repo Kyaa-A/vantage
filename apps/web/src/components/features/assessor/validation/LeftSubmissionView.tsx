@@ -41,7 +41,7 @@ export function LeftSubmissionView({ assessment, expandedId, onToggle }: LeftSub
 
   const resolveMov = async (mov: AnyRecord): Promise<string> => {
     const key: string | null = mov?.storage_path || mov?.url || null;
-    if (!key) return;
+    if (!key) return "";
     try {
       const signed = await getSignedUrl(key, 300);
       if (signed) {
@@ -413,7 +413,7 @@ export function LeftSubmissionView({ assessment, expandedId, onToggle }: LeftSub
                       <div className="absolute inset-0 pointer-events-none">
                         {annotations.map((a, idx) => {
                           if (a.type !== 'rect') return null;
-                          const r = naturalToImageRect(a.rect as AnyRecord);
+                          const r = naturalToImageRect(a.rect as any);
                           return (
                             <div
                               key={a.id}

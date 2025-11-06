@@ -39,13 +39,13 @@ export function FieldPropertiesPanel() {
     return (
       <div className="flex h-full items-center justify-center p-6">
         <div className="text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-            <Settings2 className="h-6 w-6 text-gray-400" />
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[var(--muted)]/30">
+            <Settings2 className="h-6 w-6 text-[var(--muted-foreground)]" />
           </div>
-          <h3 className="mt-4 text-sm font-medium text-gray-900">
+          <h3 className="mt-4 text-sm font-medium text-[var(--foreground)]">
             No field selected
           </h3>
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-[var(--text-secondary)]">
             Click on a field in the canvas to edit its properties
           </p>
         </div>
@@ -57,9 +57,9 @@ export function FieldPropertiesPanel() {
   return (
     <div className="h-full overflow-y-auto">
       {/* Header */}
-      <div className="border-b border-gray-200 bg-white px-4 py-3 sticky top-0 z-10">
-        <h3 className="text-sm font-semibold text-gray-900">Field Properties</h3>
-        <p className="mt-1 text-xs text-gray-500">
+      <div className="border-b border-[var(--border)] bg-[var(--card)] px-4 py-3 sticky top-0 z-10">
+        <h3 className="text-sm font-semibold text-[var(--foreground)]">Field Properties</h3>
+        <p className="mt-1 text-xs text-[var(--text-secondary)]">
           {selectedField.field_type.replace('_', ' ')} • {selectedField.field_id}
         </p>
       </div>

@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { useFormBuilderStore, isDatePickerField } from '@/store/useFormBuilderStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { isDatePickerField, useFormBuilderStore } from '@/store/useFormBuilderStore';
 import type { DatePickerField } from '@vantage/shared';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 
 interface DatePickerPropertiesProps {
   fieldId: string;
@@ -43,8 +43,8 @@ export function DatePickerProperties({ fieldId }: DatePickerPropertiesProps) {
       field_id: field.field_id,
       required: field.required,
       help_text: field.help_text || '',
-      min_date: field.min_date,
-      max_date: field.max_date,
+      min_date: field.min_date ?? undefined,
+      max_date: field.max_date ?? undefined,
       default_to_today: field.default_to_today || false,
     },
   });
@@ -57,8 +57,9 @@ export function DatePickerProperties({ fieldId }: DatePickerPropertiesProps) {
   const min_date = watch('min_date');
   const max_date = watch('max_date');
 
-  const hasDateRangeError =
-    min_date && max_date && new Date(min_date) >= new Date(max_date);
+  const hasDateRangeError = Boolean(
+    min_date && max_date && new Date(min_date) >= new Date(max_date)
+  );
 
   const onSave = (data: FormValues) => {
     const updates: Partial<DatePickerField> = {

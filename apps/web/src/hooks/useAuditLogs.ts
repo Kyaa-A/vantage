@@ -1,5 +1,5 @@
+import type { AuditLogListResponse, GetAdminAuditLogsParams } from '@vantage/shared';
 import { useGetAdminAuditLogs } from '@vantage/shared';
-import type { GetAdminAuditLogsParams } from '@vantage/shared';
 
 /**
  * Custom hook for fetching audit logs with filtering
@@ -16,7 +16,7 @@ export function useAuditLogs(filters?: GetAdminAuditLogsParams) {
       // Refetch every 30 seconds to keep data fresh
       refetchInterval: 30000,
       // Keep previous data while fetching new data (for smooth pagination)
-      keepPreviousData: true,
-    },
+      placeholderData: (previousData: AuditLogListResponse | undefined) => previousData,
+    } as any,
   });
 }

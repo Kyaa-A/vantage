@@ -9,17 +9,15 @@
  * - Exporting override audit logs
  */
 
-import {
-  useGetAdminDeadlinesStatus,
-  usePostAdminDeadlinesOverride,
-  useGetAdminDeadlinesOverrides,
-  useGetAdminDeadlinesOverridesExport,
-} from '@vantage/shared';
 import type {
-  DeadlineStatusListResponse,
   DeadlineOverrideCreate,
-  DeadlineOverrideResponse,
   DeadlineOverrideListResponse,
+  DeadlineStatusListResponse
+} from '@vantage/shared';
+import {
+  useGetAdminDeadlinesOverrides,
+  useGetAdminDeadlinesStatus,
+  usePostAdminDeadlinesOverride
 } from '@vantage/shared';
 
 /**
@@ -68,7 +66,7 @@ export function useDeadlines(options?: {
       query: {
         // Refetch every 30 seconds for real-time updates
         refetchInterval: 30000,
-      },
+      } as any,
     }
   );
 
@@ -96,7 +94,7 @@ export function useDeadlines(options?: {
       query: {
         // Only fetch if at least one filter is provided or explicitly enabled
         enabled: true,
-      },
+      } as any,
     }
   );
 

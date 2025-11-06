@@ -139,44 +139,39 @@ export default function AdminDashboardPage() {
             <div className="space-y-6">
               {/* Real-time Status Card */}
               <div className="bg-[var(--card)] border border-[var(--border)] rounded-sm shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-1 h-6 bg-gradient-to-b from-green-500 to-emerald-600 rounded-sm"></div>
+                <div className="mb-4">
                   <h3 className="text-lg font-semibold text-[var(--foreground)]">System Status</h3>
                 </div>
                 <div className="space-y-4">
-                  <div 
-                    className="flex items-center justify-between p-3 rounded-sm"
-                    style={{ backgroundColor: 'var(--analytics-success-bg)' }}
+                  <div
+                    className="flex items-center justify-between p-3 rounded-sm bg-[var(--muted)]/20 border border-[var(--border)]"
                   >
                     <div className="flex items-center gap-2">
-                      <div 
+                      <div
                         className="w-2 h-2 rounded-full animate-pulse"
-                        style={{ backgroundColor: 'var(--analytics-success)' }}
+                        style={{ backgroundColor: 'var(--cityscape-yellow)' }}
                       ></div>
                       <span className="text-sm font-medium text-[var(--foreground)]">Live Data</span>
                     </div>
-                    <span 
+                    <span
                       className="text-xs font-semibold"
-                      style={{ color: 'var(--analytics-success-text-light)' }}
+                      style={{ color: 'var(--cityscape-yellow)' }}
                     >
                       ACTIVE
                     </span>
                   </div>
-                  <div 
-                    className="flex items-center justify-between p-3 rounded-sm"
-                    style={{ backgroundColor: 'var(--kpi-blue-from)' }}
+                  <div
+                    className="flex items-center justify-between p-3 rounded-sm bg-[var(--muted)]/20 border border-[var(--border)]"
                   >
                     <span className="text-sm font-medium text-[var(--foreground)]">Last Updated</span>
                     <span className="text-xs text-[var(--muted-foreground)]">{new Date().toLocaleTimeString()}</span>
                   </div>
-                  <div 
-                    className="flex items-center justify-between p-3 rounded-sm"
-                    style={{ backgroundColor: 'var(--kpi-purple-from)' }}
+                  <div
+                    className="flex items-center justify-between p-3 rounded-sm bg-[var(--muted)]/20 border border-[var(--border)]"
                   >
                     <span className="text-sm font-medium text-[var(--foreground)]">Auto-refresh</span>
-                    <span 
-                      className="text-xs font-semibold"
-                      style={{ color: 'var(--kpi-purple-text)' }}
+                    <span
+                      className="text-xs font-semibold text-[var(--text-secondary)]"
                     >
                       30s
                     </span>
@@ -186,43 +181,30 @@ export default function AdminDashboardPage() {
 
               {/* Quick Actions Card */}
               <div className="bg-[var(--card)] border border-[var(--border)] rounded-sm shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-1 h-6 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-sm"></div>
+                <div className="mb-4">
                   <h3 className="text-lg font-semibold text-[var(--foreground)]">Quick Actions</h3>
                 </div>
                 <div className="space-y-3">
-                  <button 
+                  <button
                     onClick={() => router.push('/mlgoo/submissions')}
-                    className="group w-full text-left p-4 rounded-sm border hover:shadow-md transition-all duration-200 hover:opacity-90"
-                    style={{
-                      backgroundColor: 'var(--kpi-blue-from)',
-                      borderColor: 'var(--kpi-blue-border, var(--border))'
-                    }}
+                    className="group w-full text-left p-4 rounded-sm border border-[var(--border)] bg-[var(--muted)]/20 hover:bg-[var(--cityscape-yellow)]/10 hover:border-[var(--cityscape-yellow)] hover:shadow-md transition-all duration-200"
                   >
                     <div className="font-semibold text-[var(--foreground)]">Review Submissions</div>
-                    <div className="text-sm text-[var(--muted-foreground)]">Check pending assessments</div>
+                    <div className="text-sm text-[var(--text-secondary)]">Check pending assessments</div>
                   </button>
-                  <button 
+                  <button
                     onClick={() => router.push('/mlgoo/reports')}
-                    className="group w-full text-left p-4 rounded-sm border hover:shadow-md transition-all duration-200 hover:opacity-90"
-                    style={{
-                      backgroundColor: 'var(--analytics-success-bg)',
-                      borderColor: 'var(--analytics-success-border)'
-                    }}
+                    className="group w-full text-left p-4 rounded-sm border border-[var(--border)] bg-[var(--muted)]/20 hover:bg-[var(--cityscape-yellow)]/10 hover:border-[var(--cityscape-yellow)] hover:shadow-md transition-all duration-200"
                   >
                     <div className="font-semibold text-[var(--foreground)]">Generate Reports</div>
-                    <div className="text-sm text-[var(--muted-foreground)]">View analytics & insights</div>
+                    <div className="text-sm text-[var(--text-secondary)]">View analytics & insights</div>
                   </button>
-                  <button 
+                  <button
                     onClick={() => router.push('/user-management')}
-                    className="group w-full text-left p-4 rounded-sm border hover:shadow-md transition-all duration-200 hover:opacity-90"
-                    style={{
-                      backgroundColor: 'var(--kpi-purple-from)',
-                      borderColor: 'var(--kpi-purple-border, var(--border))'
-                    }}
+                    className="group w-full text-left p-4 rounded-sm border border-[var(--border)] bg-[var(--muted)]/20 hover:bg-[var(--cityscape-yellow)]/10 hover:border-[var(--cityscape-yellow)] hover:shadow-md transition-all duration-200"
                   >
                     <div className="font-semibold text-[var(--foreground)]">Manage Users</div>
-                    <div className="text-sm text-[var(--muted-foreground)]">User accounts & permissions</div>
+                    <div className="text-sm text-[var(--text-secondary)]">User accounts & permissions</div>
                   </button>
                 </div>
               </div>

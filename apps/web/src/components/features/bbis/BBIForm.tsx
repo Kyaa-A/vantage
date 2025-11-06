@@ -93,18 +93,13 @@ export default function BBIForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="bg-[var(--card)] border border-[var(--border)] rounded-sm p-6 space-y-6">
-        <div className="space-y-2">
-          <h3 className="text-lg font-semibold text-[var(--foreground)]">
-            Basic Information
-          </h3>
-          <p className="text-sm text-[var(--muted-foreground)]">
-            Configure the basic details for this BBI
-          </p>
-        </div>
+        <h3 className="text-lg font-semibold text-[var(--foreground)]">
+          Basic Information
+        </h3>
 
         {/* BBI Name */}
         <div className="space-y-2">
-          <Label htmlFor="name">
+          <Label htmlFor="name" className="text-[var(--foreground)]">
             BBI Name <span className="text-red-500">*</span>
           </Label>
           <Input
@@ -114,7 +109,7 @@ export default function BBIForm({
               setForm({ ...form, name: e.target.value })
             }
             placeholder="e.g., Barangay Health Workers"
-            className={errors.name ? "border-red-500" : ""}
+            className={`bg-[var(--background)] border-[var(--border)] focus:border-[var(--cityscape-yellow)] focus:ring-[var(--cityscape-yellow)] transition-colors ${errors.name ? "border-red-500" : ""}`}
           />
           {errors.name && (
             <p className="text-sm text-red-500">{errors.name}</p>
@@ -123,7 +118,7 @@ export default function BBIForm({
 
         {/* Abbreviation */}
         <div className="space-y-2">
-          <Label htmlFor="abbreviation">
+          <Label htmlFor="abbreviation" className="text-[var(--foreground)]">
             Abbreviation <span className="text-red-500">*</span>
           </Label>
           <Input
@@ -133,7 +128,7 @@ export default function BBIForm({
               setForm({ ...form, abbreviation: e.target.value })
             }
             placeholder="e.g., BHW"
-            className={errors.abbreviation ? "border-red-500" : ""}
+            className={`bg-[var(--background)] border-[var(--border)] focus:border-[var(--cityscape-yellow)] focus:ring-[var(--cityscape-yellow)] transition-colors ${errors.abbreviation ? "border-red-500" : ""}`}
           />
           {errors.abbreviation && (
             <p className="text-sm text-red-500">{errors.abbreviation}</p>
@@ -142,7 +137,7 @@ export default function BBIForm({
 
         {/* Description */}
         <div className="space-y-2">
-          <Label htmlFor="description">Description</Label>
+          <Label htmlFor="description" className="text-[var(--foreground)]">Description</Label>
           <Textarea
             id="description"
             value={form.description}
@@ -151,13 +146,14 @@ export default function BBIForm({
             }
             placeholder="Describe the purpose and function of this BBI..."
             rows={3}
+            className="bg-[var(--background)] border-[var(--border)] focus:border-[var(--cityscape-yellow)] focus:ring-[var(--cityscape-yellow)] transition-colors"
           />
         </div>
 
         {/* Governance Area - Only for new BBIs */}
         {!isEditing && (
           <div className="space-y-2">
-            <Label htmlFor="governance_area">
+            <Label htmlFor="governance_area" className="text-[var(--foreground)]">
               Governance Area <span className="text-red-500">*</span>
             </Label>
             <Select
@@ -167,18 +163,22 @@ export default function BBIForm({
               }
             >
               <SelectTrigger
-                className={errors.governance_area_id ? "border-red-500" : ""}
+                className={`bg-[var(--background)] border-[var(--border)] focus:border-[var(--cityscape-yellow)] focus:ring-[var(--cityscape-yellow)] transition-colors ${errors.governance_area_id ? "border-red-500" : ""}`}
               >
                 <SelectValue placeholder="Select governance area" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-[var(--card)] border border-[var(--border)] shadow-lg rounded-sm">
                 {isLoadingGovernanceAreas ? (
                   <SelectItem value="0" disabled>
                     Loading...
                   </SelectItem>
                 ) : (
                   typedGovernanceAreas?.map((area) => (
-                    <SelectItem key={area.id} value={area.id.toString()}>
+                    <SelectItem
+                      key={area.id}
+                      value={area.id.toString()}
+                      className="text-[var(--foreground)] hover:bg-[var(--cityscape-yellow)]/10"
+                    >
                       {area.name}
                     </SelectItem>
                   ))
@@ -190,9 +190,6 @@ export default function BBIForm({
                 {errors.governance_area_id}
               </p>
             )}
-            <p className="text-sm text-[var(--muted-foreground)]">
-              Note: Governance area cannot be changed after creation
-            </p>
           </div>
         )}
       </div>
@@ -205,21 +202,23 @@ export default function BBIForm({
             variant="outline"
             onClick={onCancel}
             disabled={isSubmitting}
+            className="px-8 h-11 bg-[var(--background)] hover:bg-[var(--muted)]/20 border-[var(--border)] text-[var(--foreground)] rounded-sm font-semibold transition-all duration-200 flex items-center gap-2"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="h-4 w-4" />
             Cancel
           </Button>
         )}
         <Button
           type="submit"
           disabled={isSubmitting}
+          className="px-8 h-11 font-semibold hover:shadow-lg transition-all duration-200 flex items-center gap-2 rounded-sm"
           style={{
             background:
               "linear-gradient(to bottom right, var(--cityscape-yellow), var(--cityscape-yellow-dark))",
             color: "var(--foreground)",
           }}
         >
-          <Save className="h-4 w-4 mr-2" />
+          <Save className="h-4 w-4" />
           {isSubmitting ? "Saving..." : isEditing ? "Save Changes" : "Create BBI"}
         </Button>
       </div>

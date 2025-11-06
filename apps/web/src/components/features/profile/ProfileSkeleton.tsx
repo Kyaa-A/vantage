@@ -12,10 +12,7 @@ export function ProfileSkeleton() {
               <div className="relative overflow-hidden bg-[var(--card)] border border-[var(--border)] shadow-lg h-full rounded-sm">
                 {/* Card Header */}
                 <div className="relative z-10 p-6 pb-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Skeleton className="w-1 h-6 bg-gradient-to-b from-[var(--cityscape-yellow)] to-[var(--cityscape-yellow-dark)] rounded-sm" />
-                    <Skeleton className="h-6 w-32" />
-                  </div>
+                  <Skeleton className="h-6 w-32 mb-2" />
                   <Skeleton className="h-4 w-64" />
                 </div>
                 
@@ -107,10 +104,7 @@ export function ProfileSkeleton() {
               <div className="relative overflow-hidden bg-[var(--card)] border border-[var(--border)] shadow-lg rounded-sm">
                 {/* Card Header */}
                 <div className="relative z-10 p-6 pb-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Skeleton className="w-1 h-6 bg-gradient-to-b from-[var(--cityscape-yellow)] to-[var(--cityscape-yellow-dark)] rounded-sm" />
-                    <Skeleton className="h-6 w-36" />
-                  </div>
+                  <Skeleton className="h-6 w-36 mb-2" />
                   <Skeleton className="h-4 w-56" />
                 </div>
                 

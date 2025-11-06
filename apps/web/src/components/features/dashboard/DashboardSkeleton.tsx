@@ -14,10 +14,7 @@ export function DashboardSkeleton() {
             <div className="relative z-10">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <Skeleton className="w-2 h-8 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-sm" />
-                    <Skeleton className="h-9 w-96" />
-                  </div>
+                  <Skeleton className="h-9 w-96" />
                   <div className="flex items-center gap-6">
                     <Skeleton className="h-8 w-48" />
                     <Skeleton className="h-8 w-48" />
@@ -43,10 +40,7 @@ export function DashboardSkeleton() {
             <div className="xl:col-span-3 space-y-8">
               {/* Primary Status Card Skeleton */}
               <div className="bg-[var(--card)] border border-[var(--border)] rounded-sm shadow-lg p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <Skeleton className="w-1 h-6 bg-gradient-to-b from-green-500 to-emerald-600 rounded-sm" />
-                  <Skeleton className="h-6 w-32" />
-                </div>
+                <Skeleton className="h-6 w-32 mb-4" />
                 <div className="space-y-6">
                   <div className="flex items-center gap-3">
                     <Skeleton className="h-5 w-5" />
@@ -67,10 +61,7 @@ export function DashboardSkeleton() {
 
               {/* Action Required: Rework Section Skeleton */}
               <div className="bg-[var(--card)] border border-[var(--border)] rounded-sm shadow-lg p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <Skeleton className="w-1 h-6 bg-gradient-to-b from-orange-500 to-red-600 rounded-sm" />
-                  <Skeleton className="h-6 w-48" />
-                </div>
+                <Skeleton className="h-6 w-48 mb-4" />
                 <Skeleton className="h-4 w-80 mb-4" />
                 <div className="space-y-4">
                   {Array.from({ length: 3 }).map((_, i) => (
@@ -96,10 +87,7 @@ export function DashboardSkeleton() {
             <div className="space-y-6">
               {/* Quick Actions Card Skeleton */}
               <div className="bg-[var(--card)] border border-[var(--border)] rounded-sm shadow-lg p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <Skeleton className="w-1 h-6 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-sm" />
-                  <Skeleton className="h-6 w-32" />
-                </div>
+                <Skeleton className="h-6 w-32 mb-4" />
                 <div className="space-y-3">
                   {Array.from({ length: 2 }).map((_, i) => (
                     <div key={i} className="p-4 rounded-sm bg-[var(--hover)] border border-[var(--border)]">
@@ -112,10 +100,7 @@ export function DashboardSkeleton() {
 
               {/* Assessment Summary Skeleton */}
               <div className="bg-[var(--card)] border border-[var(--border)] rounded-sm shadow-lg p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <Skeleton className="w-1 h-6 bg-gradient-to-b from-purple-500 to-pink-600 rounded-sm" />
-                  <Skeleton className="h-6 w-40" />
-                </div>
+                <Skeleton className="h-6 w-40 mb-4" />
                 <div className="space-y-4">
                   {Array.from({ length: 4 }).map((_, i) => (
                     <div key={i} className="flex justify-between items-center p-3 bg-[var(--hover)] rounded-sm border border-[var(--border)]">
@@ -128,10 +113,7 @@ export function DashboardSkeleton() {
 
               {/* Recent Activity Card Skeleton */}
               <div className="bg-[var(--card)] border border-[var(--border)] rounded-sm shadow-lg p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <Skeleton className="w-1 h-6 bg-gradient-to-b from-indigo-500 to-purple-600 rounded-sm" />
-                  <Skeleton className="h-6 w-32" />
-                </div>
+                <Skeleton className="h-6 w-32 mb-4" />
                 <div className="space-y-3">
                   {Array.from({ length: 3 }).map((_, i) => (
                     <div key={i} className="flex items-center gap-3 p-2">

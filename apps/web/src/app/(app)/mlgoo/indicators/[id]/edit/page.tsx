@@ -85,7 +85,7 @@ export default function EditIndicatorPage() {
 
       // Load form_schema into Zustand store
       if (indicator.form_schema && indicator.form_schema.fields) {
-        loadFields(indicator.form_schema.fields);
+        loadFields(indicator.form_schema.fields as any);
       }
 
       setIsLoaded(true);

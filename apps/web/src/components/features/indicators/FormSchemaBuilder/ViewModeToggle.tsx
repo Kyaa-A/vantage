@@ -56,28 +56,28 @@ export function ViewModeToggle({ value, onChange }: ViewModeToggleProps) {
           <TabsTrigger value="builder" className="gap-2">
             <Settings2 className="h-4 w-4" />
             <span>Builder</span>
-            <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border bg-white px-1.5 font-mono text-[10px] font-medium text-gray-600 opacity-60">
+            <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border border-[var(--border)] bg-[var(--muted)]/20 px-1.5 font-mono text-[10px] font-medium text-[var(--muted-foreground)] opacity-60">
               <span className="text-xs">⌘</span>1
             </kbd>
           </TabsTrigger>
           <TabsTrigger value="preview" className="gap-2">
             <Eye className="h-4 w-4" />
             <span>Preview</span>
-            <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border bg-white px-1.5 font-mono text-[10px] font-medium text-gray-600 opacity-60">
+            <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border border-[var(--border)] bg-[var(--muted)]/20 px-1.5 font-mono text-[10px] font-medium text-[var(--muted-foreground)] opacity-60">
               <span className="text-xs">⌘</span>2
             </kbd>
           </TabsTrigger>
           <TabsTrigger value="json" className="gap-2">
             <Code2 className="h-4 w-4" />
             <span>JSON</span>
-            <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border bg-white px-1.5 font-mono text-[10px] font-medium text-gray-600 opacity-60">
+            <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border border-[var(--border)] bg-[var(--muted)]/20 px-1.5 font-mono text-[10px] font-medium text-[var(--muted-foreground)] opacity-60">
               <span className="text-xs">⌘</span>3
             </kbd>
           </TabsTrigger>
         </TabsList>
       </Tabs>
 
-      <div className="text-xs text-gray-500">
+      <div className="text-xs text-[var(--text-secondary)]">
         {value === 'builder' && 'Build and configure your form'}
         {value === 'preview' && 'See how it looks to users'}
         {value === 'json' && 'View and copy JSON schema'}

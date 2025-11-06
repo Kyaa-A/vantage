@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { useFormBuilderStore, isNumberInputField } from '@/store/useFormBuilderStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { isNumberInputField, useFormBuilderStore } from '@/store/useFormBuilderStore';
 import type { NumberInputField } from '@vantage/shared';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 
 interface NumberInputPropertiesProps {
   fieldId: string;
@@ -61,10 +61,10 @@ export function NumberInputProperties({ fieldId }: NumberInputPropertiesProps) {
       field_id: field.field_id,
       required: field.required,
       help_text: field.help_text || '',
-      min_value: field.min_value,
-      max_value: field.max_value,
-      placeholder: field.placeholder,
-      default_value: field.default_value,
+      min_value: field.min_value ?? undefined,
+      max_value: field.max_value ?? undefined,
+      placeholder: field.placeholder ?? undefined,
+      default_value: field.default_value ?? undefined,
     },
   });
 
@@ -104,10 +104,10 @@ export function NumberInputProperties({ fieldId }: NumberInputPropertiesProps) {
       field_id: field.field_id,
       required: field.required,
       help_text: field.help_text || '',
-      min_value: field.min_value,
-      max_value: field.max_value,
-      placeholder: field.placeholder,
-      default_value: field.default_value,
+      min_value: field.min_value ?? undefined,
+      max_value: field.max_value ?? undefined,
+      placeholder: field.placeholder ?? undefined,
+      default_value: field.default_value ?? undefined,
     });
     setHasChanges(false);
   };

@@ -20,12 +20,12 @@ export default function UserNav() {
   // Function to humanize role text
   const humanizeRole = (role: string) => {
     const roleMap: Record<string, string> = {
-      'SUPERADMIN': 'Super Administrator',
       'MLGOO_DILG': 'MLGOO DILG',
-      'AREA_ASSESSOR': 'Area Assessor',
-      'BLGU': 'Barangay Official'
+      'ASSESSOR': 'Area Assessor',
+      'VALIDATOR': 'Validator',
+      'BLGU_USER': 'Barangay Official'
     };
-    
+
     return roleMap[role] || role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 

@@ -61,11 +61,8 @@ export function UserManagementSkeleton() {
             <div className="p-6 border-b border-[var(--border)]">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-1 h-6 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-sm"></div>
-                    <Skeleton className="h-6 w-32" />
-                  </div>
-                  <Skeleton className="h-4 w-64 mt-1" />
+                  <Skeleton className="h-6 w-32 mb-1" />
+                  <Skeleton className="h-4 w-64" />
                 </div>
 
                 {/* Search Bar */}

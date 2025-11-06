@@ -1,12 +1,13 @@
 'use client';
 
-import { useFormBuilderStore } from '@/store/useFormBuilderStore';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Eye } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import type { FormField } from '@/store/useFormBuilderStore';
+import { useFormBuilderStore } from '@/store/useFormBuilderStore';
+import type { FieldOption } from '@vantage/shared';
+import { Eye } from 'lucide-react';
 
 /**
  * FormPreview Component
@@ -78,7 +79,7 @@ function PreviewField({ field }: { field: FormField }) {
       case 'checkbox_group':
         return (
           <div className="space-y-3">
-            {'options' in field && field.options?.map((option) => (
+            {'options' in field && field.options?.map((option: FieldOption) => (
               <div key={option.value} className="flex items-center space-x-2">
                 <Checkbox id={`${field.field_id}-${option.value}`} disabled />
                 <label
@@ -95,7 +96,7 @@ function PreviewField({ field }: { field: FormField }) {
       case 'radio_button':
         return (
           <div className="space-y-3">
-            {'options' in field && field.options?.map((option) => (
+            {'options' in field && field.options?.map((option: FieldOption) => (
               <div key={option.value} className="flex items-center space-x-2">
                 <input
                   type="radio"

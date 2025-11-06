@@ -1,6 +1,6 @@
 import { useAuthStore } from '@/store/useAuthStore';
-import { useGovernanceAreas } from './useGovernanceAreas';
 import { GovernanceArea } from '@vantage/shared';
+import { useGovernanceAreas } from './useGovernanceAreas';
 
 /**
  * Custom hook to get the assigned governance area for Area Assessors.
@@ -11,16 +11,16 @@ export function useAssessorGovernanceArea() {
   const { data: governanceAreasData, isLoading, error } = useGovernanceAreas();
 
   const getAssessorGovernanceArea = () => {
-    if (!user || user.role !== 'AREA_ASSESSOR') {
+    if (!user || user.role !== 'ASSESSOR') {
       return null;
     }
 
-    if (!user.governance_area_id || !governanceAreasData) {
+    if (!user.validator_area_id || !governanceAreasData) {
       return 'Unknown Governance Area';
     }
 
     const governanceArea = (governanceAreasData as GovernanceArea[]).find(
-      (ga: GovernanceArea) => ga.id === user.governance_area_id
+      (ga: GovernanceArea) => ga.id === user.validator_area_id
     );
 
     return governanceArea?.name || 'Unknown Governance Area';
@@ -30,6 +30,6 @@ export function useAssessorGovernanceArea() {
     governanceAreaName: getAssessorGovernanceArea(),
     isLoading,
     error,
-    governanceAreaId: user?.governance_area_id
+    governanceAreaId: user?.validator_area_id
   };
 } 

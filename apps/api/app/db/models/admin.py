@@ -109,7 +109,7 @@ class AssessmentCycle(Base):
     )  # Calibration/validation deadline
 
     # Active status (only one cycle can be active)
-    is_active = Column(Boolean, nullable=False, default=True, index=True)
+    is_active = Column(Boolean, nullable=False, default=True)
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)

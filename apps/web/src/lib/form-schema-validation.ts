@@ -1,4 +1,5 @@
 import type { FormField } from '@/store/useFormBuilderStore';
+import type { FieldOption } from '@vantage/shared';
 
 /**
  * Client-side validation for form schema before save
@@ -77,9 +78,9 @@ export function validateFormSchema(fields: FormField[]): ValidationError[] {
         }
 
         // Check for duplicate option values
-        const optionValues = field.options.map((opt) => opt.value);
+        const optionValues = field.options.map((opt: FieldOption) => opt.value);
         const dupOptions = optionValues.filter(
-          (val, index) => optionValues.indexOf(val) !== index
+          (val: string, index: number) => optionValues.indexOf(val) !== index
         );
         if (dupOptions.length > 0) {
           errors.push({

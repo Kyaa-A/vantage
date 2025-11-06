@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { useFormBuilderStore, isTextAreaField } from '@/store/useFormBuilderStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { isTextAreaField, useFormBuilderStore } from '@/store/useFormBuilderStore';
 import type { TextAreaField } from '@vantage/shared';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 
 interface TextAreaPropertiesProps {
   fieldId: string;
@@ -43,9 +43,9 @@ export function TextAreaProperties({ fieldId }: TextAreaPropertiesProps) {
       field_id: field.field_id,
       required: field.required,
       help_text: field.help_text || '',
-      max_length: field.max_length,
-      rows: field.rows || 4,
-      placeholder: field.placeholder,
+      max_length: field.max_length ?? undefined,
+      rows: field.rows ?? 4,
+      placeholder: field.placeholder ?? undefined,
     },
   });
 

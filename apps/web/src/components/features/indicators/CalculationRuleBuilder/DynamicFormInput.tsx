@@ -40,7 +40,7 @@ export function DynamicFormInput({ field, value, onChange }: DynamicFormInputPro
             placeholder={field.placeholder || `Enter ${field.label}`}
             value={value || ''}
             onChange={(e) => onChange(e.target.value)}
-            maxLength={field.max_length}
+            maxLength={field.max_length as any}
           />
           {field.help_text && (
             <p className="text-xs text-muted-foreground">{field.help_text}</p>
@@ -61,7 +61,7 @@ export function DynamicFormInput({ field, value, onChange }: DynamicFormInputPro
             value={value || ''}
             onChange={(e) => onChange(e.target.value)}
             rows={field.rows || 3}
-            maxLength={field.max_length}
+            maxLength={field.max_length as any}
           />
           {field.help_text && (
             <p className="text-xs text-muted-foreground">{field.help_text}</p>
@@ -84,8 +84,8 @@ export function DynamicFormInput({ field, value, onChange }: DynamicFormInputPro
             onChange={(e) =>
               onChange(e.target.value === '' ? null : parseFloat(e.target.value))
             }
-            min={field.min_value}
-            max={field.max_value}
+            min={field.min_value as any}
+            max={field.max_value as any}
           />
           {field.help_text && (
             <p className="text-xs text-muted-foreground">{field.help_text}</p>
@@ -179,8 +179,8 @@ export function DynamicFormInput({ field, value, onChange }: DynamicFormInputPro
             type="date"
             value={value || ''}
             onChange={(e) => onChange(e.target.value)}
-            min={field.min_date}
-            max={field.max_date}
+            min={field.min_date as any}
+            max={field.max_date as any}
           />
           {field.help_text && (
             <p className="text-xs text-muted-foreground">{field.help_text}</p>

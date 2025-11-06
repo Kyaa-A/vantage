@@ -59,7 +59,7 @@ export function RuleConfigForm({ rule, formSchema, onChange }: RuleConfigFormPro
           <OperatorSelector
             operator={rule.operator}
             operators={['>=', '>', '<=', '<', '==']}
-            onChange={(operator) => onChange({ ...rule, operator })}
+            onChange={(operator) => onChange({ ...rule, operator } as any)}
           />
 
           {/* Threshold Input */}
@@ -102,7 +102,7 @@ export function RuleConfigForm({ rule, formSchema, onChange }: RuleConfigFormPro
           <OperatorSelector
             operator={rule.operator}
             operators={['>=', '>', '<=', '<', '==']}
-            onChange={(operator) => onChange({ ...rule, operator })}
+            onChange={(operator) => onChange({ ...rule, operator } as any)}
           />
 
           {/* Threshold Input */}
@@ -144,7 +144,7 @@ export function RuleConfigForm({ rule, formSchema, onChange }: RuleConfigFormPro
           <OperatorSelector
             operator={rule.operator}
             operators={['==', '!=', 'contains', 'not_contains']}
-            onChange={(operator) => onChange({ ...rule, operator })}
+            onChange={(operator) => onChange({ ...rule, operator } as any)}
           />
 
           {/* Expected Value Input */}

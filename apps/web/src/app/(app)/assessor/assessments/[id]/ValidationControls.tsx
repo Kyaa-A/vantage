@@ -157,7 +157,10 @@ export function ValidationControls({
 
       await movUploadMutation.mutateAsync({
         responseId,
-        data: movData,
+        data: {
+          ...movData,
+          file: selectedFile,
+        },
       });
 
       // Invalidate the assessment details query to refresh the data
