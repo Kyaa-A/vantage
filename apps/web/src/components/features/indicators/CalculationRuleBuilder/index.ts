@@ -7,3 +7,5 @@ export { RuleConfigForm } from './RuleConfigForm';
 export { FieldSelector } from './FieldSelector';
 export { OperatorSelector } from './OperatorSelector';
 export { ValueInput } from './ValueInput';
+export { TestCalculationPanel } from './TestCalculationPanel';
+export { DynamicFormInput } from './DynamicFormInput';

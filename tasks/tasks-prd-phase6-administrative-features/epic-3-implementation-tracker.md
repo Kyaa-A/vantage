@@ -12,9 +12,9 @@
 
 - **Total Stories:** 8
 - **Total Tasks:** 45
-- **Completed Tasks:** 18 (Stories 3.1, 3.2 & 3.3 complete!)
-- **Current Story:** Story 3.4
-- **Progress:** 40% (18/45 tasks)
+- **Completed Tasks:** 22 (Stories 3.1, 3.2, 3.3 & 3.5 complete! Story 3.4 skipped)
+- **Current Story:** Story 3.6
+- **Progress:** 49% (22/45 tasks)
 
 ---
 
@@ -154,15 +154,23 @@
 ## Story 3.5: Frontend Calculation Rule Builder - Test Calculation Feature
 
 **Duration:** 1 day
-**Status:** Pending
-**Dependencies:** Story 3.4
+**Status:** ✅ Complete
+**Dependencies:** Story 3.4 (skipped - functionality already in Story 3.3)
 
 ### Tasks
 
-- [ ] **3.5.1** Create TestCalculationPanel component
-- [ ] **3.5.2** Generate dynamic input fields from form_schema
-- [ ] **3.5.3** Implement "Run Test" button and API call
-- [ ] **3.5.4** Display test result with explanation
+- [x] **3.5.1** Create TestCalculationPanel component
+  - **File:** `apps/web/src/components/features/indicators/CalculationRuleBuilder/TestCalculationPanel.tsx`
+  - **Completed:** Full test panel with validation, API integration, and result display
+- [x] **3.5.2** Generate dynamic input fields from form_schema
+  - **File:** `apps/web/src/components/features/indicators/CalculationRuleBuilder/DynamicFormInput.tsx`
+  - **Completed:** Dynamic input renderer supporting all 7 field types with appropriate UI controls
+- [x] **3.5.3** Implement "Run Test" button and API call
+  - **Integration:** Uses `usePostIndicatorsTestCalculation` hook from generated API client
+  - **Completed:** Mutation-based API call with loading states and error handling
+- [x] **3.5.4** Display test result with explanation
+  - **Component:** TestCalculationPanel includes comprehensive result display
+  - **Completed:** Visual Pass/Fail badges, evaluation result, explanation text, and output status configuration display
 
 ---
 

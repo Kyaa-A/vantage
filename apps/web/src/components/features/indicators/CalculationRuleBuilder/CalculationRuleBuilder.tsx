@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, Info } from 'lucide-react';
 import { ConditionGroupList } from './ConditionGroupList';
 import { OutputStatusConfig } from './OutputStatusConfig';
+import { TestCalculationPanel } from './TestCalculationPanel';
 
 interface CalculationRuleBuilderProps {
   /** Existing calculation schema to load (for editing) */
@@ -159,6 +160,9 @@ export function CalculationRuleBuilder({
           <AlertDescription>You have unsaved changes.</AlertDescription>
         </Alert>
       )}
+
+      {/* Test Calculation Panel */}
+      <TestCalculationPanel formSchema={formSchema} />
     </div>
   );
 }
