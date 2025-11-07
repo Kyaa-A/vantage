@@ -246,11 +246,15 @@ class IndicatorService:
         # Validate form_schema if being updated
         form_schema = data.get("form_schema")
         if form_schema is not None:
-            validation_errors = generate_validation_errors(form_schema)
-            if validation_errors:
-                raise ValueError(
-                    f"Form schema validation failed: {'; '.join(validation_errors)}"
-                )
+            try:
+                form_schema_obj = FormSchema(**form_schema)
+                validation_errors = generate_validation_errors(form_schema_obj)
+                if validation_errors:
+                    raise ValueError(
+                        f"Form schema validation failed: {'; '.join(validation_errors)}"
+                    )
+            except Exception as e:
+                raise ValueError(f"Invalid form schema format: {str(e)}")
 
         # Validate calculation_schema if being updated
         calculation_schema = data.get("calculation_schema")

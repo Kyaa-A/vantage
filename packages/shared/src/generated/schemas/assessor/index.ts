@@ -6,6 +6,7 @@
 import type { PerformanceOverview } from '../common';
 import type { SystemicWeakness } from '../system';
 import type { WorkflowMetrics } from '../common';
+import type { AssessorAnalyticsResponseAssessmentPeriod } from '../assessments';
 
 /**
  * AssessorAnalyticsResponse
@@ -17,12 +18,6 @@ export interface AssessorAnalyticsResponse {
   assessment_period?: AssessorAnalyticsResponseAssessmentPeriod;
   governance_area_name?: AssessorAnalyticsResponseGovernanceAreaName;
 }
-
-
-/**
- * AssessorAnalyticsResponseAssessmentPeriod
- */
-export type AssessorAnalyticsResponseAssessmentPeriod = string | null;
 
 
 /**
@@ -47,20 +42,3 @@ export interface AssessorQueueItem {
  * AssessorQueueItemSubmissionDate
  */
 export type AssessorQueueItemSubmissionDate = string | null;
-
-
-/**
- * BodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPost
- */
-export interface BodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPost {
-  /** The MOV file to upload */
-  file: Blob;
-  /** Optional custom filename */
-  filename?: BodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPostFilename;
-}
-
-
-/**
- * BodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPostFilename
- */
-export type BodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPostFilename = string | null;

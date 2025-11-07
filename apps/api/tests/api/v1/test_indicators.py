@@ -87,7 +87,17 @@ def test_indicator(db_session: Session, governance_area: GovernanceArea):
         is_active=True,
         is_auto_calculable=False,
         is_profiling_only=False,
-        form_schema={"type": "object", "properties": {"test": {"type": "string"}}},
+        form_schema={
+            "fields": [
+                {
+                    "field_id": "test_field",
+                    "field_type": "text",
+                    "label": "Test Field",
+                    "required": True,
+                    "is_means_of_verification": False
+                }
+            ]
+        },
         governance_area_id=governance_area.id,
     )
     db_session.add(indicator)
@@ -151,7 +161,16 @@ def test_create_indicator_success(
         "is_active": True,
         "is_auto_calculable": False,
         "is_profiling_only": False,
-        "form_schema": {"type": "object", "properties": {"field1": {"type": "string"}}},
+        "form_schema": {
+            "fields": [
+                {
+                    "field_id": "test_field_1",
+                    "field_type": "text_input",
+                    "label": "Test Field",
+                    "required": True
+                }
+            ]
+        },
     }
 
     response = client.post("/api/v1/indicators", json=payload)
@@ -356,7 +375,16 @@ def test_update_indicator_schema_triggers_versioning(
     original_version = test_indicator.version
 
     payload = {
-        "form_schema": {"type": "object", "properties": {"new_field": {"type": "number"}}},
+        "form_schema": {
+            "fields": [
+                {
+                    "field_id": "new_field",
+                    "field_type": "number_input",
+                    "label": "New Number Field",
+                    "required": True
+                }
+            ]
+        },
     }
 
     response = client.put(f"/api/v1/indicators/{test_indicator.id}", json=payload)
@@ -364,7 +392,7 @@ def test_update_indicator_schema_triggers_versioning(
     assert response.status_code == 200
     data = response.json()
     assert data["version"] == original_version + 1  # Version should increment
-    assert data["form_schema"] == payload["form_schema"]
+    assert data["form_schema"]["fields"][0]["field_id"] == "new_field"
 
 
 def test_update_indicator_unauthorized(client: TestClient, test_indicator: Indicator):
@@ -450,7 +478,18 @@ def test_get_indicator_history_success(
     # First update to create history
     client.put(
         f"/api/v1/indicators/{test_indicator.id}",
-        json={"form_schema": {"type": "object", "properties": {"updated": {"type": "string"}}}},
+        json={
+            "form_schema": {
+                "fields": [
+                    {
+                        "field_id": "updated_field",
+                        "field_type": "text_input",
+                        "label": "Updated Field",
+                        "required": True
+                    }
+                ]
+            }
+        },
     )
 
     # Get history

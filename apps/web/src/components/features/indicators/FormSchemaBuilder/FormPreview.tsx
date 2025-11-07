@@ -121,7 +121,7 @@ function PreviewField({ field }: { field: FormField }) {
           <div className="space-y-2">
             <Input
               type="number"
-              placeholder={'placeholder' in field ? field.placeholder : undefined}
+              placeholder={'placeholder' in field ? (field.placeholder ?? undefined) : undefined}
               disabled
               className="bg-gray-50"
             />
@@ -134,7 +134,7 @@ function PreviewField({ field }: { field: FormField }) {
           <div className="space-y-2">
             <Input
               type="text"
-              placeholder={'placeholder' in field ? field.placeholder : undefined}
+              placeholder={'placeholder' in field ? (field.placeholder ?? undefined) : undefined}
               disabled
               className="bg-gray-50"
             />
@@ -146,8 +146,8 @@ function PreviewField({ field }: { field: FormField }) {
         return (
           <div className="space-y-2">
             <Textarea
-              placeholder={'placeholder' in field ? field.placeholder : undefined}
-              rows={'rows' in field ? field.rows : 4}
+              placeholder={'placeholder' in field ? (field.placeholder ?? undefined) : undefined}
+              rows={'rows' in field ? (field.rows ?? 4) : 4}
               disabled
               className="bg-gray-50"
             />

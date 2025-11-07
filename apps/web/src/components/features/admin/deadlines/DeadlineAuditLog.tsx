@@ -11,6 +11,7 @@
  */
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { useDeadlineAuditLog, exportDeadlineOverridesCSV } from "@/hooks/useDeadlineAuditLog";
 import { useCycles } from "@/hooks/useCycles";
 import { useBarangays } from "@/hooks/useBarangays";
@@ -35,9 +36,12 @@ import {
   Clock,
   ChevronLeft,
   ChevronRight,
+  ArrowLeft,
 } from "lucide-react";
 
 export function DeadlineAuditLog() {
+  const router = useRouter();
+
   // Get active cycle and data
   const { activeCycle } = useCycles();
   const { data: barangays } = useBarangays();
@@ -133,15 +137,23 @@ export function DeadlineAuditLog() {
               )}
             </div>
 
-            {/* Export Button */}
-            <Button
-              onClick={handleExport}
-              variant="outline"
-              className="self-start lg:self-center"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Export CSV
-            </Button>
+            {/* Action Buttons */}
+            <div className="flex gap-2 self-start lg:self-center">
+              <Button
+                onClick={() => router.push("/mlgoo/deadlines")}
+                variant="outline"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Status
+              </Button>
+              <Button
+                onClick={handleExport}
+                variant="outline"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export CSV
+              </Button>
+            </div>
           </div>
         </div>
       </div>

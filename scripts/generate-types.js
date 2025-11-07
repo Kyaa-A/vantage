@@ -81,6 +81,11 @@ function mapSchemasToTags(schemaNames, tagInfo) {
   // Map schemas to tags based on naming patterns
   tags.forEach((tag) => {
     const tagSchemas = schemaNames.filter((schemaName) => {
+      // Skip if already processed (only add to first matching group)
+      if (processed.has(schemaName)) {
+        return false;
+      }
+
       // Check if schema name contains the tag name
       const schemaLower = schemaName.toLowerCase();
       const tagLower = tag.toLowerCase();

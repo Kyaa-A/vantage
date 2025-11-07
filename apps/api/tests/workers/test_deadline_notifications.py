@@ -6,7 +6,7 @@ This test suite covers the send_deadline_extension_notification Celery task.
 
 import pytest
 from unittest.mock import Mock, patch
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 
 from app.workers.notifications import send_deadline_extension_notification
@@ -137,7 +137,7 @@ def test_send_deadline_extension_notification_success(
     blgu_user,
 ):
     """Test successful deadline extension notification"""
-    new_deadline = (datetime.utcnow() + timedelta(days=30)).isoformat()
+    new_deadline = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
 
     result = send_deadline_extension_notification(
         barangay_id=sample_barangay.id,
@@ -169,7 +169,7 @@ def test_send_deadline_extension_notification_multiple_indicators(
     blgu_user,
 ):
     """Test notification with multiple indicators"""
-    new_deadline = (datetime.utcnow() + timedelta(days=30)).isoformat()
+    new_deadline = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
 
     result = send_deadline_extension_notification(
         barangay_id=sample_barangay.id,
@@ -195,7 +195,7 @@ def test_send_deadline_extension_notification_multiple_blgu_users(
     blgu_user_2,
 ):
     """Test notification to multiple BLGU users"""
-    new_deadline = (datetime.utcnow() + timedelta(days=30)).isoformat()
+    new_deadline = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
 
     result = send_deadline_extension_notification(
         barangay_id=sample_barangay.id,
@@ -219,7 +219,7 @@ def test_send_deadline_extension_notification_barangay_not_found(
     admin_user,
 ):
     """Test notification with non-existent barangay"""
-    new_deadline = (datetime.utcnow() + timedelta(days=30)).isoformat()
+    new_deadline = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
 
     result = send_deadline_extension_notification(
         barangay_id=99999,
@@ -242,7 +242,7 @@ def test_send_deadline_extension_notification_indicators_not_found(
     blgu_user,
 ):
     """Test notification with non-existent indicators"""
-    new_deadline = (datetime.utcnow() + timedelta(days=30)).isoformat()
+    new_deadline = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
 
     result = send_deadline_extension_notification(
         barangay_id=sample_barangay.id,
@@ -264,7 +264,7 @@ def test_send_deadline_extension_notification_no_blgu_users(
     admin_user,
 ):
     """Test notification when no BLGU users exist for barangay"""
-    new_deadline = (datetime.utcnow() + timedelta(days=30)).isoformat()
+    new_deadline = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
 
     result = send_deadline_extension_notification(
         barangay_id=sample_barangay.id,
@@ -287,7 +287,7 @@ def test_send_deadline_extension_notification_admin_user_not_found(
     blgu_user,
 ):
     """Test notification when admin user not found (should use default)"""
-    new_deadline = (datetime.utcnow() + timedelta(days=30)).isoformat()
+    new_deadline = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
 
     result = send_deadline_extension_notification(
         barangay_id=sample_barangay.id,
@@ -336,7 +336,7 @@ def test_send_deadline_extension_notification_includes_message(
     blgu_user,
 ):
     """Test that notification includes a formatted message"""
-    new_deadline = (datetime.utcnow() + timedelta(days=30)).isoformat()
+    new_deadline = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
 
     result = send_deadline_extension_notification(
         barangay_id=sample_barangay.id,
@@ -363,8 +363,8 @@ def test_send_deadline_extension_notification_handles_timezone_aware_deadlines(
     blgu_user,
 ):
     """Test that notification handles timezone-aware datetime strings"""
-    # Test with Z suffix (UTC)
-    new_deadline_utc = (datetime.utcnow() + timedelta(days=30)).isoformat() + "Z"
+    # Test with timezone-aware datetime (isoformat already includes timezone info)
+    new_deadline_utc = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
 
     result = send_deadline_extension_notification(
         barangay_id=sample_barangay.id,
@@ -399,7 +399,7 @@ def test_send_deadline_extension_notification_only_active_blgu_users(
     db_session.add(inactive_user)
     db_session.commit()
 
-    new_deadline = (datetime.utcnow() + timedelta(days=30)).isoformat()
+    new_deadline = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
 
     result = send_deadline_extension_notification(
         barangay_id=sample_barangay.id,

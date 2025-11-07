@@ -99,7 +99,7 @@ export function DeadlineOverrideModal({
     return indicators.filter((i: any) => i.is_active);
   }, [indicators]);
 
-  // Reset form when modal closes
+  // Reset form when modal closes or opens
   React.useEffect(() => {
     if (!open) {
       setCurrentStep(1);
@@ -110,6 +110,19 @@ export function DeadlineOverrideModal({
         reason: "",
       });
       setBarangaySearch("");
+    } else {
+      // When modal opens with pre-selected barangay, skip to step 2
+      if (preSelectedBarangayId) {
+        setCurrentStep(2);
+        setFormData({
+          barangayId: preSelectedBarangayId,
+          indicatorIds: [],
+          newDeadline: "",
+          reason: "",
+        });
+      } else {
+        setCurrentStep(1);
+      }
     }
   }, [open, preSelectedBarangayId]);
 
@@ -148,7 +161,9 @@ export function DeadlineOverrideModal({
   };
 
   const handlePrevious = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 1));
+    // If barangay is pre-selected, don't go back to step 1
+    const minStep = preSelectedBarangayId ? 2 : 1;
+    setCurrentStep((prev) => Math.max(prev - 1, minStep));
   };
 
   // Handle submission
@@ -223,7 +238,7 @@ export function DeadlineOverrideModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Calendar className="w-5 h-5 text-[var(--cityscape-yellow)]" />
@@ -232,9 +247,9 @@ export function DeadlineOverrideModal({
         </DialogHeader>
 
         {/* Progress Indicator */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-center gap-2 mb-6">
           {[1, 2, 3, 4].map((step) => (
-            <div key={step} className="flex items-center">
+            <React.Fragment key={step}>
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                   step < currentStep
@@ -248,12 +263,12 @@ export function DeadlineOverrideModal({
               </div>
               {step < 4 && (
                 <div
-                  className={`w-12 h-0.5 ${
+                  className={`w-16 h-0.5 ${
                     step < currentStep ? "bg-green-500" : "bg-gray-200 dark:bg-gray-700"
                   }`}
                 />
               )}
-            </div>
+            </React.Fragment>
           ))}
         </div>
 

@@ -4,6 +4,7 @@
 // 🏷️  Based on FastAPI tag: "bbis"
 
 import type { GovernanceAreaSummary } from '../governancearea';
+import type { TestBBICalculationRequestIndicatorStatuses } from '../indicators';
 
 /**
  * BBICreate
@@ -286,12 +287,6 @@ export interface TestBBICalculationRequest {
   /** Sample indicator statuses (indicator_id -> Pass/Fail) */
   indicator_statuses: TestBBICalculationRequestIndicatorStatuses;
 }
-
-
-/**
- * TestBBICalculationRequestIndicatorStatuses
- */
-export type TestBBICalculationRequestIndicatorStatuses = {[key: string]: string};
 
 
 /**

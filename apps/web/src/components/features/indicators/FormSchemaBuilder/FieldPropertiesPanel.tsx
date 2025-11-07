@@ -3,12 +3,12 @@
 import { useFormBuilderStore } from '@/store/useFormBuilderStore';
 import { Settings2 } from 'lucide-react';
 import { CheckboxGroupProperties } from './FieldProperties/CheckboxGroupProperties';
-import { RadioButtonProperties } from './FieldProperties/RadioButtonProperties';
-import { NumberInputProperties } from './FieldProperties/NumberInputProperties';
-import { TextInputProperties } from './FieldProperties/TextInputProperties';
-import { TextAreaProperties } from './FieldProperties/TextAreaProperties';
 import { DatePickerProperties } from './FieldProperties/DatePickerProperties';
 import { FileUploadProperties } from './FieldProperties/FileUploadProperties';
+import { NumberInputProperties } from './FieldProperties/NumberInputProperties';
+import { RadioButtonProperties } from './FieldProperties/RadioButtonProperties';
+import { TextAreaProperties } from './FieldProperties/TextAreaProperties';
+import { TextInputProperties } from './FieldProperties/TextInputProperties';
 
 /**
  * FieldPropertiesPanel Component
@@ -60,7 +60,7 @@ export function FieldPropertiesPanel() {
       <div className="border-b border-[var(--border)] bg-[var(--card)] px-4 py-3 sticky top-0 z-10">
         <h3 className="text-sm font-semibold text-[var(--foreground)]">Field Properties</h3>
         <p className="mt-1 text-xs text-[var(--text-secondary)]">
-          {selectedField.field_type.replace('_', ' ')} • {selectedField.field_id}
+          {selectedField.field_type?.replace('_', ' ') || 'Unknown'} • {selectedField.field_id}
         </p>
       </div>
 

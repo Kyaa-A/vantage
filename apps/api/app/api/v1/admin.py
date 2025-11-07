@@ -18,6 +18,7 @@ from app.schemas.admin import (
     DeadlineOverrideListResponse,
     BarangayDeadlineStatusResponse,
     DeadlineStatusListResponse,
+    PhaseStatusResponse,
 )
 from app.services.audit_service import audit_service
 from app.services.deadline_service import deadline_service
@@ -455,7 +456,18 @@ async def get_deadline_status(
     # Convert to response format
     items = []
     for status in status_data:
-        items.append(BarangayDeadlineStatusResponse(**status))
+        # Convert nested phase dictionaries to PhaseStatusResponse objects
+        barangay_status = BarangayDeadlineStatusResponse(
+            barangay_id=status["barangay_id"],
+            barangay_name=status["barangay_name"],
+            cycle_id=status["cycle_id"],
+            cycle_name=status["cycle_name"],
+            phase1=PhaseStatusResponse(**status["phase1"]),
+            rework=PhaseStatusResponse(**status["rework"]),
+            phase2=PhaseStatusResponse(**status["phase2"]),
+            calibration=PhaseStatusResponse(**status["calibration"]),
+        )
+        items.append(barangay_status)
 
     return DeadlineStatusListResponse(items=items, total=len(items))
 

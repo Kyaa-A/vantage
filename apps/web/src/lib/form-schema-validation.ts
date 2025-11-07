@@ -102,7 +102,9 @@ export function validateFormSchema(fields: FormField[]): ValidationError[] {
         'min_value' in field &&
         'max_value' in field &&
         field.min_value !== undefined &&
-        field.max_value !== undefined
+        field.min_value !== null &&
+        field.max_value !== undefined &&
+        field.max_value !== null
       ) {
         if (field.min_value >= field.max_value) {
           errors.push({

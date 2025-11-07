@@ -12,6 +12,7 @@
  */
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { useDeadlines, getStatusBadgeClasses, getStatusLabel } from "@/hooks/useDeadlines";
 import { useCycles } from "@/hooks/useCycles";
 import { DeadlineOverrideModal } from "./DeadlineOverrideModal";
@@ -34,9 +35,12 @@ import {
   AlertCircle,
   CheckCircle2,
   XCircle,
+  FileText,
 } from "lucide-react";
 
 export function DeadlineStatusDashboard() {
+  const router = useRouter();
+
   // Get active cycle
   const { activeCycle, isLoadingActiveCycle } = useCycles();
 
@@ -196,16 +200,24 @@ export function DeadlineStatusDashboard() {
               </p>
             </div>
 
-            {/* Refresh Button */}
-            <Button
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-              variant="outline"
-              className="self-start lg:self-center"
-            >
-              <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
-              {isRefreshing ? "Refreshing..." : "Refresh"}
-            </Button>
+            {/* Action Buttons */}
+            <div className="flex gap-2 self-start lg:self-center">
+              <Button
+                onClick={() => router.push("/mlgoo/deadlines/audit")}
+                variant="outline"
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                View Audit Log
+              </Button>
+              <Button
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                variant="outline"
+              >
+                <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
+                {isRefreshing ? "Refreshing..." : "Refresh"}
+              </Button>
+            </div>
           </div>
         </div>
       </div>

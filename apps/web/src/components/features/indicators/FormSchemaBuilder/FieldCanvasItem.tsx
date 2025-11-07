@@ -1,20 +1,20 @@
 'use client';
 
+import type { FormField } from '@/store/useFormBuilderStore';
+import { useFormBuilderStore } from '@/store/useFormBuilderStore';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
-  CheckSquare,
-  Circle,
-  Hash,
-  Type,
   AlignLeft,
   Calendar,
-  Upload,
+  CheckSquare,
+  Circle,
   GripVertical,
+  Hash,
   Trash2,
+  Type,
+  Upload,
 } from 'lucide-react';
-import { useFormBuilderStore } from '@/store/useFormBuilderStore';
-import type { FormField } from '@/store/useFormBuilderStore';
 
 /**
  * Map field types to their icons and colors
@@ -159,7 +159,7 @@ export function FieldCanvasItem({ field }: FieldCanvasItemProps) {
                 {field.label}
               </p>
               <p className="text-xs text-gray-500">
-                {field.field_type.replace('_', ' ')} • {field.field_id}
+                {field.field_type?.replace('_', ' ') || 'Unknown'} • {field.field_id}
                 {field.required && (
                   <span className="ml-2 text-red-600">Required</span>
                 )}

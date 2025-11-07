@@ -4,8 +4,9 @@
 // 🏷️  Based on FastAPI tag: "indicators"
 
 import type { CalculationSchema } from '../common';
+import type { BodyTestCalculationApiV1IndicatorsTestCalculationPostAssessmentData } from '../assessments';
 import type { FormSchema } from '../common';
-import type { UserNested } from '../users';
+import type { IndicatorHistoryResponseArchivedByUser } from '../users';
 import type { GovernanceAreaNested } from '../common';
 
 /**
@@ -15,12 +16,6 @@ export interface BodyTestCalculationApiV1IndicatorsTestCalculationPost {
   calculation_schema: CalculationSchema;
   assessment_data: BodyTestCalculationApiV1IndicatorsTestCalculationPostAssessmentData;
 }
-
-
-/**
- * BodyTestCalculationApiV1IndicatorsTestCalculationPostAssessmentData
- */
-export type BodyTestCalculationApiV1IndicatorsTestCalculationPostAssessmentData = { [key: string]: unknown };
 
 
 /**
@@ -183,12 +178,6 @@ export interface IndicatorHistoryResponse {
  * IndicatorHistoryResponseArchivedBy
  */
 export type IndicatorHistoryResponseArchivedBy = number | null;
-
-
-/**
- * IndicatorHistoryResponseArchivedByUser
- */
-export type IndicatorHistoryResponseArchivedByUser = UserNested | null;
 
 
 /**
@@ -459,12 +448,6 @@ export type PostIndicatorsValidateCalculationSchema200 = { [key: string]: unknow
  * PostIndicatorsValidateFormSchema200
  */
 export type PostIndicatorsValidateFormSchema200 = { [key: string]: unknown };
-
-
-/**
- * SystemicWeaknessIndicatorId
- */
-export type SystemicWeaknessIndicatorId = number | null;
 
 
 /**

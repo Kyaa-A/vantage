@@ -1,20 +1,20 @@
-import { create } from 'zustand';
 import type {
-  FormSchemaInputFieldsItem,
   CheckboxGroupField,
-  RadioButtonField,
-  NumberInputField,
-  TextInputField,
-  TextAreaField,
   DatePickerField,
   FileUploadField,
+  FormSchemaFieldsItem,
+  NumberInputField,
+  RadioButtonField,
+  TextAreaField,
+  TextInputField,
 } from '@vantage/shared';
+import { create } from 'zustand';
 
 /**
  * Type alias for all form field types
  * Matches the discriminated union from the backend
  */
-export type FormField = FormSchemaInputFieldsItem;
+export type FormField = FormSchemaFieldsItem;
 
 /**
  * Form Builder state interface for managing form schema construction

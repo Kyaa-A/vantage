@@ -1,13 +1,13 @@
 # ⏰ Deadline Management Service
 # Business logic for managing assessment cycles and deadline overrides
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any
 from enum import Enum
 import csv
 from io import StringIO
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import and_, or_, func
 
 from app.db.models.admin import AssessmentCycle, DeadlineOverride
@@ -256,6 +256,7 @@ class DeadlineService:
         assessments = (
             db.query(Assessment)
             .join(User, Assessment.blgu_user_id == User.id)
+            .options(joinedload(Assessment.blgu_user))
             .filter(User.barangay_id.isnot(None))
             .all()
         )
@@ -281,7 +282,7 @@ class DeadlineService:
             key = (override.barangay_id, override.indicator_id)
             override_lookup[key] = override.new_deadline
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         status_results = []
 
         for barangay in barangays:
@@ -319,6 +320,16 @@ class DeadlineService:
 
         return status_results
 
+    def _ensure_timezone_aware(self, dt: datetime) -> datetime:
+        """
+        Ensure a datetime is timezone-aware (UTC).
+
+        If the datetime is naive, assume it's UTC and make it aware.
+        """
+        if dt.tzinfo is None:
+            return dt.replace(tzinfo=timezone.utc)
+        return dt
+
     def _determine_phase_status(
         self,
         assessments: List[Assessment],
@@ -338,6 +349,9 @@ class DeadlineService:
         Returns:
             Dictionary with status and additional info
         """
+        # Ensure deadline is timezone-aware
+        deadline = self._ensure_timezone_aware(deadline)
+
         # Check if there's a submitted assessment
         submitted_assessments = [
             a
@@ -349,16 +363,19 @@ class DeadlineService:
             # Get the latest submission
             latest_submission = max(submitted_assessments, key=lambda a: a.submitted_at)
 
-            if latest_submission.submitted_at <= deadline:
+            # Ensure submitted_at is timezone-aware
+            submitted_at = self._ensure_timezone_aware(latest_submission.submitted_at)
+
+            if submitted_at <= deadline:
                 return {
                     "status": DeadlineStatusType.SUBMITTED_ON_TIME.value,
-                    "submitted_at": latest_submission.submitted_at.isoformat(),
+                    "submitted_at": submitted_at.isoformat(),
                     "deadline": deadline.isoformat(),
                 }
             else:
                 return {
                     "status": DeadlineStatusType.SUBMITTED_LATE.value,
-                    "submitted_at": latest_submission.submitted_at.isoformat(),
+                    "submitted_at": submitted_at.isoformat(),
                     "deadline": deadline.isoformat(),
                 }
         else:
@@ -429,7 +446,7 @@ class DeadlineService:
             raise ValueError(f"User with ID {created_by_user_id} not found")
 
         # Validate new_deadline is not in the past
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         if new_deadline <= now:
             raise ValueError(
                 f"New deadline must be in the future. "

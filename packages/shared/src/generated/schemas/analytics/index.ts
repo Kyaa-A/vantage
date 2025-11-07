@@ -3,34 +3,6 @@
 // 📁 Analytics-related types
 // 🏷️  Based on FastAPI tag: "analytics"
 
-import type { PerformanceOverview } from '../common';
-import type { SystemicWeakness } from '../system';
-import type { WorkflowMetrics } from '../common';
-
-/**
- * AssessorAnalyticsResponse
- */
-export interface AssessorAnalyticsResponse {
-  overview: PerformanceOverview;
-  hotspots: SystemicWeakness[];
-  workflow: WorkflowMetrics;
-  assessment_period?: AssessorAnalyticsResponseAssessmentPeriod;
-  governance_area_name?: AssessorAnalyticsResponseGovernanceAreaName;
-}
-
-
-/**
- * AssessorAnalyticsResponseAssessmentPeriod
- */
-export type AssessorAnalyticsResponseAssessmentPeriod = string | null;
-
-
-/**
- * AssessorAnalyticsResponseGovernanceAreaName
- */
-export type AssessorAnalyticsResponseGovernanceAreaName = string | null;
-
-
 /**
  * GetAnalyticsDashboardParams
  */

@@ -290,46 +290,57 @@ class TestGenerateValidationErrors:
 
     def test_duplicate_field_ids_detected(self):
         """Test that duplicate field_ids are detected"""
-        schema = FormSchema(
-            fields=[
-                TextInputField(
-                    field_id="field1",
-                    field_type="text_input",
-                    label="Field 1",
-                    required=True,
-                ),
-                TextInputField(
-                    field_id="field1",
-                    field_type="text_input",
-                    label="Field 1 Duplicate",
-                    required=False,
-                ),
-            ]
-        )
-        errors = generate_validation_errors(schema)
-        assert len(errors) > 0
-        assert any("Duplicate field_ids" in err for err in errors)
+        # FormSchema validator will raise ValidationError when duplicate field_ids exist
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError) as exc_info:
+            schema = FormSchema(
+                fields=[
+                    TextInputField(
+                        field_id="field1",
+                        field_type="text_input",
+                        label="Field 1",
+                        required=True,
+                        is_means_of_verification=False,
+                    ),
+                    TextInputField(
+                        field_id="field1",
+                        field_type="text_input",
+                        label="Field 1 Duplicate",
+                        required=False,
+                        is_means_of_verification=False,
+                    ),
+                ]
+            )
+
+        # Check that the error message mentions duplicate field_ids
+        assert "Duplicate field_ids" in str(exc_info.value)
 
     def test_invalid_conditional_mov_reference_detected(self):
         """Test that invalid conditional MOV reference is detected"""
-        schema = FormSchema(
-            fields=[
-                FileUploadField(
-                    field_id="upload",
-                    field_type="file_upload",
-                    label="Upload File",
-                    required=True,
-                    conditional_mov_requirement=ConditionalMOVLogic(
-                        field_id="nonexistent",
-                        operator="equals",
-                        value="yes"
+        # FormSchema validator will raise ValidationError for invalid conditional_mov references
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError) as exc_info:
+            schema = FormSchema(
+                fields=[
+                    FileUploadField(
+                        field_id="upload",
+                        field_type="file_upload",
+                        label="Upload File",
+                        required=True,
+                        is_means_of_verification=True,
+                        conditional_mov_requirement=ConditionalMOVLogic(
+                            field_id="nonexistent",
+                            operator="equals",
+                            value="yes"
+                        ),
                     ),
-                ),
-            ]
-        )
-        errors = generate_validation_errors(schema)
-        assert len(errors) > 0
-        assert any("does not exist" in err for err in errors)
+                ]
+            )
+
+        # Check that the error message mentions the nonexistent field
+        assert "does not exist" in str(exc_info.value) or "nonexistent" in str(exc_info.value)
 
     def test_checkbox_with_no_options_detected(self):
         """Test that checkbox fields without options are detected"""

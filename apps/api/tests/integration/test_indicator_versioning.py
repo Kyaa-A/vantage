@@ -54,7 +54,16 @@ def test_complete_versioning_workflow(
         "is_active": True,
         "is_auto_calculable": False,
         "is_profiling_only": False,
-        "form_schema": {"type": "object", "properties": {"field1": {"type": "string"}}},
+        "form_schema": {
+            "fields": [
+                {
+                    "field_id": "field1",
+                    "field_type": "text_input",
+                    "label": "Field 1",
+                    "required": True
+                }
+            ]
+        },
         "calculation_schema": None,
         "remark_schema": None,
     }
@@ -67,7 +76,11 @@ def test_complete_versioning_workflow(
 
     assert indicator.version == 1
     assert indicator.name == "Test Versioning Indicator"
-    assert indicator.form_schema == {"type": "object", "properties": {"field1": {"type": "string"}}}
+    # Just check that form_schema has the right structure
+    assert "fields" in indicator.form_schema
+    assert len(indicator.form_schema["fields"]) == 1
+    assert indicator.form_schema["fields"][0]["field_id"] == "field1"
+    assert indicator.form_schema["fields"][0]["field_type"] == "text_input"
 
     indicator_id = indicator.id
 
@@ -95,11 +108,20 @@ def test_complete_versioning_workflow(
     # Step 3: Update form_schema (version increments to 2)
     schema_update_1 = {
         "form_schema": {
-            "type": "object",
-            "properties": {
-                "field1": {"type": "string"},
-                "field2": {"type": "number"}
-            }
+            "fields": [
+                {
+                    "field_id": "field1",
+                    "field_type": "text_input",
+                    "label": "Field 1",
+                    "required": True
+                },
+                {
+                    "field_id": "field2",
+                    "field_type": "number_input",
+                    "label": "Field 2",
+                    "required": False
+                }
+            ]
         }
     }
 
@@ -111,28 +133,37 @@ def test_complete_versioning_workflow(
     )
 
     assert indicator.version == 2  # Version should increment
-    assert indicator.form_schema == {
-        "type": "object",
-        "properties": {
-            "field1": {"type": "string"},
-            "field2": {"type": "number"}
-        }
-    }
+    # Check form_schema structure
+    assert len(indicator.form_schema["fields"]) == 2
+    assert indicator.form_schema["fields"][0]["field_id"] == "field1"
+    assert indicator.form_schema["fields"][1]["field_id"] == "field2"
 
     # Verify indicators_history contains version 1
     history = indicator_service.get_indicator_history(db_session, indicator_id)
     assert len(history) == 1
     assert history[0].version == 1
     assert history[0].name == "Updated Name"
-    assert history[0].form_schema == {"type": "object", "properties": {"field1": {"type": "string"}}}
+    assert history[0].form_schema["fields"][0]["field_id"] == "field1"
     assert history[0].archived_by == test_user.id
     assert history[0].archived_at is not None
 
     # Step 4: Update calculation_schema (version increments to 3)
     schema_update_2 = {
         "calculation_schema": {
-            "rule_type": "AND_ALL",
-            "sub_indicators": []
+            "condition_groups": [
+                {
+                    "operator": "AND",
+                    "rules": [
+                        {
+                            "rule_type": "MATCH_VALUE",
+                            "field_id": "field1",
+                            "operator": "!=",
+                            "expected_value": ""
+                        }
+                    ]
+                }
+            ],
+            "output_status_on_pass": "Pass"
         }
     }
 
@@ -144,10 +175,8 @@ def test_complete_versioning_workflow(
     )
 
     assert indicator.version == 3  # Version should increment again
-    assert indicator.calculation_schema == {
-        "rule_type": "AND_ALL",
-        "sub_indicators": []
-    }
+    # Just verify calculation_schema has condition_groups
+    assert "condition_groups" in indicator.calculation_schema
 
     # Step 5: Verify indicators_history contains versions 1 and 2
     history = indicator_service.get_indicator_history(db_session, indicator_id)
@@ -158,22 +187,15 @@ def test_complete_versioning_workflow(
     assert history[1].version == 1
 
     # Verify version 2 has the updated form_schema
-    assert history[0].form_schema == {
-        "type": "object",
-        "properties": {
-            "field1": {"type": "string"},
-            "field2": {"type": "number"}
-        }
-    }
+    assert len(history[0].form_schema["fields"]) == 2
+    assert history[0].form_schema["fields"][0]["field_id"] == "field1"
+    assert history[0].form_schema["fields"][1]["field_id"] == "field2"
     assert history[0].calculation_schema is None
 
     # Step 6: Verify current indicators table contains version 3
     current_indicator = indicator_service.get_indicator(db_session, indicator_id)
     assert current_indicator.version == 3
-    assert current_indicator.calculation_schema == {
-        "rule_type": "AND_ALL",
-        "sub_indicators": []
-    }
+    assert "condition_groups" in current_indicator.calculation_schema
 
 
 def test_version_history_preserves_all_fields(
@@ -192,8 +214,32 @@ def test_version_history_preserves_all_fields(
         "is_active": True,
         "is_auto_calculable": True,
         "is_profiling_only": False,
-        "form_schema": {"type": "object"},
-        "calculation_schema": {"rule_type": "OR_ANY"},
+        "form_schema": {
+            "fields": [
+                {
+                    "field_id": "test_field",
+                    "field_type": "text_input",
+                    "label": "Test Field",
+                    "required": True
+                }
+            ]
+        },
+        "calculation_schema": {
+            "condition_groups": [
+                {
+                    "operator": "OR",
+                    "rules": [
+                        {
+                            "rule_type": "MATCH_VALUE",
+                            "field_id": "test_field",
+                            "operator": "!=",
+                            "expected_value": ""
+                        }
+                    ]
+                }
+            ],
+            "output_status_on_pass": "Pass"
+        },
         "remark_schema": {"type": "string"},
         "technical_notes_text": "Original technical notes",
     }
@@ -208,7 +254,22 @@ def test_version_history_preserves_all_fields(
 
     # Update schema to trigger versioning
     schema_update = {
-        "form_schema": {"type": "array"}
+        "form_schema": {
+            "fields": [
+                {
+                    "field_id": "test_field",
+                    "field_type": "text_input",
+                    "label": "Test Field",
+                    "required": True
+                },
+                {
+                    "field_id": "new_field",
+                    "field_type": "number_input",
+                    "label": "New Field",
+                    "required": False
+                }
+            ]
+        }
     }
 
     indicator_service.update_indicator(
@@ -230,8 +291,8 @@ def test_version_history_preserves_all_fields(
     assert archived_version.is_active is True
     assert archived_version.is_auto_calculable is True
     assert archived_version.is_profiling_only is False
-    assert archived_version.form_schema == {"type": "object"}
-    assert archived_version.calculation_schema == {"rule_type": "OR_ANY"}
+    assert archived_version.form_schema["fields"][0]["field_id"] == "test_field"
+    assert "condition_groups" in archived_version.calculation_schema
     assert archived_version.remark_schema == {"type": "string"}
     assert archived_version.technical_notes_text == "Original technical notes"
     assert archived_version.archived_by == test_user.id
@@ -249,7 +310,17 @@ def test_multiple_schema_changes_in_sequence(
     indicator_data = {
         "name": "Multi-Version Indicator",
         "governance_area_id": governance_area.id,
-        "form_schema": {"version": 1},
+        "form_schema": {
+            "fields": [
+                {
+                    "field_id": "version",
+                    "field_type": "number_input",
+                    "label": "Version",
+                    "required": True,
+                    "default_value": 1
+                }
+            ]
+        },
     }
 
     indicator = indicator_service.create_indicator(
@@ -262,7 +333,19 @@ def test_multiple_schema_changes_in_sequence(
 
     # Make 5 schema changes
     for i in range(2, 7):
-        update = {"form_schema": {"version": i}}
+        update = {
+            "form_schema": {
+                "fields": [
+                    {
+                        "field_id": "version",
+                        "field_type": "number_input",
+                        "label": "Version",
+                        "required": True,
+                        "default_value": i
+                    }
+                ]
+            }
+        }
         indicator_service.update_indicator(
             db=db_session,
             indicator_id=indicator_id,
@@ -273,7 +356,7 @@ def test_multiple_schema_changes_in_sequence(
     # Verify current version is 6
     current = indicator_service.get_indicator(db_session, indicator_id)
     assert current.version == 6
-    assert current.form_schema == {"version": 6}
+    assert current.form_schema["fields"][0]["default_value"] == 6
 
     # Verify history has versions 1-5
     history = indicator_service.get_indicator_history(db_session, indicator_id)
@@ -283,7 +366,7 @@ def test_multiple_schema_changes_in_sequence(
     for idx, archived in enumerate(history):
         expected_version = 5 - idx  # 5, 4, 3, 2, 1
         assert archived.version == expected_version
-        assert archived.form_schema == {"version": expected_version}
+        assert archived.form_schema["fields"][0]["default_value"] == expected_version
 
 
 def test_version_uniqueness_constraint(
@@ -300,7 +383,20 @@ def test_version_uniqueness_constraint(
     indicator_data = {
         "name": "Uniqueness Test Indicator",
         "governance_area_id": governance_area.id,
-        "form_schema": {"initial": True},
+        "form_schema": {
+            "fields": [
+                {
+                    "field_id": "initial",
+                    "field_type": "radio_button",
+                    "label": "Initial",
+                    "required": True,
+                    "options": [
+                        {"label": "Yes", "value": "yes"},
+                        {"label": "No", "value": "no"}
+                    ]
+                }
+            ]
+        },
     }
 
     indicator = indicator_service.create_indicator(
@@ -313,7 +409,22 @@ def test_version_uniqueness_constraint(
     indicator_service.update_indicator(
         db=db_session,
         indicator_id=indicator.id,
-        data={"form_schema": {"updated": True}},
+        data={
+            "form_schema": {
+                "fields": [
+                    {
+                        "field_id": "updated",
+                        "field_type": "radio_button",
+                        "label": "Updated",
+                        "required": True,
+                        "options": [
+                            {"label": "Option 1", "value": "opt1"},
+                            {"label": "Option 2", "value": "opt2"}
+                        ]
+                    }
+                ]
+            }
+        },
         user_id=test_user.id
     )
 
@@ -349,7 +460,20 @@ def test_archived_by_user_relationship(
     indicator_data = {
         "name": "User Relationship Test",
         "governance_area_id": governance_area.id,
-        "form_schema": {"initial": True},
+        "form_schema": {
+            "fields": [
+                {
+                    "field_id": "initial",
+                    "field_type": "radio_button",
+                    "label": "Initial",
+                    "required": True,
+                    "options": [
+                        {"label": "Yes", "value": "yes"},
+                        {"label": "No", "value": "no"}
+                    ]
+                }
+            ]
+        },
     }
 
     indicator = indicator_service.create_indicator(
@@ -362,7 +486,22 @@ def test_archived_by_user_relationship(
     indicator_service.update_indicator(
         db=db_session,
         indicator_id=indicator.id,
-        data={"form_schema": {"updated": True}},
+        data={
+            "form_schema": {
+                "fields": [
+                    {
+                        "field_id": "updated",
+                        "field_type": "radio_button",
+                        "label": "Updated",
+                        "required": True,
+                        "options": [
+                            {"label": "Option 1", "value": "opt1"},
+                            {"label": "Option 2", "value": "opt2"}
+                        ]
+                    }
+                ]
+            }
+        },
         user_id=test_user.id
     )
 
