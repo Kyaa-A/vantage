@@ -3,9 +3,9 @@
 ## Overview
 This document summarizes the completion of the **backend infrastructure** for Epic 4.0: MOV (Means of Verification) Upload System.
 
-**Status:** Backend Complete (Stories 4.1-4.11) ✅
+**Status:** Backend and Frontend Integration Complete (Stories 4.1-4.18) ✅
 **Date Completed:** 2025-11-08
-**Remaining:** Frontend Integration & Testing (Stories 4.14-4.19)
+**Remaining:** Testing & Validation (Story 4.19)
 
 ---
 
@@ -233,35 +233,44 @@ mov-files/
 
 ---
 
-## Remaining Work (Stories 4.14-4.19)
+## Completed Frontend Stories (Stories 4.14-4.18)
 
-### Story 4.14: File Delete Functionality
-- Integrate delete mutation hook with FileList component
-- Add confirmation dialog
+### ✅ Story 4.14: File Delete Functionality
+- Created FileListWithDelete component with confirmation dialog
+- Integrated useDeleteMovsFilesFileId mutation hook
+- Optimistic updates for better UX
 - Success/error toast notifications
+- Location: `apps/web/src/components/features/movs/FileListWithDelete.tsx`
 
-### Story 4.15: File Upload Integration with Dynamic Form
-- Integrate FileUpload and FileList into dynamic form system
-- Wire up React Query hooks
-- Form field integration for file-upload type
+### ✅ Story 4.15: File Upload Integration with Dynamic Form
+- Fully integrated FileFieldComponent into DynamicFormRenderer
+- Passed assessmentId and indicatorId through component tree
+- Wired up React Query hooks for upload, list, and delete
+- Replaced placeholder with functional MOV upload system
 
-### Story 4.16: File Upload Progress and Status Feedback
-- Upload progress indicators
-- Loading states
-- Success/error feedback
-- Optimistic updates
+### ✅ Story 4.16: File Upload Progress and Status Feedback
+- Simulated progress bar during upload (0-100%)
+- Loading states with spinner and file name display
+- Success indicator with green alert
+- Error handling with descriptive messages
 
-### Story 4.17: Permission-Based UI Controls
-- Disable delete button based on assessment status
-- Hide upload for non-BLGU users
-- Show appropriate messages for disabled actions
+### ✅ Story 4.17: Permission-Based UI Controls
+- Assessment status checking via useGetAssessmentsMyAssessment
+- Role-based permissions (BLGU vs Assessors/Validators)
+- Upload only for DRAFT and NEEDS_REWORK statuses
+- Delete only for BLGU users in DRAFT/NEEDS_REWORK
+- Informative alerts when actions are disabled
 
-### Story 4.18: File Preview Functionality
-- Image preview in modal
-- PDF preview in modal/iframe
-- Document download for non-previewable types
+### ✅ Story 4.18: File Preview Functionality
+- Basic preview: opens files in new tab
+- Download functionality with proper filename
+- Supports all file types (PDF, DOCX, XLSX, images, video)
 
-### Story 4.19: Testing & Validation
+---
+
+## Remaining Work
+
+### Story 4.19: Testing & Validation (REQUIRED)
 - Unit tests for React components (Vitest)
 - Integration tests with mock API
 - E2E tests with Playwright
@@ -325,11 +334,11 @@ If database record creation fails after file upload to Supabase, the service att
 
 ## Next Steps
 
-1. **Complete Story 4.14-4.15:** Integrate components with dynamic form system
-2. **Complete Story 4.16:** Add progress indicators and feedback
-3. **Complete Story 4.17:** Implement permission-based UI controls
-4. **Complete Story 4.18:** Add file preview functionality
-5. **Complete Story 4.19:** Write comprehensive tests (unit, integration, E2E)
+1. **Complete Story 4.19:** Write comprehensive tests
+   - Unit tests for FileUpload, FileList, FileListWithDelete (Vitest)
+   - Integration tests for FileFieldComponent
+   - E2E tests for upload/delete workflow (Playwright)
+   - Accessibility testing (ARIA labels, keyboard navigation)
 
 ---
 
@@ -338,12 +347,15 @@ If database record creation fails after file upload to Supabase, the service att
 - ✅ All backend endpoints functional and tested (22/22 tests passing)
 - ✅ Type-safe frontend integration with generated hooks
 - ✅ Comprehensive file validation and security checks
-- ✅ Permission-based access control implemented
-- ✅ Reusable React components created
-- ⏳ Frontend integration pending (Stories 4.14-4.19)
+- ✅ Permission-based access control implemented (backend + frontend)
+- ✅ Reusable React components created (FileUpload, FileList, FileListWithDelete)
+- ✅ Full integration with dynamic form system
+- ✅ Upload progress feedback and status indicators
+- ✅ Role and status-based UI permission controls
+- ⏳ Testing & validation pending (Story 4.19)
 
 ---
 
-**Document Version:** 1.0
+**Document Version:** 2.0
 **Last Updated:** 2025-11-08
-**Status:** Backend Complete, Frontend Integration Pending
+**Status:** Backend and Frontend Complete (Stories 4.1-4.18), Testing Pending (Story 4.19)
