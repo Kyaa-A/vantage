@@ -566,8 +566,6 @@ def test_get_form_schema_with_blgu_user(
 
     barangay = Barangay(
         name=f"Test Barangay {uuid.uuid4().hex[:8]}",
-        municipality="Test Municipality",
-        province="Test Province",
     )
     db_session.add(barangay)
     db_session.commit()

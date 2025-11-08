@@ -707,10 +707,10 @@ async def save_assessment_answers(
 
     # Extract field definitions from form_schema
     fields = form_schema.get("fields", [])
-    field_map = {field.get("id"): field for field in fields}
+    field_map = {field.get("field_id", field.get("id")): field for field in fields}
 
     # Extract field responses from request body
-    field_responses = request_body.get("responses", [])
+    field_responses = request_body.responses
 
     # Validate each field response
     validation_errors = []
