@@ -34,3 +34,16 @@ class SuccessResponse(BaseModel):
 
     success: bool = True
     message: str
+
+
+class ValidationResult(BaseModel):
+    """
+    File validation result schema.
+
+    Used by FileValidationService to return validation results
+    with success status, error messages, and error codes.
+    """
+
+    success: bool
+    error_message: str | None = None
+    error_code: str | None = None
