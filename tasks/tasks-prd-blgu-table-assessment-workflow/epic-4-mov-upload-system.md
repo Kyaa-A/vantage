@@ -44,49 +44,49 @@
     - **Tech:** Supabase Storage API, manual testing, role-based testing
     - **Time Estimate:** 3 hours
 
-- [ ] **4.2 Story: Database Schema for MOV Files**
+- [x] **4.2 Story: Database Schema for MOV Files** ✅
   - Create `mov_files` table with columns: id, assessment_id, indicator_id, file_name, file_url, file_type, file_size, uploaded_by, uploaded_at
   - Create Alembic migration for new table
   - Add foreign key relationships to assessments and indicators
   - Tech stack involved: SQLAlchemy, Alembic, PostgreSQL
   - Dependencies: None (can be done independently)
 
-  - [ ] **4.2.1 Atomic: Create Alembic migration file for mov_files table**
+  - [x] **4.2.1 Atomic: Create Alembic migration file for mov_files table**
     - **Files:** `apps/api/alembic/versions/xxxx_create_mov_files_table.py` (NEW)
     - **Dependencies:** None
     - **Acceptance:** Migration file created with `alembic revision --autogenerate -m "create mov_files table"`. File contains upgrade and downgrade functions.
     - **Tech:** Alembic, SQLAlchemy
     - **Time Estimate:** 2 hours
 
-  - [ ] **4.2.2 Atomic: Define upgrade function to create mov_files table**
+  - [x] **4.2.2 Atomic: Define upgrade function to create mov_files table**
     - **Files:** `apps/api/alembic/versions/xxxx_create_mov_files_table.py`
     - **Dependencies:** Task 4.2.1 must be complete
     - **Acceptance:** Upgrade function creates mov_files table with columns: id (UUID, primary key), assessment_id (Integer, FK), indicator_id (Integer, FK), file_name (String), file_url (String), file_type (String), file_size (Integer), uploaded_by (Integer, FK to users), uploaded_at (DateTime), deleted_at (DateTime, nullable for soft delete).
     - **Tech:** Alembic op.create_table(), PostgreSQL, SQLAlchemy Column types
     - **Time Estimate:** 4 hours
 
-  - [ ] **4.2.3 Atomic: Add foreign key constraints for assessment_id, indicator_id, uploaded_by**
+  - [x] **4.2.3 Atomic: Add foreign key constraints for assessment_id, indicator_id, uploaded_by**
     - **Files:** `apps/api/alembic/versions/xxxx_create_mov_files_table.py`
     - **Dependencies:** Task 4.2.2 must be complete
-    - **Acceptance:** Foreign keys created: assessment_id → assessments.id (CASCADE delete), indicator_id → governance_indicators.id (CASCADE delete), uploaded_by → users.id (SET NULL on delete). Constraints named explicitly.
+    - **Acceptance:** Foreign keys created: assessment_id → assessments.id (CASCADE delete), indicator_id → indicators.id (CASCADE delete), uploaded_by → users.id (SET NULL on delete). Constraints named explicitly.
     - **Tech:** Alembic ForeignKeyConstraint, PostgreSQL foreign keys
     - **Time Estimate:** 3 hours
 
-  - [ ] **4.2.4 Atomic: Add indexes for query performance**
+  - [x] **4.2.4 Atomic: Add indexes for query performance**
     - **Files:** `apps/api/alembic/versions/xxxx_create_mov_files_table.py`
     - **Dependencies:** Task 4.2.3 must be complete
-    - **Acceptance:** Indexes created: idx_mov_files_assessment_id, idx_mov_files_indicator_id, idx_mov_files_uploaded_by. Indexes improve query performance for file listing.
+    - **Acceptance:** Indexes created: idx_mov_files_assessment_id, idx_mov_files_indicator_id, idx_mov_files_uploaded_by, idx_mov_files_deleted_at. Indexes improve query performance for file listing.
     - **Tech:** Alembic op.create_index(), PostgreSQL indexes
     - **Time Estimate:** 2 hours
 
-  - [ ] **4.2.5 Atomic: Define downgrade function to drop mov_files table**
+  - [x] **4.2.5 Atomic: Define downgrade function to drop mov_files table**
     - **Files:** `apps/api/alembic/versions/xxxx_create_mov_files_table.py`
     - **Dependencies:** Task 4.2.4 must be complete
     - **Acceptance:** Downgrade function drops indexes, drops foreign keys, drops table. Migration rollback succeeds with `alembic downgrade -1`.
     - **Tech:** Alembic op.drop_table(), op.drop_index()
     - **Time Estimate:** 2 hours
 
-  - [ ] **4.2.6 Atomic: Test migration upgrade and downgrade**
+  - [x] **4.2.6 Atomic: Test migration upgrade and downgrade**
     - **Files:** `apps/api/tests/migrations/test_mov_files_migration.py` (NEW)
     - **Dependencies:** Tasks 4.2.2-4.2.5 must be complete
     - **Acceptance:** Migration applies successfully with `alembic upgrade head`. Table exists with correct columns and constraints. Rollback succeeds. Table is removed after downgrade.
