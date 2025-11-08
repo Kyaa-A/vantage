@@ -8,3 +8,7 @@ export { MunicipalProgressChart } from './MunicipalProgressChart';
 export { AssessorQueue } from './AssessorQueue';
 export { FailedIndicators } from './FailedIndicators';
 export { DashboardHeader } from './DashboardHeader';
+export { CompletionMetricsCard } from './CompletionMetricsCard';
+export { IndicatorNavigationList } from './IndicatorNavigationList';
+export { AssessorCommentsPanel } from './AssessorCommentsPanel';
+export { CompletionStatusBadge } from './CompletionStatusBadge';
