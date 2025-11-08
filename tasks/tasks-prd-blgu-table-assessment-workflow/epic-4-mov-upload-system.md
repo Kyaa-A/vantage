@@ -8,7 +8,7 @@
 
 ### Three-Tier Structure: Epic → Story → Atomic
 
-- [ ] **4.1 Story: Supabase Storage Bucket Configuration**
+- [x] **4.1 Story: Supabase Storage Bucket Configuration** ✅
   - Create dedicated Supabase Storage bucket for MOV files
   - Configure bucket policies for BLGU and assessor access
   - Set up row-level security (RLS) policies for file access
@@ -16,28 +16,28 @@
   - Tech stack involved: Supabase Storage, PostgreSQL RLS policies
   - Dependencies: None (can be done independently)
 
-  - [ ] **4.1.1 Atomic: Create Supabase Storage bucket via Supabase dashboard**
+  - [x] **4.1.1 Atomic: Create Supabase Storage bucket via Supabase dashboard**
     - **Files:** Supabase dashboard configuration (no code files)
     - **Dependencies:** None
     - **Acceptance:** Storage bucket named "mov-files" created in Supabase. Bucket is set to private (not public). Bucket visible in Supabase Storage dashboard.
     - **Tech:** Supabase Storage, dashboard configuration
     - **Time Estimate:** 1 hour
 
-  - [ ] **4.1.2 Atomic: Configure bucket privacy and CORS settings**
+  - [x] **4.1.2 Atomic: Configure bucket privacy and CORS settings**
     - **Files:** Supabase dashboard configuration
     - **Dependencies:** Task 4.1.1 must be complete
     - **Acceptance:** Bucket set to private access. CORS configured to allow uploads from frontend domain (localhost:3000 for development, production domain for production). CORS headers allow multipart uploads.
     - **Tech:** Supabase Storage, CORS configuration
     - **Time Estimate:** 2 hours
 
-  - [ ] **4.1.3 Atomic: Define RLS policies for file access**
+  - [x] **4.1.3 Atomic: Define RLS policies for file access**
     - **Files:** Supabase SQL editor or migration script
     - **Dependencies:** Task 4.1.2 must be complete
     - **Acceptance:** RLS policies created: BLGU users can upload/delete files for their own assessments. Assessors can read all files. Validators can read files for their assigned governance areas. Policies tested with different user roles.
     - **Tech:** PostgreSQL RLS, Supabase policies, SQL
     - **Time Estimate:** 4 hours
 
-  - [ ] **4.1.4 Atomic: Test file upload and access with different user roles**
+  - [x] **4.1.4 Atomic: Test file upload and access with different user roles**
     - **Files:** Manual testing or test script
     - **Dependencies:** Task 4.1.3 must be complete
     - **Acceptance:** BLGU user can upload file to their assessment folder. Assessor can download BLGU's file. BLGU user cannot access other BLGU's files. Validator can access files for assigned areas only.
