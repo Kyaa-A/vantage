@@ -126,3 +126,23 @@ class IndicatorHistoryResponse(BaseModel):
 
     # Nested relationships
     archived_by_user: Optional[UserNested] = None
+
+
+class FormSchemaMetadata(BaseModel):
+    """Metadata for form schema response."""
+
+    title: str = Field(..., description="Indicator title/name")
+    description: Optional[str] = Field(None, description="Indicator description")
+    governance_area_name: Optional[str] = Field(None, description="Governance area name")
+
+
+class FormSchemaResponse(BaseModel):
+    """Response schema for GET /indicators/{id}/form-schema endpoint.
+
+    Returns form schema with metadata for BLGU users to complete assessments.
+    Does NOT include calculation_schema or remark_schema (assessor-only fields).
+    """
+
+    indicator_id: int = Field(..., description="Indicator ID")
+    form_schema: Dict[str, Any] = Field(..., description="Form schema JSON structure")
+    metadata: FormSchemaMetadata = Field(..., description="Indicator metadata")
