@@ -313,6 +313,322 @@ class TestStorageServiceFileUpload:
             assert result.file_type == "application/octet-stream"
 
 
+class TestStorageServiceFileDeletion:
+    """Test file deletion functionality (Story 4.6)."""
+
+    @pytest.fixture
+    def service(self):
+        """Fixture providing StorageService instance."""
+        return StorageService()
+
+    @pytest.fixture
+    def mock_supabase_client(self):
+        """Fixture providing mocked Supabase client."""
+        mock_client = MagicMock()
+        # Mock successful deletion
+        mock_client.storage.from_().remove.return_value = {}
+        return mock_client
+
+    def test_delete_mov_file_success_with_draft_assessment(
+        self, service, mock_supabase_client, db_session, mock_assessment, mock_blgu_user
+    ):
+        """Test successful deletion by BLGU user for DRAFT assessment (Task 4.6.4)."""
+        from app.db.enums import AssessmentStatus, AreaType
+        from app.db.models.governance_area import GovernanceArea, Indicator
+
+        # Ensure assessment is in DRAFT status
+        mock_assessment.status = AssessmentStatus.DRAFT
+        db_session.commit()
+
+        # Create indicator
+        governance_area = GovernanceArea(name="Test Area", area_type=AreaType.CORE)
+        db_session.add(governance_area)
+        db_session.flush()
+
+        indicator = Indicator(
+            name="Test Indicator",
+            governance_area_id=governance_area.id,
+            form_schema={}
+        )
+        db_session.add(indicator)
+        db_session.flush()
+
+        # Create MOVFile
+        from app.db.models.assessment import MOVFile
+
+        mov_file = MOVFile(
+            assessment_id=mock_assessment.id,
+            indicator_id=indicator.id,
+            uploaded_by=mock_blgu_user.id,
+            file_name="test.pdf",
+            file_url="https://storage.supabase.co/mov-files/1/1/test.pdf",
+            file_type="application/pdf",
+            file_size=1024,
+        )
+        db_session.add(mov_file)
+        db_session.commit()
+
+        file_id = mov_file.id
+
+        # Mock Supabase client
+        with patch(
+            "app.services.storage_service._get_supabase_client",
+            return_value=mock_supabase_client,
+        ):
+            # Delete the file
+            result = service.delete_mov_file(
+                db=db_session, file_id=file_id, user_id=mock_blgu_user.id
+            )
+
+            # Verify soft delete
+            assert result.deleted_at is not None
+            assert result.id == file_id
+
+            # Verify Supabase deletion was called
+            mock_supabase_client.storage.from_().remove.assert_called_once()
+
+    def test_delete_mov_file_rejects_submitted_assessment(
+        self, service, db_session, mock_assessment, mock_blgu_user
+    ):
+        """Test that deletion is rejected for SUBMITTED assessment (Task 4.6.5)."""
+        from app.db.enums import AssessmentStatus, AreaType
+        from app.db.models.governance_area import GovernanceArea, Indicator
+        from fastapi import HTTPException
+
+        # Set assessment to SUBMITTED_FOR_REVIEW status
+        mock_assessment.status = AssessmentStatus.SUBMITTED_FOR_REVIEW
+        db_session.commit()
+
+        # Create indicator
+        governance_area = GovernanceArea(name="Test Area", area_type=AreaType.CORE)
+        db_session.add(governance_area)
+        db_session.flush()
+
+        indicator = Indicator(
+            name="Test Indicator",
+            governance_area_id=governance_area.id,
+            form_schema={}
+        )
+        db_session.add(indicator)
+        db_session.flush()
+
+        # Create MOVFile
+        from app.db.models.assessment import MOVFile
+
+        mov_file = MOVFile(
+            assessment_id=mock_assessment.id,
+            indicator_id=indicator.id,
+            uploaded_by=mock_blgu_user.id,
+            file_name="test.pdf",
+            file_url="https://storage.supabase.co/mov-files/1/1/test.pdf",
+            file_type="application/pdf",
+            file_size=1024,
+        )
+        db_session.add(mov_file)
+        db_session.commit()
+
+        file_id = mov_file.id
+
+        # Attempt to delete - should raise HTTPException
+        with pytest.raises(HTTPException) as exc_info:
+            service.delete_mov_file(
+                db=db_session, file_id=file_id, user_id=mock_blgu_user.id
+            )
+
+        assert exc_info.value.status_code == 403
+        assert "Cannot delete files from" in exc_info.value.detail
+
+        # Verify file was NOT deleted
+        db_session.refresh(mov_file)
+        assert mov_file.deleted_at is None
+
+    def test_delete_mov_file_rejects_different_user(
+        self, service, db_session, mock_assessment, mock_blgu_user
+    ):
+        """Test that user can only delete their own files (Task 4.6.6)."""
+        from app.db.enums import AssessmentStatus, AreaType
+        from app.db.models.governance_area import GovernanceArea, Indicator
+        from app.db.models.user import User
+        from fastapi import HTTPException
+
+        # Ensure assessment is in DRAFT status
+        mock_assessment.status = AssessmentStatus.DRAFT
+        db_session.commit()
+
+        # Create another user
+        other_user = User(
+            email="other@example.com",
+            name="Other User",
+            hashed_password="hashed",
+            role="BLGU_USER"
+        )
+        db_session.add(other_user)
+        db_session.flush()
+
+        # Create indicator
+        governance_area = GovernanceArea(name="Test Area", area_type=AreaType.CORE)
+        db_session.add(governance_area)
+        db_session.flush()
+
+        indicator = Indicator(
+            name="Test Indicator",
+            governance_area_id=governance_area.id,
+            form_schema={}
+        )
+        db_session.add(indicator)
+        db_session.flush()
+
+        # Create MOVFile uploaded by mock_blgu_user
+        from app.db.models.assessment import MOVFile
+
+        mov_file = MOVFile(
+            assessment_id=mock_assessment.id,
+            indicator_id=indicator.id,
+            uploaded_by=mock_blgu_user.id,  # Uploaded by mock_blgu_user
+            file_name="test.pdf",
+            file_url="https://storage.supabase.co/mov-files/1/1/test.pdf",
+            file_type="application/pdf",
+            file_size=1024,
+        )
+        db_session.add(mov_file)
+        db_session.commit()
+
+        file_id = mov_file.id
+
+        # Attempt to delete with different user - should raise HTTPException
+        with pytest.raises(HTTPException) as exc_info:
+            service.delete_mov_file(
+                db=db_session, file_id=file_id, user_id=other_user.id
+            )
+
+        assert exc_info.value.status_code == 403
+        assert "You can only delete files you uploaded" in exc_info.value.detail
+
+        # Verify file was NOT deleted
+        db_session.refresh(mov_file)
+        assert mov_file.deleted_at is None
+
+    def test_delete_mov_file_allows_needs_rework(
+        self, service, mock_supabase_client, db_session, mock_assessment, mock_blgu_user
+    ):
+        """Test that deletion is allowed for NEEDS_REWORK assessment."""
+        from app.db.enums import AssessmentStatus, AreaType
+        from app.db.models.governance_area import GovernanceArea, Indicator
+
+        # Set assessment to NEEDS_REWORK status
+        mock_assessment.status = AssessmentStatus.NEEDS_REWORK
+        db_session.commit()
+
+        # Create indicator
+        governance_area = GovernanceArea(name="Test Area", area_type=AreaType.CORE)
+        db_session.add(governance_area)
+        db_session.flush()
+
+        indicator = Indicator(
+            name="Test Indicator",
+            governance_area_id=governance_area.id,
+            form_schema={}
+        )
+        db_session.add(indicator)
+        db_session.flush()
+
+        # Create MOVFile
+        from app.db.models.assessment import MOVFile
+
+        mov_file = MOVFile(
+            assessment_id=mock_assessment.id,
+            indicator_id=indicator.id,
+            uploaded_by=mock_blgu_user.id,
+            file_name="test.pdf",
+            file_url="https://storage.supabase.co/mov-files/1/1/test.pdf",
+            file_type="application/pdf",
+            file_size=1024,
+        )
+        db_session.add(mov_file)
+        db_session.commit()
+
+        file_id = mov_file.id
+
+        # Mock Supabase client
+        with patch(
+            "app.services.storage_service._get_supabase_client",
+            return_value=mock_supabase_client,
+        ):
+            # Delete the file - should succeed
+            result = service.delete_mov_file(
+                db=db_session, file_id=file_id, user_id=mock_blgu_user.id
+            )
+
+            # Verify soft delete
+            assert result.deleted_at is not None
+
+    def test_delete_mov_file_rejects_already_deleted(
+        self, service, db_session, mock_assessment, mock_blgu_user
+    ):
+        """Test that already deleted files cannot be deleted again."""
+        from app.db.enums import AssessmentStatus, AreaType
+        from app.db.models.governance_area import GovernanceArea, Indicator
+        from fastapi import HTTPException
+        from datetime import datetime
+
+        # Ensure assessment is in DRAFT status
+        mock_assessment.status = AssessmentStatus.DRAFT
+        db_session.commit()
+
+        # Create indicator
+        governance_area = GovernanceArea(name="Test Area", area_type=AreaType.CORE)
+        db_session.add(governance_area)
+        db_session.flush()
+
+        indicator = Indicator(
+            name="Test Indicator",
+            governance_area_id=governance_area.id,
+            form_schema={}
+        )
+        db_session.add(indicator)
+        db_session.flush()
+
+        # Create MOVFile that is already soft deleted
+        from app.db.models.assessment import MOVFile
+
+        mov_file = MOVFile(
+            assessment_id=mock_assessment.id,
+            indicator_id=indicator.id,
+            uploaded_by=mock_blgu_user.id,
+            file_name="test.pdf",
+            file_url="https://storage.supabase.co/mov-files/1/1/test.pdf",
+            file_type="application/pdf",
+            file_size=1024,
+            deleted_at=datetime.utcnow(),  # Already deleted
+        )
+        db_session.add(mov_file)
+        db_session.commit()
+
+        file_id = mov_file.id
+
+        # Attempt to delete - should raise HTTPException
+        with pytest.raises(HTTPException) as exc_info:
+            service.delete_mov_file(
+                db=db_session, file_id=file_id, user_id=mock_blgu_user.id
+            )
+
+        assert exc_info.value.status_code == 403
+        assert "already been deleted" in exc_info.value.detail
+
+    def test_delete_file_from_storage_handles_errors_gracefully(self, service, mock_supabase_client):
+        """Test that storage deletion errors don't crash the service."""
+        # Mock Supabase failure
+        mock_supabase_client.storage.from_().remove.side_effect = Exception("Connection error")
+
+        with patch(
+            "app.services.storage_service._get_supabase_client",
+            return_value=mock_supabase_client,
+        ):
+            # Should return False instead of raising
+            result = service._delete_file_from_storage("test/path/file.pdf")
+            assert result is False
+
+
 class TestStorageServiceSingleton:
     """Test that singleton instance is exported."""
 
