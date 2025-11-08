@@ -440,6 +440,28 @@ class CompletenessValidationResponse(BaseModel):
 
 
 # ============================================================================
+# MOV File Schemas (Epic 4.0)
+# ============================================================================
+
+
+class MOVFileResponse(BaseModel):
+    """Response schema for MOV file operations."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    assessment_id: int
+    indicator_id: int
+    file_name: str
+    file_url: str
+    file_type: str
+    file_size: int
+    uploaded_by: int
+    uploaded_at: datetime
+    deleted_at: Optional[datetime] = None
+
+
+# ============================================================================
 # Update forward references for nested models
 # ============================================================================
 
