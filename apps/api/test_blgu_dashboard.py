@@ -20,7 +20,7 @@ API_V1 = f"{BASE_URL}/api/v1"
 # Test user credentials (replace with actual credentials)
 BLGU_USER_EMAIL = "test1@example.com"
 BLGU_USER_PASSWORD = "changethis"  # Replace with actual password
-TEST_ASSESSMENT_ID = 20  # Replace with actual assessment ID
+TEST_ASSESSMENT_ID = 68  # Replace with actual assessment ID
 
 
 def login(email: str, password: str) -> Optional[str]:

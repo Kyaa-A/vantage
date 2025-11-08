@@ -21,7 +21,6 @@ if not assessments:
     # Create a new assessment
     new_assessment = Assessment(
         blgu_user_id=user_id,
-        year=2025,
         status="DRAFT"
     )
     db.add(new_assessment)
@@ -34,9 +33,10 @@ else:
     print(f"✅ Found {len(assessments)} assessment(s):\n")
     for assessment in assessments:
         print(f"  Assessment ID: {assessment.id}")
-        print(f"  Year: {assessment.year}")
         print(f"  Status: {assessment.status}")
         print(f"  Created: {assessment.created_at}")
+        print(f"  Submitted: {assessment.submitted_at if assessment.submitted_at else 'Not yet'}")
+        print(f"  Rework Count: {assessment.rework_count}")
         print()
 
     print(f"👉 Use this assessment ID: {assessments[0].id}")
