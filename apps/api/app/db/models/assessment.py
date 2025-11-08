@@ -61,6 +61,9 @@ class Assessment(Base):
     bbi_results = relationship(
         "BBIResult", back_populates="assessment", cascade="all, delete-orphan"
     )
+    mov_files = relationship(
+        "MOVFile", back_populates="assessment", cascade="all, delete-orphan"
+    )
 
 
 class AssessmentResponse(Base):
@@ -157,6 +160,53 @@ class MOV(Base):
 
     # Relationships
     response = relationship("AssessmentResponse", back_populates="movs")
+
+
+class MOVFile(Base):
+    """
+    MOVFile (Means of Verification File) table model for database storage.
+
+    Represents uploaded files stored in Supabase Storage that serve as evidence
+    for specific indicators within an assessment. This model supports the new
+    MOV upload system (Epic 4.0) with direct indicator-level file management.
+
+    Path structure in Supabase Storage: {assessment_id}/{indicator_id}/{file_name}
+    """
+
+    __tablename__ = "mov_files"
+
+    # Primary key
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+
+    # Foreign keys
+    assessment_id: Mapped[int] = mapped_column(
+        ForeignKey("assessments.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    indicator_id: Mapped[int] = mapped_column(
+        ForeignKey("indicators.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    uploaded_by: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+
+    # File metadata
+    file_name: Mapped[str] = mapped_column(String, nullable=False)
+    file_url: Mapped[str] = mapped_column(String, nullable=False)
+    file_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    file_size: Mapped[int] = mapped_column(Integer, nullable=False)  # Size in bytes
+
+    # Timestamps
+    uploaded_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.utcnow
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime, nullable=True, index=True
+    )  # Soft delete support
+
+    # Relationships
+    assessment = relationship("Assessment", back_populates="mov_files")
+    indicator = relationship("Indicator", back_populates="mov_files")
+    uploader = relationship("User", foreign_keys=[uploaded_by])
 
 
 class FeedbackComment(Base):

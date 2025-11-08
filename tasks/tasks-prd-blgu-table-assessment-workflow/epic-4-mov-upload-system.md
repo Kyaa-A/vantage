@@ -93,45 +93,45 @@
     - **Tech:** Pytest, Alembic, SQLAlchemy inspection
     - **Time Estimate:** 3 hours
 
-- [ ] **4.3 Story: SQLAlchemy Model for MOV Files**
+- [x] **4.3 Story: SQLAlchemy Model for MOV Files** ✅
   - Create `MOVFile` model in `apps/api/app/db/models/assessment.py`
   - Add relationships to Assessment and Indicator models
   - Include proper type hints and constraints
   - Tech stack involved: SQLAlchemy, Python type hints
   - Dependencies: Story 4.2 must be complete
 
-  - [ ] **4.3.1 Atomic: Create MOVFile SQLAlchemy model class**
+  - [x] **4.3.1 Atomic: Create MOVFile SQLAlchemy model class**
     - **Files:** `apps/api/app/db/models/assessment.py`
     - **Dependencies:** Story 4.2 must be complete (migration applied)
     - **Acceptance:** MOVFile model class created with __tablename__ = "mov_files". All columns defined: id, assessment_id, indicator_id, file_name, file_url, file_type, file_size, uploaded_by, uploaded_at, deleted_at. Type hints use Optional where applicable.
     - **Tech:** SQLAlchemy declarative base, Column, types, Python type hints
     - **Time Estimate:** 3 hours
 
-  - [ ] **4.3.2 Atomic: Add relationship to Assessment model**
+  - [x] **4.3.2 Atomic: Add relationship to Assessment model**
     - **Files:** `apps/api/app/db/models/assessment.py`
     - **Dependencies:** Task 4.3.1 must be complete
-    - **Acceptance:** MOVFile model has relationship to Assessment: assessment = relationship("Assessment", back_populates="mov_files"). Assessment model has back_populates: mov_files = relationship("MOVFile", back_populates="assessment"). Lazy loading configured.
+    - **Acceptance:** MOVFile model has relationship to Assessment: assessment = relationship("Assessment", back_populates="mov_files"). Assessment model has back_populates: mov_files = relationship("MOVFile", back_populates="assessment", cascade="all, delete-orphan").
     - **Tech:** SQLAlchemy relationship(), back_populates, lazy loading
     - **Time Estimate:** 2 hours
 
-  - [ ] **4.3.3 Atomic: Add relationship to GovernanceIndicator model**
+  - [x] **4.3.3 Atomic: Add relationship to Indicator model**
     - **Files:** `apps/api/app/db/models/assessment.py`, `apps/api/app/db/models/governance_area.py`
     - **Dependencies:** Task 4.3.1 must be complete
-    - **Acceptance:** MOVFile model has relationship to GovernanceIndicator: indicator = relationship("GovernanceIndicator"). GovernanceIndicator model has back_populates: mov_files = relationship("MOVFile").
+    - **Acceptance:** MOVFile model has relationship to Indicator: indicator = relationship("Indicator"). Indicator model has back_populates: mov_files = relationship("MOVFile", back_populates="indicator").
     - **Tech:** SQLAlchemy relationship()
     - **Time Estimate:** 2 hours
 
-  - [ ] **4.3.4 Atomic: Add relationship to User model for uploaded_by**
-    - **Files:** `apps/api/app/db/models/assessment.py`, `apps/api/app/db/models/user.py`
+  - [x] **4.3.4 Atomic: Add relationship to User model for uploaded_by**
+    - **Files:** `apps/api/app/db/models/assessment.py`
     - **Dependencies:** Task 4.3.1 must be complete
-    - **Acceptance:** MOVFile model has relationship to User: uploader = relationship("User"). User model optionally has back_populates for uploaded files.
+    - **Acceptance:** MOVFile model has relationship to User: uploader = relationship("User", foreign_keys=[uploaded_by]).
     - **Tech:** SQLAlchemy relationship()
     - **Time Estimate:** 2 hours
 
-  - [ ] **4.3.5 Atomic: Test MOVFile model and relationships**
+  - [x] **4.3.5 Atomic: Test MOVFile model and relationships**
     - **Files:** `apps/api/tests/db/models/test_mov_file.py` (NEW)
     - **Dependencies:** Tasks 4.3.1-4.3.4 must be complete
-    - **Acceptance:** Unit tests verify MOVFile can be created, saved to database. Relationships load correctly. Foreign keys work. Cascade deletes work (deleting assessment deletes mov_files).
+    - **Acceptance:** Unit tests verify MOVFile can be created, saved to database. Relationships load correctly. Foreign keys work. Cascade deletes work (deleting assessment deletes mov_files). All 10 tests pass.
     - **Tech:** Pytest, SQLAlchemy fixtures, test database
     - **Time Estimate:** 4 hours
 

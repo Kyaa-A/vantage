@@ -110,6 +110,7 @@ class Indicator(Base):
     )
     history = relationship("IndicatorHistory", back_populates="indicator")
     deadline_overrides = relationship("DeadlineOverride", back_populates="indicator")
+    mov_files = relationship("MOVFile", back_populates="indicator")
 
 
 class IndicatorHistory(Base):
