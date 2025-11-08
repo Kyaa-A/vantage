@@ -1,6 +1,7 @@
 # 📋 Assessments API Routes
 # Endpoints for assessment management and assessment data
 
+from datetime import datetime
 from typing import Any, Dict, List
 
 from app.api import deps
@@ -601,4 +602,229 @@ async def generate_insights(
         "assessment_id": id,
         "task_id": task.id,
         "status": "processing",
+    }
+
+
+@router.post(
+    "/{assessment_id}/answers",
+    status_code=status.HTTP_200_OK,
+    tags=["assessments"],
+)
+async def save_assessment_answers(
+    assessment_id: int,
+    request_body: Dict[str, Any],
+    indicator_id: int = Query(..., description="ID of the indicator"),
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+) -> Dict[str, Any]:
+    """
+    Save form responses for an assessment.
+
+    **Permissions**:
+    - BLGU users can save answers for their own assessments
+    - Assessors can save answers (for table validation)
+
+    **Path Parameters**:
+    - assessment_id: ID of the assessment
+
+    **Query Parameters**:
+    - indicator_id: ID of the indicator
+
+    **Request Body**:
+    ```json
+    {
+      "responses": [
+        {"field_id": "field1", "value": "text response"},
+        {"field_id": "field2", "value": 42},
+        {"field_id": "field3", "value": ["option1", "option2"]}
+      ]
+    }
+    ```
+
+    **Field Type Validation**:
+    - text/textarea: value must be string
+    - number: value must be numeric (int or float)
+    - date: value must be ISO date string
+    - select/radio: value must be string matching one of the field's option IDs
+    - checkbox: value must be array of strings matching the field's option IDs
+
+    **Returns**: Confirmation with count of saved fields
+
+    **Raises**:
+    - 400: Assessment is locked for editing
+    - 403: User not authorized to modify this assessment
+    - 404: Assessment or indicator not found
+    - 422: Field validation errors (field not found, type mismatch, invalid option)
+    """
+    from app.db.models import Assessment
+    from app.db.models.governance_area import Indicator
+
+    # Retrieve assessment
+    assessment = db.query(Assessment).filter(Assessment.id == assessment_id).first()
+
+    if not assessment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Assessment with ID {assessment_id} not found"
+        )
+
+    # Permission check: BLGU users can only save their own assessments
+    # Assessors can save for any assessment (for table validation)
+    if current_user.role == UserRole.BLGU_USER:
+        if assessment.blgu_user_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You are not authorized to modify this assessment"
+            )
+    # Assessors and other roles are allowed
+
+    # Status check: Only DRAFT or NEEDS_REWORK assessments can be edited
+    locked_statuses = [AssessmentStatus.SUBMITTED_FOR_REVIEW, AssessmentStatus.VALIDATED]
+    if assessment.status in locked_statuses:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Assessment is locked for editing. Current status: {assessment.status.value}"
+        )
+
+    # Retrieve indicator and form_schema for validation
+    indicator = db.query(Indicator).filter(Indicator.id == indicator_id).first()
+
+    if not indicator:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Indicator with ID {indicator_id} not found"
+        )
+
+    # Parse form_schema to extract field definitions
+    form_schema = indicator.form_schema or {}
+
+    # Extract field definitions from form_schema
+    fields = form_schema.get("fields", [])
+    field_map = {field.get("id"): field for field in fields}
+
+    # Extract field responses from request body
+    field_responses = request_body.get("responses", [])
+
+    # Validate each field response
+    validation_errors = []
+
+    for response in field_responses:
+        field_id = response.get("field_id")
+        value = response.get("value")
+
+        # Check if field_id exists in form_schema
+        if field_id not in field_map:
+            validation_errors.append({
+                "field_id": field_id,
+                "error": f"Field '{field_id}' not found in form schema"
+            })
+            continue
+
+        field_definition = field_map[field_id]
+        field_type = field_definition.get("type")
+
+        # Validate value type matches field type
+        if field_type == "text" or field_type == "textarea":
+            if not isinstance(value, str):
+                validation_errors.append({
+                    "field_id": field_id,
+                    "error": f"Field '{field_id}' expects string value, got {type(value).__name__}"
+                })
+
+        elif field_type == "number":
+            if not isinstance(value, (int, float)):
+                validation_errors.append({
+                    "field_id": field_id,
+                    "error": f"Field '{field_id}' expects numeric value, got {type(value).__name__}"
+                })
+
+        elif field_type == "date":
+            if not isinstance(value, str):
+                validation_errors.append({
+                    "field_id": field_id,
+                    "error": f"Field '{field_id}' expects date string (ISO format), got {type(value).__name__}"
+                })
+            # Note: Additional date format validation can be added here
+
+        elif field_type == "select" or field_type == "radio":
+            # For select/radio, value should be a string matching one of the options
+            if not isinstance(value, str):
+                validation_errors.append({
+                    "field_id": field_id,
+                    "error": f"Field '{field_id}' expects string value (option ID), got {type(value).__name__}"
+                })
+            else:
+                # Validate that selected option exists
+                options = field_definition.get("options", [])
+                option_ids = [opt.get("id") for opt in options]
+                if value not in option_ids:
+                    validation_errors.append({
+                        "field_id": field_id,
+                        "error": f"Field '{field_id}' has invalid option '{value}'. Valid options: {option_ids}"
+                    })
+
+        elif field_type == "checkbox":
+            # For checkbox, value should be an array of option IDs
+            if not isinstance(value, list):
+                validation_errors.append({
+                    "field_id": field_id,
+                    "error": f"Field '{field_id}' expects array of option IDs, got {type(value).__name__}"
+                })
+            else:
+                # Validate that all selected options exist
+                options = field_definition.get("options", [])
+                option_ids = [opt.get("id") for opt in options]
+                for selected_option in value:
+                    if selected_option not in option_ids:
+                        validation_errors.append({
+                            "field_id": field_id,
+                            "error": f"Field '{field_id}' has invalid option '{selected_option}'. Valid options: {option_ids}"
+                        })
+
+    # If validation errors found, raise 422
+    if validation_errors:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={
+                "message": "Field validation failed",
+                "errors": validation_errors
+            }
+        )
+
+    # Upsert assessment_response record
+    from app.db.models.assessment import AssessmentResponse
+
+    # Check if assessment_response already exists for this assessment + indicator
+    existing_response = db.query(AssessmentResponse).filter(
+        AssessmentResponse.assessment_id == assessment_id,
+        AssessmentResponse.indicator_id == indicator_id
+    ).first()
+
+    # Build response_data dictionary from field responses
+    response_data = {response["field_id"]: response["value"] for response in field_responses}
+
+    if existing_response:
+        # Update existing record
+        existing_response.response_data = response_data
+        existing_response.updated_at = datetime.utcnow()
+        db.commit()
+        db.refresh(existing_response)
+    else:
+        # Create new record
+        new_response = AssessmentResponse(
+            assessment_id=assessment_id,
+            indicator_id=indicator_id,
+            response_data=response_data,
+            is_completed=False,  # Will be set to True when all required fields are filled
+            requires_rework=False,
+        )
+        db.add(new_response)
+        db.commit()
+        db.refresh(new_response)
+
+    return {
+        "message": "Responses saved successfully",
+        "assessment_id": assessment_id,
+        "indicator_id": indicator_id,
+        "saved_count": len(field_responses)
     }
