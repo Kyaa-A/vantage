@@ -188,3 +188,73 @@ export function useGetMovsAssessmentsAssessmentIdIndicatorsIndicatorIdFiles<TDat
 
 
 
+/**
+ * Delete a MOV (Means of Verification) file from both storage and database.
+
+    - **Performs soft delete**: Sets deleted_at timestamp instead of removing record
+    - **Permission check**: Only the uploader can delete their own files
+    - **Status restriction**: Only allowed for DRAFT or NEEDS_REWORK assessments
+    - **Storage cleanup**: Removes file from Supabase Storage
+
+    Returns the deleted file metadata with updated deleted_at timestamp.
+ * @summary Delete a MOV file
+ */
+export const deleteMovsFiles$FileId = (
+    fileId: number,
+ options?: SecondParameter<typeof mutator>,) => {
+      
+      
+      return mutator<MOVFileResponse>(
+      {url: `http://localhost:8000/api/v1/movs/files/${fileId}`, method: 'DELETE'
+    },
+      options);
+    }
+  
+
+
+export const getDeleteMovsFilesFileIdMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMovsFiles$FileId>>, TError,{fileId: number}, TContext>, request?: SecondParameter<typeof mutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteMovsFiles$FileId>>, TError,{fileId: number}, TContext> => {
+
+const mutationKey = ['deleteMovsFilesFileId'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteMovsFiles$FileId>>, {fileId: number}> = (props) => {
+          const {fileId} = props ?? {};
+
+          return  deleteMovsFiles$FileId(fileId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteMovsFilesFileIdMutationResult = NonNullable<Awaited<ReturnType<typeof deleteMovsFiles$FileId>>>
+    
+    export type DeleteMovsFilesFileIdMutationError = HTTPValidationError
+
+    /**
+ * @summary Delete a MOV file
+ */
+export const useDeleteMovsFilesFileId = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMovsFiles$FileId>>, TError,{fileId: number}, TContext>, request?: SecondParameter<typeof mutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteMovsFiles$FileId>>,
+        TError,
+        {fileId: number},
+        TContext
+      > => {
+
+      const mutationOptions = getDeleteMovsFilesFileIdMutationOptions(options);
+
+      return useMutation(mutationOptions );
+    }
+    

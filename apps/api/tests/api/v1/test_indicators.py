@@ -513,3 +513,260 @@ def test_get_indicator_history_not_found(
     response = client.get("/api/v1/indicators/99999/history")
 
     assert response.status_code == 404
+
+
+# ====================================================================
+# GET /api/v1/indicators/{indicator_id}/form-schema - Get Form Schema
+# ====================================================================
+
+
+def test_get_form_schema_success(
+    client: TestClient,
+    db_session: Session,
+    admin_user: User,
+    test_indicator: Indicator
+):
+    """Test successfully retrieving form schema for an indicator"""
+    _override_admin_and_db(client, admin_user, db_session)
+
+    response = client.get(f"/api/v1/indicators/{test_indicator.id}/form-schema")
+
+    assert response.status_code == 200
+    data = response.json()
+
+    # Verify response structure
+    assert "indicator_id" in data
+    assert "form_schema" in data
+    assert "metadata" in data
+
+    # Verify indicator_id matches
+    assert data["indicator_id"] == test_indicator.id
+
+    # Verify form_schema contains fields
+    assert isinstance(data["form_schema"], dict)
+    assert "fields" in data["form_schema"]
+    assert isinstance(data["form_schema"]["fields"], list)
+    assert len(data["form_schema"]["fields"]) > 0
+
+    # Verify metadata
+    metadata = data["metadata"]
+    assert metadata["title"] == test_indicator.name
+    assert metadata["description"] == test_indicator.description
+    assert "governance_area_name" in metadata
+
+
+def test_get_form_schema_with_blgu_user(
+    client: TestClient,
+    db_session: Session,
+    test_indicator: Indicator
+):
+    """Test BLGU users can access form schemas (all barangays complete all governance areas)"""
+    # Create a BLGU user
+    from app.db.models.barangay import Barangay
+
+    barangay = Barangay(
+        name=f"Test Barangay {uuid.uuid4().hex[:8]}",
+        municipality="Test Municipality",
+        province="Test Province",
+    )
+    db_session.add(barangay)
+    db_session.commit()
+    db_session.refresh(barangay)
+
+    blgu_user = User(
+        email=f"blgu_{uuid.uuid4().hex[:8]}@example.com",
+        name="BLGU User",
+        hashed_password=pwd_context.hash("blgupass123"),
+        role=UserRole.BLGU_USER,
+        barangay_id=barangay.id,
+        is_active=True,
+    )
+    db_session.add(blgu_user)
+    db_session.commit()
+    db_session.refresh(blgu_user)
+
+    _override_user_and_db(client, blgu_user, db_session)
+
+    response = client.get(f"/api/v1/indicators/{test_indicator.id}/form-schema")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["indicator_id"] == test_indicator.id
+    assert "form_schema" in data
+
+
+def test_get_form_schema_with_assessor(
+    client: TestClient,
+    db_session: Session,
+    assessor_user: User,
+    test_indicator: Indicator
+):
+    """Test assessors can access form schemas"""
+    _override_user_and_db(client, assessor_user, db_session)
+
+    response = client.get(f"/api/v1/indicators/{test_indicator.id}/form-schema")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["indicator_id"] == test_indicator.id
+    assert "form_schema" in data
+
+
+def test_get_form_schema_not_found(
+    client: TestClient,
+    db_session: Session,
+    admin_user: User
+):
+    """Test getting form schema for non-existent indicator returns 404"""
+    _override_admin_and_db(client, admin_user, db_session)
+
+    response = client.get("/api/v1/indicators/99999/form-schema")
+
+    assert response.status_code == 404
+    assert "not found" in response.json()["detail"].lower()
+
+
+def test_get_form_schema_unauthorized(client: TestClient, test_indicator: Indicator):
+    """Test that accessing form schema requires authentication"""
+    response = client.get(f"/api/v1/indicators/{test_indicator.id}/form-schema")
+
+    assert response.status_code in [401, 403]
+
+
+def test_get_form_schema_with_complex_schema(
+    client: TestClient,
+    db_session: Session,
+    admin_user: User,
+    governance_area: GovernanceArea
+):
+    """Test form schema retrieval with complex multi-field schema"""
+    # Create indicator with complex form schema
+    complex_indicator = Indicator(
+        name=f"Complex Indicator {uuid.uuid4().hex[:8]}",
+        description="Complex multi-field indicator",
+        version=1,
+        is_active=True,
+        is_auto_calculable=False,
+        is_profiling_only=False,
+        form_schema={
+            "fields": [
+                {
+                    "field_id": "text_field",
+                    "field_type": "text_input",
+                    "label": "Text Input",
+                    "required": True,
+                    "help_text": "Enter text"
+                },
+                {
+                    "field_id": "number_field",
+                    "field_type": "number_input",
+                    "label": "Number Input",
+                    "required": True,
+                    "min_value": 0,
+                    "max_value": 100
+                },
+                {
+                    "field_id": "date_field",
+                    "field_type": "date_picker",
+                    "label": "Date Picker",
+                    "required": False
+                },
+                {
+                    "field_id": "radio_field",
+                    "field_type": "radio_button",
+                    "label": "Radio Button",
+                    "required": True,
+                    "options": [
+                        {"value": "yes", "label": "Yes"},
+                        {"value": "no", "label": "No"}
+                    ]
+                }
+            ]
+        },
+        governance_area_id=governance_area.id,
+    )
+    db_session.add(complex_indicator)
+    db_session.commit()
+    db_session.refresh(complex_indicator)
+
+    _override_admin_and_db(client, admin_user, db_session)
+
+    response = client.get(f"/api/v1/indicators/{complex_indicator.id}/form-schema")
+
+    assert response.status_code == 200
+    data = response.json()
+
+    # Verify all fields are present
+    fields = data["form_schema"]["fields"]
+    assert len(fields) == 4
+
+    # Verify field IDs
+    field_ids = [f["field_id"] for f in fields]
+    assert "text_field" in field_ids
+    assert "number_field" in field_ids
+    assert "date_field" in field_ids
+    assert "radio_field" in field_ids
+
+    # Verify specific field properties
+    number_field = next(f for f in fields if f["field_id"] == "number_field")
+    assert number_field["min_value"] == 0
+    assert number_field["max_value"] == 100
+
+    radio_field = next(f for f in fields if f["field_id"] == "radio_field")
+    assert len(radio_field["options"]) == 2
+
+
+def test_get_form_schema_excludes_calculation_schema(
+    client: TestClient,
+    db_session: Session,
+    admin_user: User,
+    governance_area: GovernanceArea
+):
+    """Test that form schema endpoint does NOT include calculation_schema (assessor-only)"""
+    # Create indicator with both form_schema and calculation_schema
+    indicator_with_calc = Indicator(
+        name=f"Indicator with Calc {uuid.uuid4().hex[:8]}",
+        description="Indicator with calculation schema",
+        version=1,
+        is_active=True,
+        is_auto_calculable=True,
+        is_profiling_only=False,
+        form_schema={
+            "fields": [
+                {
+                    "field_id": "score",
+                    "field_type": "number_input",
+                    "label": "Score",
+                    "required": True
+                }
+            ]
+        },
+        calculation_schema={
+            "rules": [
+                {
+                    "condition": "score >= 80",
+                    "result": "PASS"
+                }
+            ]
+        },
+        governance_area_id=governance_area.id,
+    )
+    db_session.add(indicator_with_calc)
+    db_session.commit()
+    db_session.refresh(indicator_with_calc)
+
+    _override_admin_and_db(client, admin_user, db_session)
+
+    response = client.get(f"/api/v1/indicators/{indicator_with_calc.id}/form-schema")
+
+    assert response.status_code == 200
+    data = response.json()
+
+    # Verify form_schema is included
+    assert "form_schema" in data
+    assert "fields" in data["form_schema"]
+
+    # Verify calculation_schema is NOT included
+    assert "calculation_schema" not in data
+    # Also check it's not nested in form_schema
+    assert "calculation_schema" not in data["form_schema"]
