@@ -20,7 +20,7 @@ from app.api import deps
 from app.db.enums import AssessmentStatus, UserRole
 from app.db.models.assessment import Assessment
 from app.db.models.user import User
-from app.schemas.blgu_dashboard import BLGUDashboardResponse
+from app.schemas.blgu_dashboard import BLGUDashboardResponse, IndicatorNavigationItem
 from app.services.completeness_validation_service import completeness_validation_service
 
 router = APIRouter(tags=["blgu-dashboard"])
@@ -162,3 +162,82 @@ def get_blgu_dashboard(
         "governance_areas": governance_areas_list,
         "rework_comments": rework_comments,
     }
+
+
+@router.get("/{assessment_id}/indicators/navigation", response_model=List[IndicatorNavigationItem])
+def get_indicator_navigation(
+    assessment_id: int,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+):
+    """
+    Get indicator navigation list with completion status and route paths.
+
+    Returns a list of all indicators for the assessment with:
+    - Indicator ID, title, and governance area
+    - Completion status (complete/incomplete)
+    - Frontend route path for navigation
+
+    **Security**: Only shows completion status (complete/incomplete).
+    Compliance status (PASS/FAIL/CONDITIONAL) is never exposed.
+
+    **Access**: BLGU users can only access their own assessment data.
+    """
+    # Check user role is BLGU_USER
+    if current_user.role != UserRole.BLGU_USER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only BLGU users can access indicator navigation",
+        )
+
+    # Retrieve assessment with eager loading of responses and indicators
+    assessment = (
+        db.query(Assessment)
+        .filter(Assessment.id == assessment_id)
+        .options(
+            joinedload(Assessment.responses)
+            .joinedload("indicator")
+            .joinedload("governance_area")
+        )
+        .first()
+    )
+
+    if not assessment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Assessment with id {assessment_id} not found",
+        )
+
+    # Check ownership: assessment must belong to current user
+    if assessment.blgu_user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to access this assessment",
+        )
+
+    # Build navigation list with completion status and route paths
+    navigation_list = []
+
+    for response in assessment.responses:
+        # Calculate completion status using CompletenessValidationService
+        validation_result = completeness_validation_service.validate_completeness(
+            form_schema=response.indicator.form_schema,
+            response_data=response.response_data,
+            uploaded_movs=response.movs
+        )
+
+        completion_status = "complete" if validation_result["is_complete"] else "incomplete"
+
+        # Generate frontend route path
+        route_path = f"/blgu/assessment/{assessment_id}/indicator/{response.indicator.id}"
+
+        navigation_list.append({
+            "indicator_id": response.indicator.id,
+            "title": response.indicator.name,
+            "completion_status": completion_status,
+            "route_path": route_path,
+            "governance_area_name": response.indicator.governance_area.name,
+            "governance_area_id": response.indicator.governance_area.id,
+        })
+
+    return navigation_list

@@ -7,7 +7,7 @@ IMPORTANT: These schemas show COMPLETION status only (complete/incomplete).
 Compliance status (PASS/FAIL/CONDITIONAL) is NEVER exposed to BLGU users.
 """
 
-from typing import List, Optional
+from typing import List, Literal, Optional
 from pydantic import BaseModel, Field
 
 
@@ -38,6 +38,26 @@ class GovernanceAreaGroup(BaseModel):
     indicators: List[IndicatorItem] = Field(
         ..., description="List of indicators in this governance area"
     )
+
+
+class IndicatorNavigationItem(BaseModel):
+    """
+    Navigation item for a single indicator.
+
+    Provides all information needed for frontend navigation including
+    route path, completion status, and governance area grouping.
+    """
+
+    indicator_id: int = Field(..., description="Indicator ID")
+    title: str = Field(..., description="Indicator title/name")
+    completion_status: Literal["complete", "incomplete"] = Field(
+        ..., description="Completion status: 'complete' or 'incomplete'"
+    )
+    route_path: str = Field(
+        ..., description="Frontend route path for navigation (e.g., /blgu/assessment/123/indicator/456)"
+    )
+    governance_area_name: str = Field(..., description="Name of the governance area")
+    governance_area_id: int = Field(..., description="ID of the governance area")
 
 
 class ReworkComment(BaseModel):

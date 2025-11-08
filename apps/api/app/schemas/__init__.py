@@ -53,6 +53,7 @@ from .blgu_dashboard import (
     BLGUDashboardResponse,
     GovernanceAreaGroup,
     IndicatorItem,
+    IndicatorNavigationItem,
     ReworkComment,
 )
 from .system import ApiResponse, ErrorResponse, HealthCheck, SuccessResponse
@@ -121,5 +122,6 @@ __all__ = [
     "BLGUDashboardResponse",
     "GovernanceAreaGroup",
     "IndicatorItem",
+    "IndicatorNavigationItem",
     "ReworkComment",
 ]
