@@ -18,7 +18,8 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
 from app.db.enums import AssessmentStatus, UserRole
-from app.db.models.assessment import Assessment
+from app.db.models.assessment import Assessment, AssessmentResponse
+from app.db.models.governance_area import Indicator
 from app.db.models.user import User
 from app.schemas.blgu_dashboard import BLGUDashboardResponse, IndicatorNavigationItem
 from app.services.completeness_validation_service import completeness_validation_service
@@ -59,9 +60,9 @@ def get_blgu_dashboard(
         .filter(Assessment.id == assessment_id)
         .options(
             joinedload(Assessment.responses)
-            .joinedload("indicator")
-            .joinedload("governance_area"),
-            joinedload(Assessment.responses).joinedload("feedback_comments"),
+            .joinedload(AssessmentResponse.indicator)
+            .joinedload(Indicator.governance_area),
+            joinedload(Assessment.responses).joinedload(AssessmentResponse.feedback_comments),
         )
         .first()
     )
@@ -196,8 +197,8 @@ def get_indicator_navigation(
         .filter(Assessment.id == assessment_id)
         .options(
             joinedload(Assessment.responses)
-            .joinedload("indicator")
-            .joinedload("governance_area")
+            .joinedload(AssessmentResponse.indicator)
+            .joinedload(Indicator.governance_area)
         )
         .first()
     )
