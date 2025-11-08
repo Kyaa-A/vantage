@@ -828,3 +828,103 @@ async def save_assessment_answers(
         "indicator_id": indicator_id,
         "saved_count": len(field_responses)
     }
+
+
+@router.get(
+    "/{assessment_id}/answers",
+    status_code=status.HTTP_200_OK,
+    tags=["assessments"],
+)
+async def get_assessment_answers(
+    assessment_id: int,
+    indicator_id: int = Query(..., description="ID of the indicator"),
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+) -> Dict[str, Any]:
+    """
+    Retrieve saved form responses for a specific indicator in an assessment.
+
+    **Permissions**:
+    - BLGU users can retrieve answers for their own assessments
+    - Assessors can retrieve answers for any assessment
+
+    **Path Parameters**:
+    - assessment_id: ID of the assessment
+
+    **Query Parameters**:
+    - indicator_id: ID of the indicator
+
+    **Returns**:
+    ```json
+    {
+      "assessment_id": 1,
+      "indicator_id": 5,
+      "responses": [
+        {"field_id": "field1", "value": "text response"},
+        {"field_id": "field2", "value": 42}
+      ],
+      "created_at": "2025-01-08T12:00:00",
+      "updated_at": "2025-01-08T12:30:00"
+    }
+    ```
+
+    Returns empty array if no responses saved yet.
+
+    **Raises**:
+    - 403: User not authorized to view this assessment
+    - 404: Assessment not found
+    """
+    from app.db.models import Assessment
+
+    # Retrieve assessment
+    assessment = db.query(Assessment).filter(Assessment.id == assessment_id).first()
+
+    if not assessment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Assessment with ID {assessment_id} not found"
+        )
+
+    # Permission check: BLGU users can only view their own assessments
+    # Assessors can view any assessment
+    if current_user.role == UserRole.BLGU_USER:
+        if assessment.blgu_user_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You are not authorized to view this assessment"
+            )
+    # Assessors and other roles are allowed
+
+    # Query assessment_response for this assessment + indicator
+    from app.db.models.assessment import AssessmentResponse
+
+    assessment_response = db.query(AssessmentResponse).filter(
+        AssessmentResponse.assessment_id == assessment_id,
+        AssessmentResponse.indicator_id == indicator_id
+    ).first()
+
+    # If no response exists yet, return empty array
+    if not assessment_response or not assessment_response.response_data:
+        return {
+            "assessment_id": assessment_id,
+            "indicator_id": indicator_id,
+            "responses": []
+        }
+
+    # Extract field responses from response_data (stored as dict)
+    # Format: {"field_id": value, ...} -> [{"field_id": ..., "value": ...}, ...]
+    field_responses = [
+        {
+            "field_id": field_id,
+            "value": value
+        }
+        for field_id, value in assessment_response.response_data.items()
+    ]
+
+    return {
+        "assessment_id": assessment_id,
+        "indicator_id": indicator_id,
+        "responses": field_responses,
+        "created_at": assessment_response.created_at.isoformat(),
+        "updated_at": assessment_response.updated_at.isoformat()
+    }
