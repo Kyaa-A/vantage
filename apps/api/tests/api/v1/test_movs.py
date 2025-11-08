@@ -45,8 +45,7 @@ def use_test_db_session(client: TestClient, db_session):
         finally:
             pass  # Don't close the session here, let the test fixture handle it
 
-    from app.db.base import get_db
-    client.app.dependency_overrides[get_db] = override_get_db
+    client.app.dependency_overrides[deps.get_db] = override_get_db
 
 
 class TestUploadMOVFile:
@@ -680,3 +679,206 @@ class TestListMOVFiles:
         assert len(data["files"]) == 1
         assert data["files"][0]["file_name"] == "indicator1_file.pdf"
         assert data["files"][0]["indicator_id"] == 1
+
+
+class TestDeleteMOVFile:
+    """Test suite for DELETE /api/v1/movs/files/{file_id}"""
+
+    @pytest.fixture
+    def blgu_user(self, db_session):
+        """Fixture providing a BLGU user."""
+        user = User(
+            email="blgu@test.com",
+            name="Test BLGU User",
+            hashed_password="hashed",
+            role="BLGU_USER",
+            barangay_id=1,
+        )
+        db_session.add(user)
+        db_session.commit()
+        db_session.refresh(user)
+        return user
+
+    @pytest.fixture
+    def other_blgu_user(self, db_session):
+        """Fixture providing another BLGU user."""
+        user = User(
+            email="other_blgu@test.com",
+            name="Other BLGU User",
+            hashed_password="hashed",
+            role="BLGU_USER",
+            barangay_id=2,
+        )
+        db_session.add(user)
+        db_session.commit()
+        db_session.refresh(user)
+        return user
+
+    @pytest.fixture
+    def draft_assessment(self, db_session, blgu_user):
+        """Fixture providing a draft assessment."""
+        assessment = Assessment(
+            blgu_user_id=blgu_user.id,
+            status=AssessmentStatus.DRAFT,
+        )
+        db_session.add(assessment)
+        db_session.commit()
+        db_session.refresh(assessment)
+        return assessment
+
+    @pytest.fixture
+    def submitted_assessment(self, db_session, blgu_user):
+        """Fixture providing a submitted assessment."""
+        assessment = Assessment(
+            blgu_user_id=blgu_user.id,
+            status=AssessmentStatus.SUBMITTED_FOR_REVIEW,
+        )
+        db_session.add(assessment)
+        db_session.commit()
+        db_session.refresh(assessment)
+        return assessment
+
+    def test_delete_file_success(self, client, db_session, draft_assessment, blgu_user):
+        """Test successful deletion of a file by the uploader for DRAFT assessment."""
+        # Create a MOV file
+        mov_file = MOVFile(
+            assessment_id=draft_assessment.id,
+            indicator_id=1,
+            uploaded_by=blgu_user.id,
+            file_name="test_file.pdf",
+            file_url="https://storage.example.com/test_file.pdf",
+            file_type="application/pdf",
+            file_size=1024,
+            uploaded_at=datetime.utcnow(),
+        )
+        db_session.add(mov_file)
+        db_session.commit()
+        db_session.refresh(mov_file)
+        file_id = mov_file.id
+
+        # Mock the storage deletion BEFORE making the request
+        with patch("app.services.storage_service._get_supabase_client") as mock_supabase:
+            mock_supabase.return_value.storage.from_().remove.return_value = {}
+
+            # Override get_db and authenticate
+            use_test_db_session(client, db_session)
+            authenticate_user(client, blgu_user)
+
+            response = client.delete(f"/api/v1/movs/files/{file_id}")
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["id"] == file_id
+        assert data["deleted_at"] is not None
+
+        # Verify file was soft-deleted in database
+        db_session.refresh(mov_file)
+        assert mov_file.deleted_at is not None
+
+    def test_delete_file_permission_denied_different_user(
+        self, client, db_session, draft_assessment, blgu_user, other_blgu_user
+    ):
+        """Test that user cannot delete files uploaded by another user."""
+        # Create file uploaded by blgu_user
+        mov_file = MOVFile(
+            assessment_id=draft_assessment.id,
+            indicator_id=1,
+            uploaded_by=blgu_user.id,
+            file_name="test_file.pdf",
+            file_url="https://storage.example.com/test_file.pdf",
+            file_type="application/pdf",
+            file_size=1024,
+            uploaded_at=datetime.utcnow(),
+        )
+        db_session.add(mov_file)
+        db_session.commit()
+        db_session.refresh(mov_file)
+        file_id = mov_file.id
+
+        # Override get_db and authenticate as different user
+        use_test_db_session(client, db_session)
+        authenticate_user(client, other_blgu_user)
+
+        response = client.delete(f"/api/v1/movs/files/{file_id}")
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        data = response.json()
+        assert "You can only delete files you uploaded" in data["detail"]
+
+        # Verify file was NOT deleted
+        db_session.refresh(mov_file)
+        assert mov_file.deleted_at is None
+
+    def test_delete_file_rejected_for_submitted_assessment(
+        self, client, db_session, submitted_assessment, blgu_user
+    ):
+        """Test that deletion is rejected for SUBMITTED assessment."""
+        # Create file in submitted assessment
+        mov_file = MOVFile(
+            assessment_id=submitted_assessment.id,
+            indicator_id=1,
+            uploaded_by=blgu_user.id,
+            file_name="test_file.pdf",
+            file_url="https://storage.example.com/test_file.pdf",
+            file_type="application/pdf",
+            file_size=1024,
+            uploaded_at=datetime.utcnow(),
+        )
+        db_session.add(mov_file)
+        db_session.commit()
+        db_session.refresh(mov_file)
+        file_id = mov_file.id
+
+        # Override get_db and authenticate
+        use_test_db_session(client, db_session)
+        authenticate_user(client, blgu_user)
+
+        response = client.delete(f"/api/v1/movs/files/{file_id}")
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        data = response.json()
+        assert "Cannot delete files from" in data["detail"]
+
+        # Verify file was NOT deleted
+        db_session.refresh(mov_file)
+        assert mov_file.deleted_at is None
+
+    def test_delete_file_not_found(self, client, db_session, blgu_user):
+        """Test deletion of non-existent file returns 404."""
+        use_test_db_session(client, db_session)
+        authenticate_user(client, blgu_user)
+
+        response = client.delete("/api/v1/movs/files/99999")
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN  # Permission check fails first
+        data = response.json()
+        assert "not found" in data["detail"]
+
+    def test_delete_already_deleted_file(self, client, db_session, draft_assessment, blgu_user):
+        """Test that already deleted files cannot be deleted again."""
+        # Create already deleted file
+        mov_file = MOVFile(
+            assessment_id=draft_assessment.id,
+            indicator_id=1,
+            uploaded_by=blgu_user.id,
+            file_name="test_file.pdf",
+            file_url="https://storage.example.com/test_file.pdf",
+            file_type="application/pdf",
+            file_size=1024,
+            uploaded_at=datetime.utcnow(),
+            deleted_at=datetime.utcnow(),  # Already deleted
+        )
+        db_session.add(mov_file)
+        db_session.commit()
+        db_session.refresh(mov_file)
+        file_id = mov_file.id
+
+        # Override get_db and authenticate
+        use_test_db_session(client, db_session)
+        authenticate_user(client, blgu_user)
+
+        response = client.delete(f"/api/v1/movs/files/{file_id}")
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        data = response.json()
+        assert "already been deleted" in data["detail"]

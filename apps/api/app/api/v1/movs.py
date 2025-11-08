@@ -157,3 +157,61 @@ def list_mov_files(
     file_responses = [MOVFileResponse.model_validate(f) for f in files]
 
     return MOVFileListResponse(files=file_responses)
+
+
+@router.delete(
+    "/files/{file_id}",
+    response_model=MOVFileResponse,
+    status_code=status.HTTP_200_OK,
+    tags=["movs"],
+    summary="Delete a MOV file",
+    description="""
+    Delete a MOV (Means of Verification) file from both storage and database.
+
+    - **Performs soft delete**: Sets deleted_at timestamp instead of removing record
+    - **Permission check**: Only the uploader can delete their own files
+    - **Status restriction**: Only allowed for DRAFT or NEEDS_REWORK assessments
+    - **Storage cleanup**: Removes file from Supabase Storage
+
+    Returns the deleted file metadata with updated deleted_at timestamp.
+    """,
+)
+def delete_mov_file(
+    file_id: int,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+) -> MOVFileResponse:
+    """
+    Delete a MOV file (soft delete).
+
+    Args:
+        file_id: ID of the MOV file to delete
+        db: Database session
+        current_user: Currently authenticated user
+
+    Returns:
+        MOVFileResponse with deleted file metadata
+
+    Raises:
+        HTTPException 403: Permission denied (not uploader, wrong status, already deleted)
+        HTTPException 404: File not found
+        HTTPException 500: Deletion failed
+    """
+    try:
+        deleted_file = storage_service.delete_mov_file(
+            db=db,
+            file_id=file_id,
+            user_id=current_user.id,
+        )
+
+        return MOVFileResponse.model_validate(deleted_file)
+
+    except HTTPException:
+        # Re-raise HTTPExceptions from the service (403, 404)
+        raise
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete file: {str(e)}",
+        )
