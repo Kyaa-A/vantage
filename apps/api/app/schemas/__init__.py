@@ -49,6 +49,12 @@ from .assessor import (
     ValidationResponse,
     WorkflowMetrics,
 )
+from .blgu_dashboard import (
+    BLGUDashboardResponse,
+    GovernanceAreaGroup,
+    IndicatorItem,
+    ReworkComment,
+)
 from .system import ApiResponse, ErrorResponse, HealthCheck, SuccessResponse
 from .token import AuthToken, LoginRequest, Token, TokenPayload
 from .user import User, UserCreate, UserInDB, UserUpdate
@@ -111,4 +117,9 @@ __all__ = [
     "PerformanceOverview",
     "SystemicWeakness",
     "WorkflowMetrics",
+    # BLGU Dashboard schemas
+    "BLGUDashboardResponse",
+    "GovernanceAreaGroup",
+    "IndicatorItem",
+    "ReworkComment",
 ]

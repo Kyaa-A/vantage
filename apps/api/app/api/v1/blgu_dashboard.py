@@ -1,0 +1,164 @@
+"""
+BLGU Dashboard API endpoints.
+
+This module provides endpoints for BLGU users to:
+- View completion metrics for their assessments
+- Navigate to incomplete indicators
+- View assessor rework comments
+
+IMPORTANT: These endpoints show COMPLETION status only (complete/incomplete).
+Compliance status (PASS/FAIL/CONDITIONAL) is NEVER exposed to BLGU users.
+"""
+
+from collections import defaultdict
+from typing import Dict, List, Any
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session, joinedload
+
+from app.api import deps
+from app.db.enums import AssessmentStatus, UserRole
+from app.db.models.assessment import Assessment
+from app.db.models.user import User
+from app.schemas.blgu_dashboard import BLGUDashboardResponse
+from app.services.completeness_validation_service import completeness_validation_service
+
+router = APIRouter(tags=["blgu-dashboard"])
+
+
+@router.get("/{assessment_id}", response_model=BLGUDashboardResponse)
+def get_blgu_dashboard(
+    assessment_id: int,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+):
+    """
+    Get BLGU dashboard with completion metrics for an assessment.
+
+    Returns completion tracking data including:
+    - Total indicators, completed count, incomplete count
+    - Completion percentage
+    - Grouped indicators by governance area and section
+    - Rework comments (if assessment status is REWORK)
+
+    **Security**: Only shows completion status (complete/incomplete).
+    Compliance status (PASS/FAIL/CONDITIONAL) is never exposed.
+
+    **Access**: BLGU users can only access their own assessment data.
+    """
+    # Check user role is BLGU_USER
+    if current_user.role != UserRole.BLGU_USER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only BLGU users can access the dashboard",
+        )
+
+    # Retrieve assessment with eager loading of responses and indicators
+    assessment = (
+        db.query(Assessment)
+        .filter(Assessment.id == assessment_id)
+        .options(
+            joinedload(Assessment.responses)
+            .joinedload("indicator")
+            .joinedload("governance_area"),
+            joinedload(Assessment.responses).joinedload("feedback_comments"),
+        )
+        .first()
+    )
+
+    if not assessment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Assessment with id {assessment_id} not found",
+        )
+
+    # Check ownership: assessment must belong to current user
+    if assessment.blgu_user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to access this assessment",
+        )
+
+    # Calculate completion metrics and group by governance area
+    total_indicators = 0
+    completed_indicators = 0
+    incomplete_indicators = 0
+
+    # Structure to group indicators by governance area
+    governance_area_groups: Dict[int, Dict[str, Any]] = defaultdict(
+        lambda: {
+            "governance_area_id": 0,
+            "governance_area_name": "",
+            "indicators": []
+        }
+    )
+
+    for response in assessment.responses:
+        total_indicators += 1
+
+        # Use CompletenessValidationService to determine completion status
+        validation_result = completeness_validation_service.validate_completeness(
+            form_schema=response.indicator.form_schema,
+            response_data=response.response_data,
+            uploaded_movs=response.movs
+        )
+
+        is_complete = validation_result["is_complete"]
+        if is_complete:
+            completed_indicators += 1
+        else:
+            incomplete_indicators += 1
+
+        # Group by governance area
+        governance_area = response.indicator.governance_area
+        area_id = governance_area.id
+
+        # Initialize governance area data if first time
+        if governance_area_groups[area_id]["governance_area_id"] == 0:
+            governance_area_groups[area_id]["governance_area_id"] = area_id
+            governance_area_groups[area_id]["governance_area_name"] = governance_area.name
+
+        # Add indicator data to the group
+        governance_area_groups[area_id]["indicators"].append({
+            "indicator_id": response.indicator.id,
+            "indicator_name": response.indicator.name,
+            "is_complete": is_complete,
+            "response_id": response.id,
+        })
+
+    # Calculate completion percentage
+    completion_percentage = (
+        (completed_indicators / total_indicators * 100) if total_indicators > 0 else 0.0
+    )
+
+    # Convert governance area groups to list
+    governance_areas_list = list(governance_area_groups.values())
+
+    # Include assessor comments if assessment status is NEEDS_REWORK
+    rework_comments = None
+    if assessment.status == AssessmentStatus.NEEDS_REWORK:
+        # Collect all feedback comments from all responses (excluding internal notes)
+        comments_list = []
+        for response in assessment.responses:
+            for feedback in response.feedback_comments:
+                # Only include non-internal feedback (public comments for BLGU)
+                if not feedback.is_internal_note:
+                    comments_list.append({
+                        "comment": feedback.comment,
+                        "comment_type": feedback.comment_type,
+                        "indicator_id": response.indicator_id,
+                        "indicator_name": response.indicator.name,
+                        "created_at": feedback.created_at.isoformat() if feedback.created_at else None,
+                    })
+
+        rework_comments = comments_list if comments_list else None
+
+    return {
+        "assessment_id": assessment_id,
+        "total_indicators": total_indicators,
+        "completed_indicators": completed_indicators,
+        "incomplete_indicators": incomplete_indicators,
+        "completion_percentage": round(completion_percentage, 2),
+        "governance_areas": governance_areas_list,
+        "rework_comments": rework_comments,
+    }
