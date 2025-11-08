@@ -346,6 +346,14 @@ export type BodyTestCalculationApiV1IndicatorsTestCalculationPostAssessmentData 
 
 
 /**
+ * BodyUploadMovFileApiV1MovsAssessmentsAssessmentIdIndicatorsIndicatorIdUploadPost
+ */
+export interface BodyUploadMovFileApiV1MovsAssessmentsAssessmentIdIndicatorsIndicatorIdUploadPost {
+  file: Blob;
+}
+
+
+/**
  * BodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPost
  */
 export interface BodyUploadMovFileForAssessorApiV1AssessorAssessmentResponsesResponseIdMovsUploadPost {
@@ -369,6 +377,17 @@ export type DeleteAssessmentsMovsMovId200 = {[key: string]: string};
 
 
 /**
+ * GetAssessmentsAssessmentIdAnswersParams
+ */
+export type GetAssessmentsAssessmentIdAnswersParams = {
+/**
+ * ID of the indicator
+ */
+indicator_id: number;
+};
+
+
+/**
  * GetAssessmentsList200Item
  */
 export type GetAssessmentsList200Item = { [key: string]: unknown };
@@ -389,6 +408,17 @@ status?: AssessmentStatus;
  * GetAssessmentsMyAssessment200
  */
 export type GetAssessmentsMyAssessment200 = { [key: string]: unknown };
+
+
+/**
+ * PostAssessmentsAssessmentIdAnswersParams
+ */
+export type PostAssessmentsAssessmentIdAnswersParams = {
+/**
+ * ID of the indicator
+ */
+indicator_id: number;
+};
 
 
 /**

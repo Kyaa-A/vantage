@@ -7,6 +7,7 @@ import type { AuditLogResponseUserEmail } from '../users';
 import type { AuditLogResponseUserName } from '../users';
 import type { GovernanceAreaGroup } from '../common';
 import type { ReworkComment } from '../common';
+import type { IncompleteIndicatorDetail } from '../indicators';
 import type { ComplianceRate } from '../common';
 import type { AreaBreakdown } from '../common';
 import type { FailedIndicator } from '../indicators';
@@ -39,6 +40,15 @@ export type SystemicWeaknessIndicatorId = number | null;
  * SystemicWeaknessReason
  */
 export type SystemicWeaknessReason = string | null;
+
+
+/**
+ * AnswerResponse
+ */
+export interface AnswerResponse {
+  field_id: string;
+  value: unknown;
+}
 
 
 /**
@@ -148,6 +158,18 @@ export interface BarangayDeadlineStatusResponse {
 
 
 /**
+ * CompletenessValidationResponse
+ */
+export interface CompletenessValidationResponse {
+  is_complete: boolean;
+  total_indicators: number;
+  complete_indicators: number;
+  incomplete_indicators: number;
+  incomplete_details: IncompleteIndicatorDetail[];
+}
+
+
+/**
  * DashboardKPIResponse
  */
 export interface DashboardKPIResponse {
@@ -209,6 +231,42 @@ export interface DeadlineStatusListResponse {
 
 
 /**
+ * FormSchemaMetadataGovernanceAreaName
+ */
+export type FormSchemaMetadataGovernanceAreaName = string | null;
+
+
+/**
+ * FormSchemaResponseFormSchema
+ */
+export type FormSchemaResponseFormSchema = { [key: string]: unknown };
+
+
+/**
+ * GetAnswersResponse
+ */
+export interface GetAnswersResponse {
+  assessment_id: number;
+  indicator_id: number;
+  responses: AnswerResponse[];
+  created_at?: GetAnswersResponseCreatedAt;
+  updated_at?: GetAnswersResponseUpdatedAt;
+}
+
+
+/**
+ * GetAnswersResponseCreatedAt
+ */
+export type GetAnswersResponseCreatedAt = string | null;
+
+
+/**
+ * GetAnswersResponseUpdatedAt
+ */
+export type GetAnswersResponseUpdatedAt = string | null;
+
+
+/**
  * HealthCheck
  */
 export interface HealthCheck {
@@ -236,36 +294,6 @@ export type HealthCheckChecks = { [key: string]: unknown };
  * HealthCheckConnections
  */
 export type HealthCheckConnections = { [key: string]: unknown };
-
-
-/**
- * MOVUploadResponse
- */
-export interface MOVUploadResponse {
-  success: boolean;
-  message: string;
-  mov_id?: MOVUploadResponseMovId;
-  storage_path?: MOVUploadResponseStoragePath;
-  mov?: MOVUploadResponseMov;
-}
-
-
-/**
- * MOVUploadResponseMov
- */
-export type MOVUploadResponseMov = unknown | null;
-
-
-/**
- * MOVUploadResponseMovId
- */
-export type MOVUploadResponseMovId = number | null;
-
-
-/**
- * MOVUploadResponseStoragePath
- */
-export type MOVUploadResponseStoragePath = string | null;
 
 
 /**

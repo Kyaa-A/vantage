@@ -12,5 +12,6 @@ export * from './blgu-dashboard';
 export * from './default';
 export * from './indicators';
 export * from './lookups';
+export * from './movs';
 export * from './system';
 export * from './users';

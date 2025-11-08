@@ -5,7 +5,7 @@
 
 import type { CalculationSchema } from '../common';
 import type { BodyTestCalculationApiV1IndicatorsTestCalculationPostAssessmentData } from '../assessments';
-import type { FormSchema } from '../common';
+import type { FormSchema } from '../formschema';
 import type { IndicatorHistoryResponseArchivedByUser } from '../users';
 import type { GovernanceAreaNested } from '../common';
 
@@ -67,6 +67,16 @@ skip?: number;
  */
 limit?: number;
 };
+
+
+/**
+ * IncompleteIndicatorDetail
+ */
+export interface IncompleteIndicatorDetail {
+  indicator_id: number;
+  indicator_title: string;
+  missing_required_fields: string[];
+}
 
 
 /**

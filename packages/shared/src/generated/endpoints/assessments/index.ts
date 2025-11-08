@@ -25,14 +25,20 @@ import type {
   AssessmentResponseCreate,
   AssessmentResponseUpdate,
   AssessmentSubmissionValidation,
+  CompletenessValidationResponse,
   DeleteAssessmentsMovsMovId200,
+  GetAnswersResponse,
+  GetAssessmentsAssessmentIdAnswersParams,
   GetAssessmentsList200Item,
   GetAssessmentsListParams,
   GetAssessmentsMyAssessment200,
   HTTPValidationError,
   MOVCreate,
   Mov,
-  PostAssessmentsIdGenerateInsights202
+  PostAssessmentsAssessmentIdAnswersParams,
+  PostAssessmentsIdGenerateInsights202,
+  SaveAnswersRequest,
+  SaveAnswersResponse
 } from '../../schemas';
 
 import { mutator } from '../../../../../../apps/web/src/lib/api';
@@ -837,6 +843,300 @@ export const usePostAssessmentsIdGenerateInsights = <TError = HTTPValidationErro
       > => {
 
       const mutationOptions = getPostAssessmentsIdGenerateInsightsMutationOptions(options);
+
+      return useMutation(mutationOptions );
+    }
+    /**
+ * Save form responses for an assessment.
+
+**Permissions**:
+- BLGU users can save answers for their own assessments
+- Assessors can save answers (for table validation)
+
+**Path Parameters**:
+- assessment_id: ID of the assessment
+
+**Query Parameters**:
+- indicator_id: ID of the indicator
+
+**Request Body**:
+```json
+{
+  "responses": [
+    {"field_id": "field1", "value": "text response"},
+    {"field_id": "field2", "value": 42},
+    {"field_id": "field3", "value": ["option1", "option2"]}
+  ]
+}
+```
+
+**Field Type Validation**:
+- text/textarea: value must be string
+- number: value must be numeric (int or float)
+- date: value must be ISO date string
+- select/radio: value must be string matching one of the field's option IDs
+- checkbox: value must be array of strings matching the field's option IDs
+
+**Returns**: Confirmation with count of saved fields
+
+**Raises**:
+- 400: Assessment is locked for editing
+- 403: User not authorized to modify this assessment
+- 404: Assessment or indicator not found
+- 422: Field validation errors (field not found, type mismatch, invalid option)
+ * @summary Save Assessment Answers
+ */
+export const postAssessments$AssessmentIdAnswers = (
+    assessmentId: number,
+    saveAnswersRequest: SaveAnswersRequest,
+    params: PostAssessmentsAssessmentIdAnswersParams,
+ options?: SecondParameter<typeof mutator>,signal?: AbortSignal
+) => {
+      
+      
+      return mutator<SaveAnswersResponse>(
+      {url: `http://localhost:8000/api/v1/assessments/${assessmentId}/answers`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: saveAnswersRequest,
+        params, signal
+    },
+      options);
+    }
+  
+
+
+export const getPostAssessmentsAssessmentIdAnswersMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAssessments$AssessmentIdAnswers>>, TError,{assessmentId: number;data: SaveAnswersRequest;params: PostAssessmentsAssessmentIdAnswersParams}, TContext>, request?: SecondParameter<typeof mutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postAssessments$AssessmentIdAnswers>>, TError,{assessmentId: number;data: SaveAnswersRequest;params: PostAssessmentsAssessmentIdAnswersParams}, TContext> => {
+
+const mutationKey = ['postAssessmentsAssessmentIdAnswers'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAssessments$AssessmentIdAnswers>>, {assessmentId: number;data: SaveAnswersRequest;params: PostAssessmentsAssessmentIdAnswersParams}> = (props) => {
+          const {assessmentId,data,params} = props ?? {};
+
+          return  postAssessments$AssessmentIdAnswers(assessmentId,data,params,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostAssessmentsAssessmentIdAnswersMutationResult = NonNullable<Awaited<ReturnType<typeof postAssessments$AssessmentIdAnswers>>>
+    export type PostAssessmentsAssessmentIdAnswersMutationBody = SaveAnswersRequest
+    export type PostAssessmentsAssessmentIdAnswersMutationError = HTTPValidationError
+
+    /**
+ * @summary Save Assessment Answers
+ */
+export const usePostAssessmentsAssessmentIdAnswers = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAssessments$AssessmentIdAnswers>>, TError,{assessmentId: number;data: SaveAnswersRequest;params: PostAssessmentsAssessmentIdAnswersParams}, TContext>, request?: SecondParameter<typeof mutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof postAssessments$AssessmentIdAnswers>>,
+        TError,
+        {assessmentId: number;data: SaveAnswersRequest;params: PostAssessmentsAssessmentIdAnswersParams},
+        TContext
+      > => {
+
+      const mutationOptions = getPostAssessmentsAssessmentIdAnswersMutationOptions(options);
+
+      return useMutation(mutationOptions );
+    }
+    /**
+ * Retrieve saved form responses for a specific indicator in an assessment.
+
+**Permissions**:
+- BLGU users can retrieve answers for their own assessments
+- Assessors can retrieve answers for any assessment
+
+**Path Parameters**:
+- assessment_id: ID of the assessment
+
+**Query Parameters**:
+- indicator_id: ID of the indicator
+
+**Returns**:
+```json
+{
+  "assessment_id": 1,
+  "indicator_id": 5,
+  "responses": [
+    {"field_id": "field1", "value": "text response"},
+    {"field_id": "field2", "value": 42}
+  ],
+  "created_at": "2025-01-08T12:00:00",
+  "updated_at": "2025-01-08T12:30:00"
+}
+```
+
+Returns empty array if no responses saved yet.
+
+**Raises**:
+- 403: User not authorized to view this assessment
+- 404: Assessment not found
+ * @summary Get Assessment Answers
+ */
+export const getAssessments$AssessmentIdAnswers = (
+    assessmentId: number,
+    params: GetAssessmentsAssessmentIdAnswersParams,
+ options?: SecondParameter<typeof mutator>,signal?: AbortSignal
+) => {
+      
+      
+      return mutator<GetAnswersResponse>(
+      {url: `http://localhost:8000/api/v1/assessments/${assessmentId}/answers`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getGetAssessmentsAssessmentIdAnswersQueryKey = (assessmentId: number,
+    params: GetAssessmentsAssessmentIdAnswersParams,) => {
+    return [`http://localhost:8000/api/v1/assessments/${assessmentId}/answers`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getGetAssessmentsAssessmentIdAnswersQueryOptions = <TData = Awaited<ReturnType<typeof getAssessments$AssessmentIdAnswers>>, TError = HTTPValidationError>(assessmentId: number,
+    params: GetAssessmentsAssessmentIdAnswersParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAssessments$AssessmentIdAnswers>>, TError, TData>, request?: SecondParameter<typeof mutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAssessmentsAssessmentIdAnswersQueryKey(assessmentId,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAssessments$AssessmentIdAnswers>>> = ({ signal }) => getAssessments$AssessmentIdAnswers(assessmentId,params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(assessmentId),  staleTime: 300000, refetchOnWindowFocus: false,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAssessments$AssessmentIdAnswers>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAssessmentsAssessmentIdAnswersQueryResult = NonNullable<Awaited<ReturnType<typeof getAssessments$AssessmentIdAnswers>>>
+export type GetAssessmentsAssessmentIdAnswersQueryError = HTTPValidationError
+
+
+/**
+ * @summary Get Assessment Answers
+ */
+
+export function useGetAssessmentsAssessmentIdAnswers<TData = Awaited<ReturnType<typeof getAssessments$AssessmentIdAnswers>>, TError = HTTPValidationError>(
+ assessmentId: number,
+    params: GetAssessmentsAssessmentIdAnswersParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAssessments$AssessmentIdAnswers>>, TError, TData>, request?: SecondParameter<typeof mutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAssessmentsAssessmentIdAnswersQueryOptions(assessmentId,params,options)
+
+  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+/**
+ * Validate completeness of all indicators in an assessment.
+
+Checks if all required fields are filled for all indicators.
+Does NOT expose compliance status (Pass/Fail) - only completeness.
+
+**Permissions**: All authenticated users
+
+**Path Parameters**:
+- assessment_id: ID of the assessment
+
+**Returns**:
+```json
+{
+  "is_complete": false,
+  "total_indicators": 10,
+  "complete_indicators": 7,
+  "incomplete_indicators": 3,
+  "incomplete_details": [
+    {
+      "indicator_id": 5,
+      "indicator_title": "Financial Management",
+      "missing_required_fields": ["field1", "field2"]
+    }
+  ]
+}
+```
+
+**Raises**:
+- 404: Assessment not found
+ * @summary Validate Assessment Completeness
+ */
+export const postAssessments$AssessmentIdValidateCompleteness = (
+    assessmentId: number,
+ options?: SecondParameter<typeof mutator>,signal?: AbortSignal
+) => {
+      
+      
+      return mutator<CompletenessValidationResponse>(
+      {url: `http://localhost:8000/api/v1/assessments/${assessmentId}/validate-completeness`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getPostAssessmentsAssessmentIdValidateCompletenessMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAssessments$AssessmentIdValidateCompleteness>>, TError,{assessmentId: number}, TContext>, request?: SecondParameter<typeof mutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postAssessments$AssessmentIdValidateCompleteness>>, TError,{assessmentId: number}, TContext> => {
+
+const mutationKey = ['postAssessmentsAssessmentIdValidateCompleteness'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAssessments$AssessmentIdValidateCompleteness>>, {assessmentId: number}> = (props) => {
+          const {assessmentId} = props ?? {};
+
+          return  postAssessments$AssessmentIdValidateCompleteness(assessmentId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostAssessmentsAssessmentIdValidateCompletenessMutationResult = NonNullable<Awaited<ReturnType<typeof postAssessments$AssessmentIdValidateCompleteness>>>
+    
+    export type PostAssessmentsAssessmentIdValidateCompletenessMutationError = HTTPValidationError
+
+    /**
+ * @summary Validate Assessment Completeness
+ */
+export const usePostAssessmentsAssessmentIdValidateCompleteness = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAssessments$AssessmentIdValidateCompleteness>>, TError,{assessmentId: number}, TContext>, request?: SecondParameter<typeof mutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof postAssessments$AssessmentIdValidateCompleteness>>,
+        TError,
+        {assessmentId: number},
+        TContext
+      > => {
+
+      const mutationOptions = getPostAssessmentsAssessmentIdValidateCompletenessMutationOptions(options);
 
       return useMutation(mutationOptions );
     }
