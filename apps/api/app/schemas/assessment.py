@@ -378,6 +378,68 @@ class AssessmentDashboardResponse(BaseModel):
 
 
 # ============================================================================
+# Dynamic Form Response Schemas (Epic 3.0)
+# ============================================================================
+
+
+class FieldAnswerInput(BaseModel):
+    """Input schema for a single field answer."""
+
+    field_id: str
+    value: Any  # Can be str, int, bool, list, etc.
+
+
+class SaveAnswersRequest(BaseModel):
+    """Request schema for saving form answers."""
+
+    responses: List[FieldAnswerInput]
+
+
+class SaveAnswersResponse(BaseModel):
+    """Response schema for save answers endpoint."""
+
+    message: str
+    assessment_id: int
+    indicator_id: int
+    saved_count: int
+
+
+class AnswerResponse(BaseModel):
+    """Response schema for a single field answer."""
+
+    field_id: str
+    value: Any
+
+
+class GetAnswersResponse(BaseModel):
+    """Response schema for retrieving saved answers."""
+
+    assessment_id: int
+    indicator_id: int
+    responses: List[AnswerResponse]
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+
+
+class IncompleteIndicatorDetail(BaseModel):
+    """Nested schema for incomplete indicator details."""
+
+    indicator_id: int
+    indicator_title: str
+    missing_required_fields: List[str]
+
+
+class CompletenessValidationResponse(BaseModel):
+    """Response schema for completeness validation endpoint."""
+
+    is_complete: bool
+    total_indicators: int
+    complete_indicators: int
+    incomplete_indicators: int
+    incomplete_details: List[IncompleteIndicatorDetail]
+
+
+# ============================================================================
 # Update forward references for nested models
 # ============================================================================
 

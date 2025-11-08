@@ -15,6 +15,12 @@ from app.schemas.assessment import (
     AssessmentResponseUpdate,
     AssessmentSubmissionValidation,
     MOVCreate,
+    SaveAnswersRequest,
+    SaveAnswersResponse,
+    GetAnswersResponse,
+    AnswerResponse,
+    CompletenessValidationResponse,
+    IncompleteIndicatorDetail,
 )
 from app.db.models.assessment import MOV as MOVModel
 from app.services.assessment_service import assessment_service
@@ -607,16 +613,17 @@ async def generate_insights(
 
 @router.post(
     "/{assessment_id}/answers",
+    response_model=SaveAnswersResponse,
     status_code=status.HTTP_200_OK,
     tags=["assessments"],
 )
 async def save_assessment_answers(
     assessment_id: int,
-    request_body: Dict[str, Any],
+    request_body: SaveAnswersRequest,
     indicator_id: int = Query(..., description="ID of the indicator"),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-) -> Dict[str, Any]:
+) -> SaveAnswersResponse:
     """
     Save form responses for an assessment.
 
@@ -822,16 +829,17 @@ async def save_assessment_answers(
         db.commit()
         db.refresh(new_response)
 
-    return {
-        "message": "Responses saved successfully",
-        "assessment_id": assessment_id,
-        "indicator_id": indicator_id,
-        "saved_count": len(field_responses)
-    }
+    return SaveAnswersResponse(
+        message="Responses saved successfully",
+        assessment_id=assessment_id,
+        indicator_id=indicator_id,
+        saved_count=len(field_responses)
+    )
 
 
 @router.get(
     "/{assessment_id}/answers",
+    response_model=GetAnswersResponse,
     status_code=status.HTTP_200_OK,
     tags=["assessments"],
 )
@@ -840,7 +848,7 @@ async def get_assessment_answers(
     indicator_id: int = Query(..., description="ID of the indicator"),
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-) -> Dict[str, Any]:
+) -> GetAnswersResponse:
     """
     Retrieve saved form responses for a specific indicator in an assessment.
 
@@ -905,33 +913,34 @@ async def get_assessment_answers(
 
     # If no response exists yet, return empty array
     if not assessment_response or not assessment_response.response_data:
-        return {
-            "assessment_id": assessment_id,
-            "indicator_id": indicator_id,
-            "responses": []
-        }
+        return GetAnswersResponse(
+            assessment_id=assessment_id,
+            indicator_id=indicator_id,
+            responses=[]
+        )
 
     # Extract field responses from response_data (stored as dict)
     # Format: {"field_id": value, ...} -> [{"field_id": ..., "value": ...}, ...]
     field_responses = [
-        {
-            "field_id": field_id,
-            "value": value
-        }
+        AnswerResponse(
+            field_id=field_id,
+            value=value
+        )
         for field_id, value in assessment_response.response_data.items()
     ]
 
-    return {
-        "assessment_id": assessment_id,
-        "indicator_id": indicator_id,
-        "responses": field_responses,
-        "created_at": assessment_response.created_at.isoformat(),
-        "updated_at": assessment_response.updated_at.isoformat()
-    }
+    return GetAnswersResponse(
+        assessment_id=assessment_id,
+        indicator_id=indicator_id,
+        responses=field_responses,
+        created_at=assessment_response.created_at.isoformat(),
+        updated_at=assessment_response.updated_at.isoformat()
+    )
 
 
 @router.post(
     "/{assessment_id}/validate-completeness",
+    response_model=CompletenessValidationResponse,
     status_code=status.HTTP_200_OK,
     tags=["assessments"],
 )
@@ -939,7 +948,7 @@ async def validate_assessment_completeness(
     assessment_id: int,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
-) -> Dict[str, Any]:
+) -> CompletenessValidationResponse:
     """
     Validate completeness of all indicators in an assessment.
 
@@ -1037,23 +1046,25 @@ async def validate_assessment_completeness(
     incomplete_details = []
     for result in indicator_results:
         if not result["is_complete"]:
-            incomplete_details.append({
-                "indicator_id": result["indicator"].id,
-                "indicator_title": result["indicator"].name,
-                "missing_required_fields": [
-                    field["field_id"]
-                    for field in result["missing_fields"]
-                ]
-            })
+            incomplete_details.append(
+                IncompleteIndicatorDetail(
+                    indicator_id=result["indicator"].id,
+                    indicator_title=result["indicator"].name,
+                    missing_required_fields=[
+                        field["field_id"]
+                        for field in result["missing_fields"]
+                    ]
+                )
+            )
 
     # Determine overall completeness
     is_complete = incomplete_count == 0
 
     # Return CompletenessValidationResponse
-    return {
-        "is_complete": is_complete,
-        "total_indicators": len(indicators),
-        "complete_indicators": complete_count,
-        "incomplete_indicators": incomplete_count,
-        "incomplete_details": incomplete_details
-    }
+    return CompletenessValidationResponse(
+        is_complete=is_complete,
+        total_indicators=len(indicators),
+        complete_indicators=complete_count,
+        incomplete_indicators=incomplete_count,
+        incomplete_details=incomplete_details
+    )
