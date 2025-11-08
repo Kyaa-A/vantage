@@ -461,6 +461,12 @@ class MOVFileResponse(BaseModel):
     deleted_at: Optional[datetime] = None
 
 
+class MOVFileListResponse(BaseModel):
+    """Response schema for listing MOV files."""
+
+    files: List[MOVFileResponse]
+
+
 # ============================================================================
 # Update forward references for nested models
 # ============================================================================

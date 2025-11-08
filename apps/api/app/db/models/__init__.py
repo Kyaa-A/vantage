@@ -4,7 +4,7 @@
 # Import Base for migrations and table creation
 from ..base import Base
 from .admin import AuditLog
-from .assessment import MOV, Assessment, AssessmentResponse, FeedbackComment
+from .assessment import MOV, MOVFile, Assessment, AssessmentResponse, FeedbackComment
 from .barangay import Barangay
 from .bbi import BBI, BBIResult
 from .governance_area import GovernanceArea, Indicator
@@ -19,6 +19,7 @@ __all__ = [
     "Assessment",
     "AssessmentResponse",
     "MOV",
+    "MOVFile",
     "FeedbackComment",
     "AuditLog",
     "BBI",

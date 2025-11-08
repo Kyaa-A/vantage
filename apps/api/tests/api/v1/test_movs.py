@@ -10,10 +10,43 @@ from unittest.mock import patch
 
 import pytest
 from fastapi import status
+from fastapi.testclient import TestClient
 
+from app.api import deps
 from app.db.enums import AssessmentStatus
 from app.db.models.assessment import Assessment, MOVFile
 from app.db.models.user import User
+
+
+def authenticate_user(client: TestClient, user: User):
+    """Helper to override authentication dependency"""
+    def override_get_current_user():
+        return user
+
+    client.app.dependency_overrides[deps.get_current_user] = override_get_current_user
+
+
+@pytest.fixture(autouse=True)
+def clear_user_override(client):
+    """Clear user-related dependency overrides after each test"""
+    yield
+    # Only clear the user override, not get_db
+    if deps.get_current_user in client.app.dependency_overrides:
+        del client.app.dependency_overrides[deps.get_current_user]
+    if deps.get_current_active_user in client.app.dependency_overrides:
+        del client.app.dependency_overrides[deps.get_current_active_user]
+
+
+def use_test_db_session(client: TestClient, db_session):
+    """Override get_db to use the test's db_session"""
+    def override_get_db():
+        try:
+            yield db_session
+        finally:
+            pass  # Don't close the session here, let the test fixture handle it
+
+    from app.db.base import get_db
+    client.app.dependency_overrides[get_db] = override_get_db
 
 
 class TestUploadMOVFile:
@@ -305,3 +338,345 @@ class TestUploadMOVFile:
             assert response.status_code == status.HTTP_201_CREATED
             data = response.json()
             assert data["file_type"] == "image/png"
+
+
+class TestListMOVFiles:
+    """Test suite for GET /api/v1/movs/assessments/{assessment_id}/indicators/{indicator_id}/files"""
+
+    @pytest.fixture
+    def blgu_user(self, db_session):
+        """Fixture providing a BLGU user."""
+        user = User(
+            email="blgu@test.com",
+            name="Test BLGU User",
+            hashed_password="hashed",
+            role="BLGU_USER",
+            barangay_id=1,
+        )
+        db_session.add(user)
+        db_session.commit()
+        db_session.refresh(user)
+        return user
+
+    @pytest.fixture
+    def other_blgu_user(self, db_session):
+        """Fixture providing another BLGU user."""
+        user = User(
+            email="other_blgu@test.com",
+            name="Other BLGU User",
+            hashed_password="hashed",
+            role="BLGU_USER",
+            barangay_id=2,
+        )
+        db_session.add(user)
+        db_session.commit()
+        db_session.refresh(user)
+        return user
+
+    @pytest.fixture
+    def assessor_user(self, db_session):
+        """Fixture providing an assessor user."""
+        user = User(
+            email="assessor@test.com",
+            name="Test Assessor",
+            hashed_password="hashed",
+            role="ASSESSOR",
+        )
+        db_session.add(user)
+        db_session.commit()
+        db_session.refresh(user)
+        return user
+
+    @pytest.fixture
+    def assessment(self, db_session, blgu_user):
+        """Fixture providing a draft assessment."""
+        assessment = Assessment(
+            blgu_user_id=blgu_user.id,
+            status=AssessmentStatus.DRAFT,
+        )
+        db_session.add(assessment)
+        db_session.commit()
+        db_session.refresh(assessment)
+        return assessment
+
+    def test_list_files_blgu_user_sees_only_own_files(
+        self, client, db_session, assessment, blgu_user, other_blgu_user
+    ):
+        """Test that BLGU users only see their own uploaded files."""
+        # Create files from different users
+        file1 = MOVFile(
+            assessment_id=assessment.id,
+            indicator_id=1,
+            uploaded_by=blgu_user.id,
+            file_name="blgu_file1.pdf",
+            file_url="https://storage.example.com/file1.pdf",
+            file_type="application/pdf",
+            file_size=1024,
+            uploaded_at=datetime.utcnow(),
+        )
+        file2 = MOVFile(
+            assessment_id=assessment.id,
+            indicator_id=1,
+            uploaded_by=other_blgu_user.id,  # Different user
+            file_name="other_file.pdf",
+            file_url="https://storage.example.com/file2.pdf",
+            file_type="application/pdf",
+            file_size=2048,
+            uploaded_at=datetime.utcnow(),
+        )
+        file3 = MOVFile(
+            assessment_id=assessment.id,
+            indicator_id=1,
+            uploaded_by=blgu_user.id,
+            file_name="blgu_file2.pdf",
+            file_url="https://storage.example.com/file3.pdf",
+            file_type="application/pdf",
+            file_size=3072,
+            uploaded_at=datetime.utcnow(),
+        )
+        db_session.add_all([file1, file2, file3])
+        db_session.commit()
+
+        # Override get_db to use test session
+        use_test_db_session(client, db_session)
+
+        # Authenticate as BLGU user
+        authenticate_user(client, blgu_user)
+
+        # List files as BLGU user
+        response = client.get(
+            f"/api/v1/movs/assessments/{assessment.id}/indicators/1/files"
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert "files" in data
+        assert len(data["files"]) == 2  # Only sees own files
+
+        # Verify only BLGU user's files are returned
+        file_names = [f["file_name"] for f in data["files"]]
+        assert "blgu_file1.pdf" in file_names
+        assert "blgu_file2.pdf" in file_names
+        assert "other_file.pdf" not in file_names  # Other user's file not visible
+
+    def test_list_files_assessor_sees_all_files(
+        self, client, db_session, assessment, blgu_user, other_blgu_user, assessor_user
+    ):
+        """Test that assessors see all files for an indicator."""
+        # Create files from different BLGU users
+        file1 = MOVFile(
+            assessment_id=assessment.id,
+            indicator_id=1,
+            uploaded_by=blgu_user.id,
+            file_name="blgu1_file.pdf",
+            file_url="https://storage.example.com/file1.pdf",
+            file_type="application/pdf",
+            file_size=1024,
+            uploaded_at=datetime.utcnow(),
+        )
+        file2 = MOVFile(
+            assessment_id=assessment.id,
+            indicator_id=1,
+            uploaded_by=other_blgu_user.id,
+            file_name="blgu2_file.pdf",
+            file_url="https://storage.example.com/file2.pdf",
+            file_type="application/pdf",
+            file_size=2048,
+            uploaded_at=datetime.utcnow(),
+        )
+        db_session.add_all([file1, file2])
+        db_session.commit()
+
+        # Override get_db to use test session
+        use_test_db_session(client, db_session)
+
+        # Authenticate as assessor
+        authenticate_user(client, assessor_user)
+
+        # List files as assessor
+        response = client.get(
+            f"/api/v1/movs/assessments/{assessment.id}/indicators/1/files"
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert "files" in data
+        assert len(data["files"]) == 2  # Sees all files
+
+        # Verify both files are returned
+        file_names = [f["file_name"] for f in data["files"]]
+        assert "blgu1_file.pdf" in file_names
+        assert "blgu2_file.pdf" in file_names
+
+    def test_list_files_excludes_soft_deleted(
+        self, client, db_session, assessment, blgu_user
+    ):
+        """Test that soft-deleted files are excluded from the list."""
+        # Create active file
+        active_file = MOVFile(
+            assessment_id=assessment.id,
+            indicator_id=1,
+            uploaded_by=blgu_user.id,
+            file_name="active_file.pdf",
+            file_url="https://storage.example.com/active.pdf",
+            file_type="application/pdf",
+            file_size=1024,
+            uploaded_at=datetime.utcnow(),
+        )
+        # Create soft-deleted file
+        deleted_file = MOVFile(
+            assessment_id=assessment.id,
+            indicator_id=1,
+            uploaded_by=blgu_user.id,
+            file_name="deleted_file.pdf",
+            file_url="https://storage.example.com/deleted.pdf",
+            file_type="application/pdf",
+            file_size=2048,
+            uploaded_at=datetime.utcnow(),
+            deleted_at=datetime.utcnow(),  # Soft deleted
+        )
+        db_session.add_all([active_file, deleted_file])
+        db_session.commit()
+
+        # Override get_db to use test session
+        use_test_db_session(client, db_session)
+
+        # Authenticate as BLGU user
+        authenticate_user(client, blgu_user)
+
+        # List files
+        response = client.get(
+            f"/api/v1/movs/assessments/{assessment.id}/indicators/1/files"
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert "files" in data
+        assert len(data["files"]) == 1  # Only active file
+
+        # Verify only active file is returned
+        assert data["files"][0]["file_name"] == "active_file.pdf"
+
+    def test_list_files_ordered_by_upload_time(
+        self, client, db_session, assessment, blgu_user
+    ):
+        """Test that files are ordered by upload time (most recent first)."""
+        from datetime import timedelta
+
+        now = datetime.utcnow()
+
+        # Create files with different upload times
+        old_file = MOVFile(
+            assessment_id=assessment.id,
+            indicator_id=1,
+            uploaded_by=blgu_user.id,
+            file_name="old_file.pdf",
+            file_url="https://storage.example.com/old.pdf",
+            file_type="application/pdf",
+            file_size=1024,
+            uploaded_at=now - timedelta(hours=2),
+        )
+        recent_file = MOVFile(
+            assessment_id=assessment.id,
+            indicator_id=1,
+            uploaded_by=blgu_user.id,
+            file_name="recent_file.pdf",
+            file_url="https://storage.example.com/recent.pdf",
+            file_type="application/pdf",
+            file_size=2048,
+            uploaded_at=now,
+        )
+        middle_file = MOVFile(
+            assessment_id=assessment.id,
+            indicator_id=1,
+            uploaded_by=blgu_user.id,
+            file_name="middle_file.pdf",
+            file_url="https://storage.example.com/middle.pdf",
+            file_type="application/pdf",
+            file_size=3072,
+            uploaded_at=now - timedelta(hours=1),
+        )
+        db_session.add_all([old_file, recent_file, middle_file])
+        db_session.commit()
+
+        # Override get_db to use test session
+        use_test_db_session(client, db_session)
+
+        # Authenticate as BLGU user
+        authenticate_user(client, blgu_user)
+
+        # List files
+        response = client.get(
+            f"/api/v1/movs/assessments/{assessment.id}/indicators/1/files"
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert len(data["files"]) == 3
+
+        # Verify order (most recent first)
+        assert data["files"][0]["file_name"] == "recent_file.pdf"
+        assert data["files"][1]["file_name"] == "middle_file.pdf"
+        assert data["files"][2]["file_name"] == "old_file.pdf"
+
+    def test_list_files_empty_list(self, client, db_session, assessment, blgu_user):
+        """Test that endpoint returns empty list when no files exist."""
+        # Override get_db to use test session
+        use_test_db_session(client, db_session)
+
+        # Authenticate as BLGU user
+        authenticate_user(client, blgu_user)
+
+        response = client.get(
+            f"/api/v1/movs/assessments/{assessment.id}/indicators/1/files"
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert "files" in data
+        assert len(data["files"]) == 0
+
+    def test_list_files_filters_by_indicator(
+        self, client, db_session, assessment, blgu_user
+    ):
+        """Test that files are filtered by indicator_id."""
+        # Create files for different indicators
+        file_indicator1 = MOVFile(
+            assessment_id=assessment.id,
+            indicator_id=1,
+            uploaded_by=blgu_user.id,
+            file_name="indicator1_file.pdf",
+            file_url="https://storage.example.com/ind1.pdf",
+            file_type="application/pdf",
+            file_size=1024,
+            uploaded_at=datetime.utcnow(),
+        )
+        file_indicator2 = MOVFile(
+            assessment_id=assessment.id,
+            indicator_id=2,
+            uploaded_by=blgu_user.id,
+            file_name="indicator2_file.pdf",
+            file_url="https://storage.example.com/ind2.pdf",
+            file_type="application/pdf",
+            file_size=2048,
+            uploaded_at=datetime.utcnow(),
+        )
+        db_session.add_all([file_indicator1, file_indicator2])
+        db_session.commit()
+
+        # Override get_db to use test session
+        use_test_db_session(client, db_session)
+
+        # Authenticate as BLGU user
+        authenticate_user(client, blgu_user)
+
+        # List files for indicator 1
+        response = client.get(
+            f"/api/v1/movs/assessments/{assessment.id}/indicators/1/files"
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert len(data["files"]) == 1
+        assert data["files"][0]["file_name"] == "indicator1_file.pdf"
+        assert data["files"][0]["indicator_id"] == 1

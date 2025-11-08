@@ -4,12 +4,16 @@ MOV File Management API Endpoints (Epic 4.0)
 Provides endpoints for uploading, listing, and deleting MOV (Means of Verification) files.
 """
 
+from typing import List
+
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.api import deps
+from app.db.enums import UserRole
+from app.db.models.assessment import MOVFile
 from app.db.models.user import User
-from app.schemas.assessment import MOVFileResponse
+from app.schemas.assessment import MOVFileListResponse, MOVFileResponse
 from app.services.file_validation_service import file_validation_service
 from app.services.storage_service import storage_service
 
@@ -87,3 +91,69 @@ def upload_mov_file(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to upload file: {str(e)}",
         )
+
+
+@router.get(
+    "/assessments/{assessment_id}/indicators/{indicator_id}/files",
+    response_model=MOVFileListResponse,
+    status_code=status.HTTP_200_OK,
+    tags=["movs"],
+    summary="List MOV files for an indicator",
+    description="""
+    Retrieve all MOV (Means of Verification) files for a specific indicator in an assessment.
+
+    - **Permission-based filtering**: BLGU users see only their own files, Assessors/Validators see all files
+    - **Excludes soft-deleted files**: Only active files are returned
+    - **Ordered by upload time**: Most recent files first
+
+    Returns a list of file metadata including URL, size, type, and uploader information.
+    """,
+)
+def list_mov_files(
+    assessment_id: int,
+    indicator_id: int,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+) -> MOVFileListResponse:
+    """
+    List all MOV files for an indicator.
+
+    Args:
+        assessment_id: ID of the assessment
+        indicator_id: ID of the indicator
+        db: Database session
+        current_user: Currently authenticated user
+
+    Returns:
+        MOVFileListResponse with list of files
+
+    Permission Rules:
+        - BLGU_USER: Can only see files they uploaded
+        - ASSESSOR, VALIDATOR, MLGOO_DILG: Can see all files for the indicator
+    """
+    # Build base query
+    query = (
+        db.query(MOVFile)
+        .filter(
+            MOVFile.assessment_id == assessment_id,
+            MOVFile.indicator_id == indicator_id,
+            MOVFile.deleted_at.is_(None),  # Exclude soft-deleted files
+        )
+        .options(joinedload(MOVFile.uploader))  # Eager load uploader relationship
+    )
+
+    # Apply permission-based filtering
+    if current_user.role == UserRole.BLGU_USER:
+        # BLGU users can only see their own files
+        query = query.filter(MOVFile.uploaded_by == current_user.id)
+
+    # Order by most recent first
+    query = query.order_by(MOVFile.uploaded_at.desc())
+
+    # Execute query
+    files = query.all()
+
+    # Convert to response schema
+    file_responses = [MOVFileResponse.model_validate(f) for f in files]
+
+    return MOVFileListResponse(files=file_responses)
