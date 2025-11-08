@@ -23,8 +23,6 @@
   ],
   // Ruff configuration (since you added the extension)
   "ruff.configuration": "apps/api/pyproject.toml",
-  // Set terminal to start in API directory for Python work
-  "terminal.integrated.cwd": "apps/api",
   // File associations
   "files.associations": {
     "*.env": "dotenv"
