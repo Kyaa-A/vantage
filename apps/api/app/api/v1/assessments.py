@@ -928,3 +928,132 @@ async def get_assessment_answers(
         "created_at": assessment_response.created_at.isoformat(),
         "updated_at": assessment_response.updated_at.isoformat()
     }
+
+
+@router.post(
+    "/{assessment_id}/validate-completeness",
+    status_code=status.HTTP_200_OK,
+    tags=["assessments"],
+)
+async def validate_assessment_completeness(
+    assessment_id: int,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+) -> Dict[str, Any]:
+    """
+    Validate completeness of all indicators in an assessment.
+
+    Checks if all required fields are filled for all indicators.
+    Does NOT expose compliance status (Pass/Fail) - only completeness.
+
+    **Permissions**: All authenticated users
+
+    **Path Parameters**:
+    - assessment_id: ID of the assessment
+
+    **Returns**:
+    ```json
+    {
+      "is_complete": false,
+      "total_indicators": 10,
+      "complete_indicators": 7,
+      "incomplete_indicators": 3,
+      "incomplete_details": [
+        {
+          "indicator_id": 5,
+          "indicator_title": "Financial Management",
+          "missing_required_fields": ["field1", "field2"]
+        }
+      ]
+    }
+    ```
+
+    **Raises**:
+    - 404: Assessment not found
+    """
+    from app.db.models import Assessment
+    from app.db.models.assessment import AssessmentResponse
+    from app.db.models.governance_area import Indicator
+    from sqlalchemy.orm import joinedload
+
+    # Retrieve assessment
+    assessment = db.query(Assessment).filter(Assessment.id == assessment_id).first()
+
+    if not assessment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Assessment with ID {assessment_id} not found"
+        )
+
+    # Retrieve all active indicators
+    indicators = db.query(Indicator).filter(
+        Indicator.is_active == True
+    ).options(
+        joinedload(Indicator.governance_area)
+    ).all()
+
+    # Retrieve all assessment_responses for this assessment
+    assessment_responses = db.query(AssessmentResponse).filter(
+        AssessmentResponse.assessment_id == assessment_id
+    ).all()
+
+    # Create a map of indicator_id -> assessment_response for easy lookup
+    response_map = {resp.indicator_id: resp for resp in assessment_responses}
+
+    # Validate completeness for each indicator using the service
+    from app.services.completeness_validation_service import CompletenessValidationService
+
+    completeness_service = CompletenessValidationService()
+
+    # Collect validation results for each indicator
+    indicator_results = []
+
+    for indicator in indicators:
+        # Get the assessment response for this indicator (if it exists)
+        assessment_response = response_map.get(indicator.id)
+
+        # Get response_data and movs
+        response_data = assessment_response.response_data if assessment_response else None
+        uploaded_movs = assessment_response.movs if assessment_response else []
+
+        # Validate completeness
+        validation_result = completeness_service.validate_completeness(
+            form_schema=indicator.form_schema,
+            response_data=response_data,
+            uploaded_movs=uploaded_movs
+        )
+
+        indicator_results.append({
+            "indicator": indicator,
+            "is_complete": validation_result["is_complete"],
+            "missing_fields": validation_result["missing_fields"]
+        })
+
+    # Aggregate completeness results across all indicators
+    complete_count = sum(1 for r in indicator_results if r["is_complete"])
+    incomplete_count = sum(1 for r in indicator_results if not r["is_complete"])
+
+    # Build list of incomplete indicators with missing field details
+    incomplete_details = []
+    for result in indicator_results:
+        if not result["is_complete"]:
+            incomplete_details.append({
+                "indicator_id": result["indicator"].id,
+                "indicator_title": result["indicator"].name,
+                "missing_required_fields": [
+                    field["field_id"]
+                    for field in result["missing_fields"]
+                ]
+            })
+
+    # Determine overall completeness
+    is_complete = incomplete_count == 0
+
+    # Return CompletenessValidationResponse
+    return {
+        "is_complete": is_complete,
+        "total_indicators": len(indicators),
+        "complete_indicators": complete_count,
+        "incomplete_indicators": incomplete_count,
+        "incomplete_details": incomplete_details
+    }
