@@ -181,6 +181,8 @@ export function DynamicFormRenderer({
             formValues={formValues}
             control={control}
             errors={formState.errors}
+            assessmentId={assessmentId}
+            indicatorId={indicatorId}
           />
         ))}
 
@@ -210,6 +212,8 @@ interface SectionRendererProps {
   formValues: Record<string, unknown>;
   control: ReturnType<typeof useForm>["control"];
   errors: ReturnType<typeof useForm>["formState"]["errors"];
+  assessmentId: number;
+  indicatorId: number;
 }
 
 function SectionRenderer({
@@ -218,6 +222,8 @@ function SectionRenderer({
   formValues,
   control,
   errors,
+  assessmentId,
+  indicatorId,
 }: SectionRendererProps) {
   // Get visible fields for this section based on conditional logic
   const visibleFields = useMemo(() => {
@@ -244,6 +250,8 @@ function SectionRenderer({
             field={field}
             control={control}
             error={errors[field.field_id]?.message as string | undefined}
+            assessmentId={assessmentId}
+            indicatorId={indicatorId}
           />
         ))}
       </CardContent>
@@ -259,9 +267,11 @@ interface FieldRendererProps {
   field: FormSchemaFieldsItem;
   control: ReturnType<typeof useForm>["control"];
   error?: string;
+  assessmentId: number;
+  indicatorId: number;
 }
 
-function FieldRenderer({ field, control, error }: FieldRendererProps) {
+function FieldRenderer({ field, control, error, assessmentId, indicatorId }: FieldRendererProps) {
   // Render appropriate field component based on field type
   switch (field.field_type) {
     case "text_input":
@@ -325,7 +335,13 @@ function FieldRenderer({ field, control, error }: FieldRendererProps) {
       );
 
     case "file_upload":
-      return <FileFieldComponent field={field} />;
+      return (
+        <FileFieldComponent
+          field={field}
+          assessmentId={assessmentId}
+          indicatorId={indicatorId}
+        />
+      );
 
     default:
       // Unknown field type - render placeholder
