@@ -25,9 +25,9 @@ import { Loader2, AlertCircle } from "lucide-react";
 export default function BLGUDashboardPage() {
   const { user } = useAuthStore();
 
-  // For now, we'll use a placeholder assessment ID
-  // TODO: Get actual assessment ID from user context or route params
-  const assessmentId = 1;
+  // Use assessment ID 68 (the correct ID for the test user)
+  // TODO: Make this dynamic - fetch from /api/v1/assessments/my-assessment
+  const assessmentId = 68;
 
   // Fetch dashboard data using generated hook
   const {
