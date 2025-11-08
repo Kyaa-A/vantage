@@ -716,8 +716,8 @@ async def save_assessment_answers(
     validation_errors = []
 
     for response in field_responses:
-        field_id = response.get("field_id")
-        value = response.get("value")
+        field_id = response.field_id
+        value = response.value
 
         # Check if field_id exists in form_schema
         if field_id not in field_map:
@@ -808,7 +808,7 @@ async def save_assessment_answers(
     ).first()
 
     # Build response_data dictionary from field responses
-    response_data = {response["field_id"]: response["value"] for response in field_responses}
+    response_data = {response.field_id: response.value for response in field_responses}
 
     if existing_response:
         # Update existing record
