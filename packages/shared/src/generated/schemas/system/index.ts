@@ -5,6 +5,8 @@
 
 import type { AuditLogResponseUserEmail } from '../users';
 import type { AuditLogResponseUserName } from '../users';
+import type { GovernanceAreaGroup } from '../common';
+import type { ReworkComment } from '../common';
 import type { ComplianceRate } from '../common';
 import type { AreaBreakdown } from '../common';
 import type { FailedIndicator } from '../indicators';
@@ -101,6 +103,33 @@ export type AuditLogResponseEntityId = number | null;
  * AuditLogResponseIpAddress
  */
 export type AuditLogResponseIpAddress = string | null;
+
+
+/**
+ * BLGUDashboardResponse
+ */
+export interface BLGUDashboardResponse {
+  /** Assessment ID */
+  assessment_id: number;
+  /** Total number of indicators in the assessment */
+  total_indicators: number;
+  /** Number of indicators with all required fields filled */
+  completed_indicators: number;
+  /** Number of indicators with missing required fields */
+  incomplete_indicators: number;
+  /** Percentage of indicators completed (0.0 to 100.0) */
+  completion_percentage: number;
+  /** Indicators grouped by governance area */
+  governance_areas: GovernanceAreaGroup[];
+  /** Assessor feedback comments if assessment needs rework (null otherwise) */
+  rework_comments?: BLGUDashboardResponseReworkComments;
+}
+
+
+/**
+ * BLGUDashboardResponseReworkComments
+ */
+export type BLGUDashboardResponseReworkComments = ReworkComment[] | null;
 
 
 /**

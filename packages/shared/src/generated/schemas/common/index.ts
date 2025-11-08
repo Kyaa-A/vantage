@@ -9,6 +9,7 @@ import type { PercentageThresholdRule } from '../percentagethresholdrule';
 import type { CountThresholdRule } from '../countthresholdrule';
 import type { MatchValueRule } from '../matchvaluerule';
 import type { BBIFunctionalityCheckRule } from '../bbis';
+import type { IndicatorItem } from '../indicators';
 import type { AssessmentRow } from '../assessments';
 
 /**
@@ -475,6 +476,19 @@ export type FormSchemaFieldsItem = CheckboxGroupField | RadioButtonField | Numbe
 
 
 /**
+ * GovernanceAreaGroup
+ */
+export interface GovernanceAreaGroup {
+  /** Governance area ID */
+  governance_area_id: number;
+  /** Governance area name */
+  governance_area_name: string;
+  /** List of indicators in this governance area */
+  indicators: IndicatorItem[];
+}
+
+
+/**
  * GovernanceAreaNested
  */
 export interface GovernanceAreaNested {
@@ -701,6 +715,29 @@ export interface RadioButtonField {
  * RadioButtonFieldHelpText
  */
 export type RadioButtonFieldHelpText = string | null;
+
+
+/**
+ * ReworkComment
+ */
+export interface ReworkComment {
+  /** Assessor feedback comment */
+  comment: string;
+  /** Type of comment (general, specific issue, etc.) */
+  comment_type: string;
+  /** Indicator this comment applies to */
+  indicator_id: number;
+  /** Name of the indicator */
+  indicator_name: string;
+  /** Timestamp when comment was created (ISO format) */
+  created_at?: ReworkCommentCreatedAt;
+}
+
+
+/**
+ * ReworkCommentCreatedAt
+ */
+export type ReworkCommentCreatedAt = string | null;
 
 
 /**

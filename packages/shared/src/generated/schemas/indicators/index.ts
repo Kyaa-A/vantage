@@ -235,6 +235,53 @@ export type IndicatorHistoryResponseTechnicalNotesText = string | null;
 
 
 /**
+ * IndicatorItem
+ */
+export interface IndicatorItem {
+  /** Indicator ID */
+  indicator_id: number;
+  /** Indicator name */
+  indicator_name: string;
+  /** Completion status: True if all required fields filled, False otherwise */
+  is_complete: boolean;
+  /** Assessment response ID for this indicator */
+  response_id: number;
+}
+
+
+/**
+ * IndicatorNavigationItem
+ */
+export interface IndicatorNavigationItem {
+  /** Indicator ID */
+  indicator_id: number;
+  /** Indicator title/name */
+  title: string;
+  /** Completion status: 'complete' or 'incomplete' */
+  completion_status: IndicatorNavigationItemCompletionStatus;
+  /** Frontend route path for navigation (e.g., /blgu/assessment/123/indicator/456) */
+  route_path: string;
+  /** Name of the governance area */
+  governance_area_name: string;
+  /** ID of the governance area */
+  governance_area_id: number;
+}
+
+
+/**
+ * IndicatorNavigationItemCompletionStatus
+ */
+export type IndicatorNavigationItemCompletionStatus = typeof IndicatorNavigationItemCompletionStatus[keyof typeof IndicatorNavigationItemCompletionStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const IndicatorNavigationItemCompletionStatus = {
+  complete: 'complete',
+  incomplete: 'incomplete',
+} as const;
+
+
+/**
  * IndicatorNestedParent
  */
 export interface IndicatorNestedParent {
