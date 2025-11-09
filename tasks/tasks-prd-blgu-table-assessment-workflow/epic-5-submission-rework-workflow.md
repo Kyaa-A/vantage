@@ -130,61 +130,69 @@
     - **Time Estimate:** 3 hours
     - **Completed:** 2025-11-09
 
-- [ ] **5.3 Story: SQLAlchemy Model Updates for Rework**
+- [x] **5.3 Story: SQLAlchemy Model Updates for Rework** ✅
   - Update Assessment model with rework tracking fields
   - Add relationship to User model for rework_requested_by
   - Add validation: rework_count cannot exceed 1
   - Tech stack involved: SQLAlchemy, Python type hints, model constraints
   - Dependencies: Story 5.2 must be complete
+  - **Completed:** 2025-11-09
 
-  - [ ] **5.3.1 Atomic: Update Assessment model with rework columns**
+  - [x] **5.3.1 Atomic: Update Assessment model with rework columns**
     - **Files:** `apps/api/app/db/models/assessment.py`
     - **Dependencies:** Story 5.2 must be complete (migration applied)
     - **Acceptance:** Assessment model includes new columns: rework_count (Integer, default=0), rework_requested_at (DateTime, nullable), rework_requested_by (Integer, nullable, FK), rework_comments (Text, nullable). Type hints use Optional where applicable.
     - **Tech:** SQLAlchemy Column, types, Python type hints
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.3.2 Atomic: Update Assessment model status field with new enum**
+  - [x] **5.3.2 Atomic: Update Assessment model status field with new enum**
     - **Files:** `apps/api/app/db/models/assessment.py`
     - **Dependencies:** Story 5.1 must be complete
     - **Acceptance:** Assessment.status column uses updated AssessmentStatus enum. Type hint: status: AssessmentStatus. Default value: AssessmentStatus.DRAFT.
     - **Tech:** SQLAlchemy Enum, Python type hints
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.3.3 Atomic: Add relationship to User for rework_requested_by**
+  - [x] **5.3.3 Atomic: Add relationship to User for rework_requested_by**
     - **Files:** `apps/api/app/db/models/assessment.py`, `apps/api/app/db/models/user.py`
     - **Dependencies:** Task 5.3.1 must be complete
     - **Acceptance:** Assessment model has relationship: rework_requester = relationship("User", foreign_keys=[rework_requested_by]). User model optionally has back_populates.
     - **Tech:** SQLAlchemy relationship(), foreign_keys parameter
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.3.4 Atomic: Add model-level validation method for rework_count**
+  - [x] **5.3.4 Atomic: Add model-level validation method for rework_count**
     - **Files:** `apps/api/app/db/models/assessment.py`
     - **Dependencies:** Task 5.3.1 must be complete
     - **Acceptance:** Add @validates('rework_count') method to Assessment model. Method raises ValueError if rework_count > 1. Validation runs before database commit.
     - **Tech:** SQLAlchemy @validates decorator, validation logic
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.3.5 Atomic: Add helper property for can_request_rework**
+  - [x] **5.3.5 Atomic: Add helper property for can_request_rework**
     - **Files:** `apps/api/app/db/models/assessment.py`
     - **Dependencies:** Tasks 5.3.1, 5.3.2 must be complete
     - **Acceptance:** Add @property can_request_rework() to Assessment model. Returns True if rework_count < 1 and status is SUBMITTED. Helper used in service layer.
     - **Tech:** Python @property, business logic
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.3.6 Atomic: Add helper property for is_locked**
+  - [x] **5.3.6 Atomic: Add helper property for is_locked**
     - **Files:** `apps/api/app/db/models/assessment.py`
     - **Dependencies:** Task 5.3.2 must be complete
     - **Acceptance:** Add @property is_locked() to Assessment model. Returns True if status in [SUBMITTED, IN_REVIEW, COMPLETED]. Used to prevent BLGU edits.
     - **Tech:** Python @property, business logic
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.3.7 Atomic: Test Assessment model with rework fields**
-    - **Files:** `apps/api/tests/db/models/test_assessment.py`
+  - [x] **5.3.7 Atomic: Test Assessment model with rework fields**
+    - **Files:** `apps/api/tests/db/models/test_assessment.py` (NEW)
     - **Dependencies:** Tasks 5.3.1-5.3.6 must be complete
     - **Acceptance:** Unit tests verify rework columns exist and accept correct values. Test rework_count validation (rejects values > 1). Test can_request_rework and is_locked properties. Test relationship to User loads correctly.
     - **Tech:** Pytest, SQLAlchemy fixtures, test database
     - **Time Estimate:** 5 hours
+    - **Completed:** 2025-11-09
 
 - [ ] **5.4 Story: Submission Validation Service**
   - Create `SubmissionValidationService` in `apps/api/app/services/submission_validation_service.py`
