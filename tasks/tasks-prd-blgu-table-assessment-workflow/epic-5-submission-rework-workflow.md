@@ -727,8 +727,11 @@
   - Ensure all schemas are correctly typed
   - Tech stack involved: Orval, TypeScript, React Query
   - Dependencies: Story 5.9 must be complete
-  - **Status:** Ready for execution - Requires backend API running at localhost:8000
-  - **Note:** All backend endpoints complete and properly tagged. Run `pnpm generate-types` when backend is running.
+  - **Status:** Ready for execution - Backend API running in Docker, waiting for Windows type generation
+  - **Blocker:** Node.js not available in WSL environment - must run from Windows terminal
+  - **Guide:** See `STORY_5.10_WINDOWS_GUIDE.md` for detailed instructions
+  - **Action Required:** Run `pnpm generate-types` from Windows PowerShell in project root
+  - **Note:** Docker containers healthy at `http://localhost:8000`, import bug fixed (commit ee57356)
 
   - [ ] **5.10.1 Atomic: Run pnpm generate-types after submission endpoints complete** ⏸️
     - **Files:** Generated files in `packages/shared/src/generated/`
