@@ -9,9 +9,10 @@
 **Status as of 2025-11-09:**
 - **Backend Stories Complete:** 9 of 9 backend stories (100%)
 - **Type Generation Complete:** 1 of 1 story (100%)
-- **Overall Progress:** 10 of 21 stories (48%)
-- **Stories 5.1-5.10:** ✅ Complete
-- **Stories 5.11-5.21:** Pending (frontend components, notifications, testing)
+- **Frontend Stories Complete:** 1 of 8 frontend stories (13%)
+- **Overall Progress:** 11 of 21 stories (52%)
+- **Stories 5.1-5.11:** ✅ Complete
+- **Stories 5.12-5.21:** Pending (frontend components, notifications, testing)
 
 **Key Deliverables Completed:**
 - 4 new REST API endpoints (submit, request-rework, resubmit, submission-status)
@@ -20,6 +21,7 @@
 - Full Pydantic schema documentation
 - 43 backend unit tests passing
 - TypeScript types and React Query hooks generated for all Epic 5.0 endpoints
+- SubmissionValidation component with comprehensive test coverage (Story 5.11)
 
 ## Stories
 
@@ -787,57 +789,59 @@
     - **Time Estimate:** 2 hours
     - **Completed:** 2025-11-09 (verified via successful type generation)
 
-- [ ] **5.11 Story: Submission Validation Component**
+- [x] **5.11 Story: Submission Validation Component** ✅
   - Create `SubmissionValidation` component in `src/components/features/assessments/submission/`
   - Display validation results: complete indicators, incomplete indicators, missing MOVs
   - Show checklist of requirements before submission
   - Highlight incomplete items in red
-  - Tech stack involved: React, TypeScript, shadcn/ui Checkbox, Alert
+  - Tech stack involved: React, TypeScript, shadcn/ui Alert, Badge, Skeleton
   - Dependencies: Story 5.10 must be complete
+  - **Completed:** 2025-11-09
+  - **Note:** Implemented with 8 comprehensive test cases covering all states
 
-  - [ ] **5.11.1 Atomic: Create SubmissionValidation component file structure**
+  - [x] **5.11.1 Atomic: Create SubmissionValidation component file structure**
     - **Files:** `apps/web/src/components/features/assessments/submission/SubmissionValidation.tsx` (NEW), `apps/web/src/components/features/assessments/submission/index.ts` (NEW)
     - **Dependencies:** None
     - **Acceptance:** Component file created with basic functional component structure. Props interface defined: assessmentId. Component exported from index.ts.
     - **Tech:** React, TypeScript, component structure
     - **Time Estimate:** 2 hours
 
-  - [ ] **5.11.2 Atomic: Integrate useGetSubmissionStatus query hook**
+  - [x] **5.11.2 Atomic: Integrate useGetSubmissionStatus query hook**
     - **Files:** `apps/web/src/components/features/assessments/submission/SubmissionValidation.tsx`
     - **Dependencies:** Task 5.11.1, Story 5.10 must be complete
     - **Acceptance:** Import useGetSubmissionStatus from @vantage/shared. Call hook with assessmentId. Extract validation_result from response. Handle loading and error states.
     - **Tech:** React, TanStack Query, generated hooks
     - **Time Estimate:** 3 hours
 
-  - [ ] **5.11.3 Atomic: Render checklist for indicator completeness**
+  - [x] **5.11.3 Atomic: Render checklist for indicator completeness**
     - **Files:** `apps/web/src/components/features/assessments/submission/SubmissionValidation.tsx`
     - **Dependencies:** Task 5.11.2 must be complete
     - **Acceptance:** Display checklist of all indicators. Complete indicators show green checkmark. Incomplete indicators show red X. Use shadcn/ui Checkbox or custom icons. List incomplete indicator names.
     - **Tech:** React, shadcn/ui, lucide-react icons, conditional rendering
     - **Time Estimate:** 4 hours
 
-  - [ ] **5.11.4 Atomic: Render checklist for MOV completeness**
+  - [x] **5.11.4 Atomic: Render checklist for MOV completeness**
     - **Files:** `apps/web/src/components/features/assessments/submission/SubmissionValidation.tsx`
     - **Dependencies:** Task 5.11.2 must be complete
     - **Acceptance:** Display checklist for required MOV uploads. Complete indicators show green checkmark. Missing MOVs show red X. List indicators missing files.
     - **Tech:** React, conditional rendering
     - **Time Estimate:** 4 hours
 
-  - [ ] **5.11.5 Atomic: Show overall validation summary**
+  - [x] **5.11.5 Atomic: Show overall validation summary**
     - **Files:** `apps/web/src/components/features/assessments/submission/SubmissionValidation.tsx`
     - **Dependencies:** Tasks 5.11.3, 5.11.4 must be complete
     - **Acceptance:** Display summary at top: "X of Y indicators complete", "X of Y MOVs uploaded". Show validation status badge: "Ready to Submit" (green) or "Incomplete" (red). Use shadcn/ui Badge, Alert.
     - **Tech:** React, shadcn/ui Badge, Alert, data aggregation
     - **Time Estimate:** 3 hours
 
-  - [ ] **5.11.6 Atomic: Add loading skeleton for validation check**
+  - [x] **5.11.6 Atomic: Add loading skeleton for validation check**
     - **Files:** `apps/web/src/components/features/assessments/submission/SubmissionValidation.tsx`
     - **Dependencies:** Task 5.11.2 must be complete
     - **Acceptance:** When isLoading is true, show skeleton loader for checklist. Use shadcn/ui Skeleton component. Show loading message.
     - **Tech:** React, shadcn/ui Skeleton, loading states
     - **Time Estimate:** 2 hours
 
-  - [ ] **5.11.7 Atomic: Add error state for validation check**
+  - [x] **5.11.7 Atomic: Add error state for validation check**
     - **Files:** `apps/web/src/components/features/assessments/submission/SubmissionValidation.tsx`
     - **Dependencies:** Task 5.11.2 must be complete
     - **Acceptance:** When error exists, show error message using shadcn/ui Alert. Include Retry button to refetch validation.
