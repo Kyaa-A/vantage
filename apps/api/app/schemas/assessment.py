@@ -487,7 +487,18 @@ class MOVFileListResponse(BaseModel):
 
 
 class SubmitAssessmentResponse(BaseModel):
-    """Response schema for assessment submission (Story 5.5)."""
+    """
+    Response schema for assessment submission (Story 5.5).
+
+    Returned when a BLGU user successfully submits an assessment for review.
+    The assessment transitions from DRAFT to SUBMITTED and becomes locked.
+
+    Fields:
+        success: Whether the submission was successful
+        message: Human-readable success message
+        assessment_id: ID of the submitted assessment
+        submitted_at: Timestamp when the assessment was submitted
+    """
 
     success: bool
     message: str
@@ -496,9 +507,23 @@ class SubmitAssessmentResponse(BaseModel):
 
 
 class RequestReworkRequest(BaseModel):
-    """Request schema for requesting rework on an assessment (Story 5.6)."""
+    """
+    Request schema for requesting rework on an assessment (Story 5.6).
 
-    comments: str  # Assessor's feedback to BLGU user
+    Used by assessors/validators to send an assessment back to the BLGU user
+    for corrections. Only one rework cycle is allowed per assessment.
+
+    Fields:
+        comments: Assessor's feedback explaining what needs to be corrected.
+                  Minimum length: 10 characters. This feedback is shown to the
+                  BLGU user when they view the assessment in REWORK status.
+
+    Validation:
+        - comments field is required and must be at least 10 characters
+        - whitespace is automatically trimmed
+    """
+
+    comments: str
 
     @classmethod
     def validate_comments(cls, v):
@@ -509,7 +534,20 @@ class RequestReworkRequest(BaseModel):
 
 
 class RequestReworkResponse(BaseModel):
-    """Response schema for rework request (Story 5.6)."""
+    """
+    Response schema for rework request (Story 5.6).
+
+    Returned when an assessor successfully requests rework on an assessment.
+    The assessment transitions from SUBMITTED to REWORK and becomes unlocked
+    for the BLGU user to make corrections.
+
+    Fields:
+        success: Whether the rework request was successful
+        message: Human-readable success message
+        assessment_id: ID of the assessment sent back for rework
+        rework_count: Current rework count (will be 1 after first rework request)
+        rework_requested_at: Timestamp when rework was requested
+    """
 
     success: bool
     message: str
@@ -519,7 +557,20 @@ class RequestReworkResponse(BaseModel):
 
 
 class ResubmitAssessmentResponse(BaseModel):
-    """Response schema for assessment resubmission (Story 5.7)."""
+    """
+    Response schema for assessment resubmission (Story 5.7).
+
+    Returned when a BLGU user successfully resubmits an assessment after
+    making corrections requested by an assessor. The assessment transitions
+    from REWORK back to SUBMITTED and becomes locked again.
+
+    Fields:
+        success: Whether the resubmission was successful
+        message: Human-readable success message
+        assessment_id: ID of the resubmitted assessment
+        resubmitted_at: Timestamp when the assessment was resubmitted
+        rework_count: Current rework count (remains at 1, not incremented)
+    """
 
     success: bool
     message: str
@@ -533,7 +584,27 @@ class SubmissionStatusResponse(BaseModel):
     Response schema for submission status check (Story 5.8).
 
     Provides comprehensive information about an assessment's submission state,
-    including validation status, rework details, and locked state.
+    including validation status, rework details, and locked state. This allows
+    BLGU users to check submission readiness and view rework feedback, while
+    allowing assessors to check assessment status before taking action.
+
+    Fields:
+        assessment_id: ID of the assessment being checked
+        status: Current workflow status (DRAFT, SUBMITTED, IN_REVIEW, REWORK, COMPLETED)
+        is_locked: Whether the assessment is locked for editing by BLGU user.
+                   Locked when SUBMITTED, IN_REVIEW, or COMPLETED.
+        rework_count: Number of times rework has been requested (0 or 1)
+        rework_comments: Assessor's feedback if rework was requested (None if no rework)
+        rework_requested_at: Timestamp when rework was requested (None if no rework)
+        rework_requested_by: ID of the assessor who requested rework (None if no rework)
+        validation_result: Current validation status showing incomplete indicators
+                           and missing MOV files
+
+    Usage:
+        - BLGU users call this endpoint to check what needs completion before submit/resubmit
+        - BLGU users view rework feedback from assessors
+        - Assessors check assessment status before requesting rework or validating
+        - Frontend displays submission readiness indicator with validation errors
     """
 
     assessment_id: int
