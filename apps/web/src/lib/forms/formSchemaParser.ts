@@ -94,7 +94,7 @@ export function getSections(
       if (typeof section === "object" && section !== null) {
         const sectionObj = section as Record<string, unknown>;
         return {
-          id: String(sectionObj.id ?? `section_${index}`),
+          id: String(sectionObj.section_id ?? sectionObj.id ?? `section_${index}`),
           title: String(sectionObj.title ?? `Section ${index + 1}`),
           description:
             sectionObj.description !== undefined &&
@@ -157,11 +157,14 @@ export function getFieldsForSection(
     formSchema.sections.length > 0
   ) {
     const targetSection = formSchema.sections.find(
-      (section: unknown) =>
-        typeof section === "object" &&
-        section !== null &&
-        "id" in section &&
-        section.id === sectionId
+      (section: unknown) => {
+        if (typeof section === "object" && section !== null) {
+          const sectionObj = section as Record<string, unknown>;
+          const id = sectionObj.section_id ?? sectionObj.id;
+          return id === sectionId;
+        }
+        return false;
+      }
     );
 
     if (

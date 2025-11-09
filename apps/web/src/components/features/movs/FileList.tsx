@@ -9,7 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 import { MOVFileResponse } from "@vantage/shared";
 
@@ -59,13 +58,13 @@ export function FileList({
 }: FileListProps) {
   if (loading) {
     return (
-      <Card>
-        <CardContent className="p-6">
+      <Card className="border-none shadow-none bg-transparent">
+        <CardContent className="p-0">
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="h-16 bg-gray-100 animate-pulse rounded-md"
+                className="h-16 bg-[var(--hover)] animate-pulse rounded-lg"
               />
             ))}
           </div>
@@ -76,11 +75,11 @@ export function FileList({
 
   if (files.length === 0) {
     return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center py-8">
-            <File className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-            <p className="text-sm text-gray-500">{emptyMessage}</p>
+      <Card className="border-none shadow-none bg-transparent">
+        <CardContent className="p-0">
+          <div className="text-center py-8 px-4 rounded-lg bg-[var(--card)] border border-dashed border-[var(--border)]">
+            <File className="mx-auto h-12 w-12 text-[var(--text-secondary)] opacity-50 mb-3" />
+            <p className="text-sm text-[var(--text-secondary)]">{emptyMessage}</p>
           </div>
         </CardContent>
       </Card>
@@ -88,19 +87,19 @@ export function FileList({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Uploaded Files</CardTitle>
+    <Card className="border-none shadow-none bg-transparent">
+      <CardHeader className="px-0 pb-3">
+        <CardTitle className="text-base font-semibold">Uploaded Files</CardTitle>
         <CardDescription>
           {files.length} file{files.length !== 1 ? "s" : ""} uploaded
         </CardDescription>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="divide-y">
+        <div className="space-y-2">
           {files.map((file) => (
             <div
               key={file.id}
-              className="p-4 hover:bg-gray-50 transition-colors"
+              className="p-3 rounded-lg border border-[var(--border)] bg-[var(--card)] hover:bg-[var(--hover)] transition-colors"
             >
               <div className="flex items-center justify-between gap-4">
                 {/* File Info */}

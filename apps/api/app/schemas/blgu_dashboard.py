@@ -83,9 +83,18 @@ class BLGUDashboardResponse(BaseModel):
 
     SECURITY NOTE: This schema only exposes COMPLETION status (complete/incomplete).
     Compliance status (PASS/FAIL/CONDITIONAL) is never included.
+
+    Epic 5.0 fields: status, rework_count, rework_requested_at, rework_requested_by
     """
 
     assessment_id: int = Field(..., description="Assessment ID")
+
+    # Epic 5.0: Assessment status and rework tracking
+    status: str = Field(..., description="Assessment status (DRAFT, SUBMITTED, IN_REVIEW, REWORK, COMPLETED)")
+    rework_count: int = Field(..., description="Number of times rework has been requested (0 or 1)")
+    rework_requested_at: Optional[str] = Field(None, description="Timestamp when rework was requested (ISO format)")
+    rework_requested_by: Optional[int] = Field(None, description="User ID of assessor who requested rework")
+
     total_indicators: int = Field(..., description="Total number of indicators in the assessment")
     completed_indicators: int = Field(
         ..., description="Number of indicators with all required fields filled"

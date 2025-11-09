@@ -70,7 +70,7 @@ async def test_get_current_area_assessor_user_requires_role_and_area(
 
     assessor_no_area = create_user(
         db_session,
-        role=UserRole.AREA_ASSESSOR,
+        role=UserRole.ASSESSOR,
         governance_area=None,
         name="Assessor No Area",
         email="a1@example.com",
@@ -84,7 +84,7 @@ async def test_get_current_area_assessor_user_requires_role_and_area(
     )
     assessor_ok = create_user(
         db_session,
-        role=UserRole.AREA_ASSESSOR,
+        role=UserRole.ASSESSOR,
         governance_area=area,
         name="Assessor A",
         email="a2@example.com",
@@ -140,7 +140,7 @@ def test_get_assessor_queue_filters_by_governance_area(client, db_session, monke
     # Create assessor tied to area A
     assessor_a = create_user(
         db_session,
-        role=UserRole.AREA_ASSESSOR,
+        role=UserRole.ASSESSOR,
         governance_area=area_a,
         name="Assessor A",
         email="assessor@example.com",

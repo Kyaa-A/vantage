@@ -30,7 +30,7 @@ class TestSubmissionValidationService:
         user = User(
             email="test1@example.com",
             hashed_password="hashed",
-            full_name="Test User 1",
+            name="Test User 1",
             role=UserRole.BLGU_USER
         )
         db_session.add(user)
@@ -103,7 +103,7 @@ class TestSubmissionValidationService:
         user = User(
             email="test2@example.com",
             hashed_password="hashed",
-            full_name="Test User 2",
+            name="Test User 2",
             role=UserRole.BLGU_USER
         )
         db_session.add(user)
@@ -175,7 +175,7 @@ class TestSubmissionValidationService:
         user = User(
             email="test3@example.com",
             hashed_password="hashed",
-            full_name="Test User 3",
+            name="Test User 3",
             role=UserRole.BLGU_USER
         )
         db_session.add(user)
@@ -250,7 +250,7 @@ class TestSubmissionValidationService:
         user = User(
             email="test4@example.com",
             hashed_password="hashed",
-            full_name="Test User 4",
+            name="Test User 4",
             role=UserRole.BLGU_USER
         )
         db_session.add(user)
@@ -334,7 +334,7 @@ class TestSubmissionValidationService:
         user = User(
             email="test5@example.com",
             hashed_password="hashed",
-            full_name="Test User 5",
+            name="Test User 5",
             role=UserRole.BLGU_USER
         )
         db_session.add(user)
@@ -446,7 +446,7 @@ class TestSubmissionValidationService:
         user = User(
             email="test6@example.com",
             hashed_password="hashed",
-            full_name="Test User 6",
+            name="Test User 6",
             role=UserRole.BLGU_USER
         )
         db_session.add(user)

@@ -130,6 +130,32 @@ The 3 failing tests are due to database session management in multi-step tests w
 
 **Impact:** These bugs would have caused 500 errors in production when saving assessment answers. The comprehensive tests caught and helped fix all issues.
 
+### Critical Production Bug Fixed in `apps/api/app/services/assessment_service.py`
+
+5. **Lines 343-357** - Governance area cleanup causing foreign key constraint violation
+   ```python
+   # Before (broken):
+   # Cleanup any non-required areas accidentally created in dev (e.g., Tourism)
+   allowed = {name for name, _ in required}
+   extras = (
+       db.query(GovernanceArea)
+       .filter(~GovernanceArea.name.in_(list(allowed)))
+       .all()
+   )
+   if extras:
+       for ga in extras:
+           db.delete(ga)  # This violates BBI foreign key constraint
+       db.commit()
+
+   # After (fixed):
+   # NOTE: Cleanup disabled due to foreign key constraint violations
+   # The BBI table has a NOT NULL constraint on governance_area_id
+   # Deleting governance areas would violate this constraint
+   # (Cleanup logic commented out)
+   ```
+
+**Impact:** This bug caused 500 errors when accessing `/api/v1/assessments/my-assessment` endpoint. The cleanup logic tried to delete governance areas, which cascaded to BBI records and attempted to set `governance_area_id=NULL`, violating the NOT NULL constraint. Discovered during frontend testing.
+
 ---
 
 ## Test Infrastructure
@@ -265,8 +291,12 @@ This endpoint validates form completeness but does NOT expose compliance status 
 **Epic 3.18 Backend API Testing: 85% Complete**
 
 - ✅ 18 tests passing and validating critical functionality
-- ✅ 4 critical production bugs found and fixed
+- ✅ **5 critical production bugs found and fixed**
+  - 4 bugs in assessments.py (Pydantic model access patterns)
+  - 1 bug in assessment_service.py (foreign key constraint violation)
 - ✅ Comprehensive coverage of success, error, and security scenarios
 - ⚠️ 3 tests need db session infrastructure fixes (not production bugs)
 
 The testing work successfully validated the form schema and answer management endpoints, catching critical bugs before production deployment. The comprehensive test suite ensures reliability and maintainability of the Dynamic Form Rendering Engine.
+
+**Frontend Testing Note:** The 5th bug (governance area cleanup) was discovered during manual frontend testing when the `/api/v1/assessments/my-assessment` endpoint returned 500 errors. This demonstrates the importance of end-to-end testing in addition to unit/integration tests.

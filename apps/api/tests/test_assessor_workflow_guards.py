@@ -32,7 +32,7 @@ def seed_assessment(db, status=AssessmentStatus.SUBMITTED_FOR_REVIEW, rework_cou
     db.add(gov_area)
     db.flush()
 
-    assessor = User(email=f"assessor2_{timestamp}@example.com", name="Assessor2", role=UserRole.AREA_ASSESSOR, hashed_password="hashed_password", is_active=True)
+    assessor = User(email=f"assessor2_{timestamp}@example.com", name="Assessor2", role=UserRole.ASSESSOR, hashed_password="hashed_password", is_active=True)
     blgu = User(email=f"blgu2_{timestamp}@example.com", name="BLGU2", role=UserRole.BLGU_USER, hashed_password="hashed_password", is_active=True)
     db.add_all([assessor, blgu])
     db.flush()

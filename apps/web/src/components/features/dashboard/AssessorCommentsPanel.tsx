@@ -9,14 +9,7 @@
  */
 
 import { MessageSquare, AlertCircle } from "lucide-react";
-
-interface ReworkComment {
-  comment: string;
-  comment_type: string;
-  indicator_id: number;
-  indicator_name: string;
-  created_at: string | null;
-}
+import type { ReworkComment } from "@vantage/shared";
 
 interface AssessorCommentsPanelProps {
   comments: ReworkComment[] | null;
@@ -43,7 +36,7 @@ export function AssessorCommentsPanel({
     return acc;
   }, {} as Record<number, { indicator_name: string; comments: ReworkComment[] }>);
 
-  const formatDate = (dateString: string | null) => {
+  const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return "Recently";
     try {
       const date = new Date(dateString);

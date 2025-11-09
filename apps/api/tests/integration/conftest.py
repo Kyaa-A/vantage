@@ -11,11 +11,10 @@ from sqlalchemy.orm import Session
 from fastapi.testclient import TestClient
 from passlib.context import CryptContext
 
-from app.db.models.governance_area import GovernanceArea
+from app.db.models.governance_area import GovernanceArea, Indicator
 from app.db.models.user import User
 from app.db.models.barangay import Barangay
 from app.db.models.assessment import Assessment, AssessmentResponse
-from app.db.models.system import Indicator
 from app.db.enums import (
     AreaType,
     UserRole,
@@ -136,28 +135,45 @@ def test_mlgoo_user(db_session: Session) -> User:
 # ============================================================================
 
 
+def _override_db_for_auth(client: TestClient, db_session: Session):
+    """Override database dependency to use the test's database session"""
+    from app.api.deps import get_db
+
+    def _override_get_db():
+        try:
+            yield db_session
+        finally:
+            pass
+
+    client.app.dependency_overrides[get_db] = _override_get_db
+
+
 @pytest.fixture
-def auth_headers_blgu(client: TestClient, test_blgu_user: User) -> Dict[str, str]:
+def auth_headers_blgu(client: TestClient, db_session: Session, test_blgu_user: User) -> Dict[str, str]:
     """Get authentication headers for BLGU user."""
+    _override_db_for_auth(client, db_session)
+
     response = client.post(
         "/api/v1/auth/login",
-        data={
-            "username": test_blgu_user.email,
+        json={
+            "email": test_blgu_user.email,
             "password": test_blgu_user.plain_password,
         },
     )
-    assert response.status_code == 200
+    assert response.status_code == 200, f"Auth failed: {response.text}"
     token = response.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
 
 
 @pytest.fixture
-def auth_headers_assessor(client: TestClient, test_assessor_user: User) -> Dict[str, str]:
+def auth_headers_assessor(client: TestClient, db_session: Session, test_assessor_user: User) -> Dict[str, str]:
     """Get authentication headers for ASSESSOR user."""
+    _override_db_for_auth(client, db_session)
+
     response = client.post(
         "/api/v1/auth/login",
-        data={
-            "username": test_assessor_user.email,
+        json={
+            "email": test_assessor_user.email,
             "password": test_assessor_user.plain_password,
         },
     )
@@ -167,12 +183,14 @@ def auth_headers_assessor(client: TestClient, test_assessor_user: User) -> Dict[
 
 
 @pytest.fixture
-def auth_headers_validator(client: TestClient, test_validator_user: User) -> Dict[str, str]:
+def auth_headers_validator(client: TestClient, db_session: Session, test_validator_user: User) -> Dict[str, str]:
     """Get authentication headers for VALIDATOR user."""
+    _override_db_for_auth(client, db_session)
+
     response = client.post(
         "/api/v1/auth/login",
-        data={
-            "username": test_validator_user.email,
+        json={
+            "email": test_validator_user.email,
             "password": test_validator_user.plain_password,
         },
     )
@@ -182,12 +200,14 @@ def auth_headers_validator(client: TestClient, test_validator_user: User) -> Dic
 
 
 @pytest.fixture
-def auth_headers_mlgoo(client: TestClient, test_mlgoo_user: User) -> Dict[str, str]:
+def auth_headers_mlgoo(client: TestClient, db_session: Session, test_mlgoo_user: User) -> Dict[str, str]:
     """Get authentication headers for MLGOO admin user."""
+    _override_db_for_auth(client, db_session)
+
     response = client.post(
         "/api/v1/auth/login",
-        data={
-            "username": test_mlgoo_user.email,
+        json={
+            "email": test_mlgoo_user.email,
             "password": test_mlgoo_user.plain_password,
         },
     )
@@ -208,7 +228,6 @@ def governance_area(db_session: Session) -> GovernanceArea:
 
     area = GovernanceArea(
         name=unique_name,
-        abbreviation="TGA",
         area_type=AreaType.CORE,
     )
     db_session.add(area)
@@ -223,7 +242,6 @@ def test_indicator(db_session: Session, governance_area: GovernanceArea) -> Indi
     Create a test indicator with form_schema for integration tests.
     """
     indicator = Indicator(
-        code=f"TEST-IND-{uuid.uuid4().hex[:8]}",
         name="Test Indicator for Integration",
         description="Integration test indicator",
         governance_area_id=governance_area.id,
@@ -232,13 +250,13 @@ def test_indicator(db_session: Session, governance_area: GovernanceArea) -> Indi
                 {
                     "id": "test_text_field",
                     "label": "Test Text Field",
-                    "type": "text",
+                    "field_type": "text",
                     "required": True,
                 },
                 {
                     "id": "test_number_field",
                     "label": "Test Number Field",
-                    "type": "number",
+                    "field_type": "number",
                     "required": True,
                     "min": 0,
                     "max": 100,
@@ -246,7 +264,7 @@ def test_indicator(db_session: Session, governance_area: GovernanceArea) -> Indi
                 {
                     "id": "test_select_field",
                     "label": "Test Select Field",
-                    "type": "select",
+                    "field_type": "select",
                     "required": True,
                     "options": ["Option A", "Option B", "Option C"],
                 },
@@ -267,6 +285,7 @@ def test_indicator(db_session: Session, governance_area: GovernanceArea) -> Indi
             "FAIL": "Test indicator failed",
         },
         is_active=True,
+        is_auto_calculable=True,
     )
     db_session.add(indicator)
     db_session.commit()
@@ -358,8 +377,9 @@ def test_assessment_with_responses(
         assessment_id=test_draft_assessment.id,
         indicator_id=test_indicator.id,
         response_data=test_assessment_data,
-        calculated_status=ValidationStatus.PASS,
-        calculated_remark="Test indicator passed",
+        validation_status=ValidationStatus.PASS,
+        generated_remark="Test indicator passed",
+        is_completed=True,
     )
     db_session.add(response)
     db_session.commit()

@@ -95,6 +95,26 @@ class CompletenessValidationService:
             uploaded_movs = []
 
         try:
+            # Check if this is a legacy JSON Schema format (Epic 1.0/2.0)
+            # These have 'type', 'properties', etc. but no 'fields' or 'sections'
+            if 'type' in form_schema and 'fields' not in form_schema and 'sections' not in form_schema:
+                # Legacy format - skip validation, return complete
+                self.logger.info("Legacy JSON Schema format detected, skipping completeness validation")
+                return {
+                    "is_complete": True,
+                    "missing_fields": [],
+                    "required_field_count": 0,
+                    "filled_field_count": 0
+                }
+
+            # Handle both Epic 3.0 (sections-based) and Epic 4.0 (fields-based) schemas
+            if 'sections' in form_schema and 'fields' not in form_schema:
+                # Epic 3.0 format - convert sections to fields
+                fields = []
+                for section in form_schema.get('sections', []):
+                    fields.extend(section.get('fields', []))
+                form_schema = {**form_schema, 'fields': fields}
+
             # Parse and validate the form schema using Pydantic
             schema_obj = FormSchema(**form_schema)
 

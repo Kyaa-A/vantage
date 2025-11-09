@@ -135,9 +135,10 @@ def get_blgu_dashboard(
     # Convert governance area groups to list
     governance_areas_list = list(governance_area_groups.values())
 
-    # Include assessor comments if assessment status is NEEDS_REWORK
+    # Epic 5.0: Include assessor comments if assessment status is REWORK
+    # Note: Also check legacy NEEDS_REWORK for backward compatibility
     rework_comments = None
-    if assessment.status == AssessmentStatus.NEEDS_REWORK:
+    if assessment.status in [AssessmentStatus.REWORK, AssessmentStatus.NEEDS_REWORK]:
         # Collect all feedback comments from all responses (excluding internal notes)
         comments_list = []
         for response in assessment.responses:
@@ -154,8 +155,13 @@ def get_blgu_dashboard(
 
         rework_comments = comments_list if comments_list else None
 
+    # Epic 5.0: Return status and rework tracking fields
     return {
         "assessment_id": assessment_id,
+        "status": assessment.status.value,  # Epic 5.0: Assessment workflow status
+        "rework_count": assessment.rework_count,  # Epic 5.0: Rework cycle count (0 or 1)
+        "rework_requested_at": assessment.rework_requested_at.isoformat() if assessment.rework_requested_at else None,  # Epic 5.0
+        "rework_requested_by": assessment.rework_requested_by,  # Epic 5.0: Assessor who requested rework
         "total_indicators": total_indicators,
         "completed_indicators": completed_indicators,
         "incomplete_indicators": incomplete_indicators,

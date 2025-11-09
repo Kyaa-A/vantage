@@ -29,7 +29,7 @@ class TestAssessmentModelReworkFields:
         user = User(
             email="test_blgu@example.com",
             hashed_password="hashed",
-            full_name="Test BLGU",
+            name="Test BLGU",
             role=UserRole.BLGU_USER,
         )
         db_session.add(user)
@@ -64,7 +64,7 @@ class TestAssessmentModelReworkFields:
         user = User(
             email="test_blgu2@example.com",
             hashed_password="hashed",
-            full_name="Test BLGU 2",
+            name="Test BLGU 2",
             role=UserRole.BLGU_USER,
         )
         db_session.add(user)
@@ -104,7 +104,7 @@ class TestAssessmentModelReworkFields:
         user = User(
             email="test_blgu3@example.com",
             hashed_password="hashed",
-            full_name="Test BLGU 3",
+            name="Test BLGU 3",
             role=UserRole.BLGU_USER,
         )
         db_session.add(user)
@@ -132,7 +132,7 @@ class TestAssessmentModelReworkFields:
         user = User(
             email="test_blgu4@example.com",
             hashed_password="hashed",
-            full_name="Test BLGU 4",
+            name="Test BLGU 4",
             role=UserRole.BLGU_USER,
         )
         db_session.add(user)
@@ -160,7 +160,7 @@ class TestAssessmentModelReworkFields:
         user = User(
             email="test_blgu5@example.com",
             hashed_password="hashed",
-            full_name="Test BLGU 5",
+            name="Test BLGU 5",
             role=UserRole.BLGU_USER,
         )
         db_session.add(user)
@@ -198,7 +198,7 @@ class TestAssessmentModelReworkFields:
         blgu_user = User(
             email="test_blgu6@example.com",
             hashed_password="hashed",
-            full_name="Test BLGU 6",
+            name="Test BLGU 6",
             role=UserRole.BLGU_USER,
         )
         db_session.add(blgu_user)
@@ -208,7 +208,7 @@ class TestAssessmentModelReworkFields:
         assessor = User(
             email="test_assessor@example.com",
             hashed_password="hashed",
-            full_name="Test Assessor",
+            name="Test Assessor",
             role=UserRole.ASSESSOR,
         )
         db_session.add(assessor)
@@ -231,7 +231,7 @@ class TestAssessmentModelReworkFields:
         assert loaded_assessment is not None
         assert loaded_assessment.rework_requester is not None
         assert loaded_assessment.rework_requester.id == assessor.id
-        assert loaded_assessment.rework_requester.full_name == "Test Assessor"
+        assert loaded_assessment.rework_requester.name == "Test Assessor"
 
         # Cleanup
         db_session.delete(assessment)
@@ -244,7 +244,7 @@ class TestAssessmentModelReworkFields:
         user = User(
             email="test_blgu7@example.com",
             hashed_password="hashed",
-            full_name="Test BLGU 7",
+            name="Test BLGU 7",
             role=UserRole.BLGU_USER,
         )
         db_session.add(user)
@@ -271,7 +271,7 @@ class TestAssessmentModelReworkFields:
         user = User(
             email="test_blgu8@example.com",
             hashed_password="hashed",
-            full_name="Test BLGU 8",
+            name="Test BLGU 8",
             role=UserRole.BLGU_USER,
         )
         db_session.add(user)
@@ -298,7 +298,7 @@ class TestAssessmentModelReworkFields:
         user = User(
             email="test_blgu9@example.com",
             hashed_password="hashed",
-            full_name="Test BLGU 9",
+            name="Test BLGU 9",
             role=UserRole.BLGU_USER,
         )
         db_session.add(user)
@@ -336,7 +336,7 @@ class TestAssessmentModelReworkFields:
         user = User(
             email="test_blgu10@example.com",
             hashed_password="hashed",
-            full_name="Test BLGU 10",
+            name="Test BLGU 10",
             role=UserRole.BLGU_USER,
         )
         db_session.add(user)
@@ -371,7 +371,7 @@ class TestAssessmentModelReworkFields:
         user = User(
             email="test_blgu11@example.com",
             hashed_password="hashed",
-            full_name="Test BLGU 11",
+            name="Test BLGU 11",
             role=UserRole.BLGU_USER,
         )
         db_session.add(user)
@@ -406,13 +406,13 @@ class TestAssessmentModelReworkFields:
         blgu_user = User(
             email="test_blgu12@example.com",
             hashed_password="hashed",
-            full_name="Test BLGU 12",
+            name="Test BLGU 12",
             role=UserRole.BLGU_USER,
         )
         assessor = User(
             email="test_assessor2@example.com",
             hashed_password="hashed",
-            full_name="Test Assessor 2",
+            name="Test Assessor 2",
             role=UserRole.ASSESSOR,
         )
         db_session.add_all([blgu_user, assessor])

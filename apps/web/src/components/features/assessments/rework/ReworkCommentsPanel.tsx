@@ -19,7 +19,7 @@ import { AlertTriangle, MessageSquare, Clock } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { useGetAssessmentsAssessmentIdSubmissionStatus } from "@vantage/shared";
 import { formatDistanceToNow } from "date-fns";
 

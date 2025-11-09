@@ -23,7 +23,7 @@ from typing import Dict
 from datetime import datetime, timedelta
 
 from app.db.models.assessment import Assessment, AssessmentResponse
-from app.db.models.system import Indicator
+from app.db.models.governance_area import Indicator
 from app.db.models.user import User
 from app.db.enums import AssessmentStatus
 

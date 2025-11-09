@@ -234,63 +234,85 @@ class AssessmentService:
             top_level_inds = [
                 ind for ind in indicators_by_area.get(area.id, []) if getattr(ind, "parent_id", None) is None
             ]
-            
-            # For areas 1-6, only use the first indicator as the parent for synthetic children
+
+            # For areas 1-6, separate Epic 3 format indicators from legacy indicators
+            # Epic 3 indicators have "fields" array in form_schema, legacy use "properties"
             if area.id in [1, 2, 3, 4, 5, 6]:
-                # Only take the first indicator to use as parent (nested structure)
-                top_level_inds = top_level_inds[:1]
-            
+                epic3_indicators = []
+                legacy_indicators = []
+
+                for ind in top_level_inds:
+                    schema = ind.form_schema or {}
+                    # Epic 3 format has "fields" array
+                    if "fields" in schema and isinstance(schema.get("fields"), list):
+                        epic3_indicators.append(ind)
+                    else:
+                        legacy_indicators.append(ind)
+
+                # Use only the first legacy indicator for mock structure (backward compatibility)
+                # But include ALL Epic 3 indicators
+                top_level_inds = legacy_indicators[:1] + epic3_indicators
+
             for ind in top_level_inds:
                 top_level_nodes.append(serialize_indicator_node(ind))
 
             # Option B (dev/demo): inject synthetic children for Areas 1-6 using nested form_schema
             # This enables nested rendering even without DB hierarchy
-            if area.id in [1, 2, 3, 4, 5, 6] and len(top_level_inds) >= 1 and len(top_level_nodes) >= 1:
-                base_ind = top_level_inds[0]
-                base_resp = response_lookup.get(base_ind.id)
-                try:
-                    if area.id == 1:
-                        # Area 1 uses the existing specific method
-                        fi_subs = self._build_fi_mock_subindicators(base_ind, base_resp)
-                        # Override parent display title to match spec (1.1 Compliance ...)
-                        top_level_nodes[0]["name"] = (
-                            "BFDP Board Compliance"
-                        )
-                        # Provide explicit code so frontend doesn't derive from DB id (e.g., 1.119)
-                        top_level_nodes[0]["code"] = "1.1"
-                        # Override the description to match the parent role
-                        top_level_nodes[0]["description"] = (
-                            "Compliance with the Barangay Full Disclosure Policy (BFDP) Board requirements"
-                        )
-                        # Clear MOVs from parent since children will show them
-                        top_level_nodes[0]["movs"] = []
-                        # Clear existing children and add synthetic ones
-                        top_level_nodes[0]["children"] = fi_subs
-                    else:
-                        # Areas 2-6 use the same structure as Area 1
-                        subs = self._build_mock_subindicators_for_area(base_ind, base_resp, area.id)
-                        if subs:
-                            # Set parent code (e.g., "2.1", "3.1", etc.) - same pattern as Area 1
-                            top_level_nodes[0]["code"] = f"{area.id}.1"
-                            # Set parent name to match Area 1 pattern
-                            area_names = {
-                                2: "Disaster Preparedness",
-                                3: "Safety, Peace and Order",
-                                4: "Social Protection and Sensitivity",
-                                5: "Business-Friendliness and Competitiveness",
-                                6: "Environmental Management"
-                            }
-                            top_level_nodes[0]["name"] = area_names.get(area.id, base_ind.name)
-                            # Clear MOVs from parent since children will show them (same as Area 1)
-                            top_level_nodes[0]["movs"] = []
-                            # Clear existing children and add synthetic ones
-                            top_level_nodes[0]["children"] = subs
-                except Exception as e:
-                    # Fail-safe: ignore mock injection errors in prod paths
-                    import logging
-                    logger = logging.getLogger(__name__)
-                    logger.warning(f"Failed to build sub-indicators for area {area.id}: {str(e)}")
-                    pass
+            # Only apply to the first indicator if it's a legacy indicator (has "properties" in schema)
+            if area.id in [1, 2, 3, 4, 5, 6] and len(top_level_nodes) >= 1:
+                # Check if the first indicator is a legacy indicator (not Epic 3 format)
+                first_ind = top_level_inds[0] if len(top_level_inds) >= 1 else None
+                if first_ind:
+                    first_schema = first_ind.form_schema or {}
+                    # Only apply mock sub-indicators to legacy format (not Epic 3)
+                    is_legacy = "properties" in first_schema and "fields" not in first_schema
+
+                    if is_legacy:
+                        base_ind = first_ind
+                        base_resp = response_lookup.get(base_ind.id)
+                        try:
+                            if area.id == 1:
+                                # Area 1 uses the existing specific method
+                                fi_subs = self._build_fi_mock_subindicators(base_ind, base_resp)
+                                # Override parent display title to match spec (1.1 Compliance ...)
+                                top_level_nodes[0]["name"] = (
+                                    "BFDP Board Compliance"
+                                )
+                                # Provide explicit code so frontend doesn't derive from DB id (e.g., 1.119)
+                                top_level_nodes[0]["code"] = "1.1"
+                                # Override the description to match the parent role
+                                top_level_nodes[0]["description"] = (
+                                    "Compliance with the Barangay Full Disclosure Policy (BFDP) Board requirements"
+                                )
+                                # Clear MOVs from parent since children will show them
+                                top_level_nodes[0]["movs"] = []
+                                # Clear existing children and add synthetic ones
+                                top_level_nodes[0]["children"] = fi_subs
+                            else:
+                                # Areas 2-6 use the same structure as Area 1
+                                subs = self._build_mock_subindicators_for_area(base_ind, base_resp, area.id)
+                                if subs:
+                                    # Set parent code (e.g., "2.1", "3.1", etc.) - same pattern as Area 1
+                                    top_level_nodes[0]["code"] = f"{area.id}.1"
+                                    # Set parent name to match Area 1 pattern
+                                    area_names = {
+                                        2: "Disaster Preparedness",
+                                        3: "Safety, Peace and Order",
+                                        4: "Social Protection and Sensitivity",
+                                        5: "Business-Friendliness and Competitiveness",
+                                        6: "Environmental Management"
+                                    }
+                                    top_level_nodes[0]["name"] = area_names.get(area.id, base_ind.name)
+                                    # Clear MOVs from parent since children will show them (same as Area 1)
+                                    top_level_nodes[0]["movs"] = []
+                                    # Clear existing children and add synthetic ones
+                                    top_level_nodes[0]["children"] = subs
+                        except Exception as e:
+                            # Fail-safe: ignore mock injection errors in prod paths
+                            import logging
+                            logger = logging.getLogger(__name__)
+                            logger.warning(f"Failed to build sub-indicators for area {area.id}: {str(e)}")
+                            pass
 
             area_data["indicators"].extend(top_level_nodes)
 
@@ -340,17 +362,21 @@ class AssessmentService:
         if created_any:
             db.commit()
 
-        # Cleanup any non-required areas accidentally created in dev (e.g., Tourism)
-        allowed = {name for name, _ in required}
-        extras = (
-            db.query(GovernanceArea)
-            .filter(~GovernanceArea.name.in_(list(allowed)))
-            .all()
-        )
-        if extras:
-            for ga in extras:
-                db.delete(ga)
-            db.commit()
+        # NOTE: Cleanup disabled due to foreign key constraint violations
+        # The BBI table has a NOT NULL constraint on governance_area_id
+        # Deleting governance areas would violate this constraint
+        #
+        # # Cleanup any non-required areas accidentally created in dev (e.g., Tourism)
+        # allowed = {name for name, _ in required}
+        # extras = (
+        #     db.query(GovernanceArea)
+        #     .filter(~GovernanceArea.name.in_(list(allowed)))
+        #     .all()
+        # )
+        # if extras:
+        #     for ga in extras:
+        #         db.delete(ga)
+        #     db.commit()
 
     def _build_fi_mock_subindicators(self, base_indicator, base_response) -> List[Dict[str, Any]]:
         """

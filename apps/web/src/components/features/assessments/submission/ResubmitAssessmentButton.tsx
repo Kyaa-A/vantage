@@ -11,14 +11,14 @@
  *
  * Props:
  * - assessmentId: ID of the assessment to resubmit
- * - validationResult: Current validation status from SubmissionValidation
+ * - isComplete: Whether the assessment is complete (100%)
  * - onSuccess: Callback function after successful resubmission
  */
 
 "use client";
 
 import { useState } from "react";
-import { Loader2, AlertCircle, CheckCircle2, RotateCcw } from "lucide-react";
+import { Loader2, AlertCircle, AlertTriangle, CheckCircle2, RotateCcw } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,13 +42,13 @@ import type { SubmissionValidationResult } from "@vantage/shared";
 
 interface ResubmitAssessmentButtonProps {
   assessmentId: number;
-  validationResult: SubmissionValidationResult;
+  isComplete: boolean;
   onSuccess?: () => void;
 }
 
 export function ResubmitAssessmentButton({
   assessmentId,
-  validationResult,
+  isComplete,
   onSuccess,
 }: ResubmitAssessmentButtonProps) {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -87,8 +87,8 @@ export function ResubmitAssessmentButton({
   });
 
   const handleResubmitClick = () => {
-    // Only show dialog if validation passes
-    if (validationResult.is_valid) {
+    // Only show dialog if assessment is complete
+    if (isComplete) {
       setShowConfirmDialog(true);
     }
   };
@@ -99,14 +99,14 @@ export function ResubmitAssessmentButton({
     });
   };
 
-  const isButtonDisabled = !validationResult.is_valid || isPending;
+  const isButtonDisabled = !isComplete || isPending;
 
   const button = (
     <Button
       onClick={handleResubmitClick}
       disabled={isButtonDisabled}
       size="lg"
-      className="w-full sm:w-auto"
+      className="w-full sm:w-auto bg-[var(--cityscape-yellow)] hover:bg-[var(--cityscape-yellow)]/90 text-gray-900 font-semibold shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {isPending ? (
         <>
@@ -122,8 +122,8 @@ export function ResubmitAssessmentButton({
     </Button>
   );
 
-  // Wrap button in tooltip if disabled due to incomplete validation
-  if (!validationResult.is_valid && !isPending) {
+  // Wrap button in tooltip if disabled due to incomplete assessment
+  if (!isComplete && !isPending) {
     return (
       <TooltipProvider>
         <Tooltip>
@@ -150,33 +150,35 @@ export function ResubmitAssessmentButton({
               <RotateCcw className="h-5 w-5" />
               Resubmit Assessment?
             </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-3 pt-2">
-              <p>Are you sure you want to resubmit this assessment?</p>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 pt-2">
+                <p className="text-sm text-muted-foreground">Are you sure you want to resubmit this assessment?</p>
 
-              <div className="flex items-start gap-2 p-3 bg-orange-50 dark:bg-orange-950/20 rounded-md border border-orange-200 dark:border-orange-900">
-                <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0 text-orange-600" />
-                <div className="text-xs space-y-1">
-                  <p className="font-semibold text-orange-700 dark:text-orange-400">
-                    Final Submission Warning
-                  </p>
-                  <p className="text-orange-600 dark:text-orange-300">
-                    This is your <strong>final submission</strong>. You have already used your one rework cycle.
-                    No further changes will be allowed after resubmission.
-                  </p>
+                <div className="flex items-start gap-2 p-3 bg-orange-50 dark:bg-orange-950/20 rounded-md border border-orange-200 dark:border-orange-900">
+                  <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0 text-orange-600" />
+                  <div className="text-xs space-y-1">
+                    <span className="font-semibold text-orange-700 dark:text-orange-400 block">
+                      Final Submission Warning
+                    </span>
+                    <span className="text-orange-600 dark:text-orange-300 block">
+                      This is your <strong>final submission</strong>. You have already used your one rework cycle.
+                      No further changes will be allowed after resubmission.
+                    </span>
+                  </div>
                 </div>
-              </div>
 
-              <ul className="list-disc list-inside space-y-1 text-sm">
-                <li>Your assessment will be locked for editing</li>
-                <li>An assessor will review your resubmission</li>
-                <li>No additional rework requests are possible</li>
-              </ul>
+                <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                  <li>Your assessment will be locked for editing</li>
+                  <li>An assessor will review your resubmission</li>
+                  <li>No additional rework requests are possible</li>
+                </ul>
 
-              <div className="flex items-start gap-2 p-3 bg-muted rounded-md mt-3">
-                <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                <p className="text-xs">
-                  Please ensure all rework requirements have been addressed and all information is accurate.
-                </p>
+                <div className="flex items-start gap-2 p-3 bg-muted rounded-md mt-3">
+                  <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">
+                    Please ensure all rework requirements have been addressed and all information is accurate.
+                  </span>
+                </div>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -185,7 +187,7 @@ export function ResubmitAssessmentButton({
             <AlertDialogAction
               onClick={handleConfirmResubmit}
               disabled={isPending}
-              className="bg-primary hover:bg-primary/90"
+              className="bg-[var(--cityscape-yellow)] hover:bg-[var(--cityscape-yellow)]/90 text-gray-900 font-semibold shadow-md hover:shadow-lg"
             >
               {isPending ? (
                 <>

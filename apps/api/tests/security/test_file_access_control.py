@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 from typing import Dict
 
 from app.db.models.assessment import Assessment, MOVFile
-from app.db.models.system import Indicator
+from app.db.models.governance_area import Indicator
 from app.db.models.user import User
 
 

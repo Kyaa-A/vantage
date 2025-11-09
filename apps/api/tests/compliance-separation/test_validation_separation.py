@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from typing import Dict
 
 from app.db.models.assessment import Assessment
+from app.db.models.governance_area import Indicator
 from app.db.enums import ValidationStatus
 
 

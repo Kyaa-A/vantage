@@ -123,6 +123,14 @@ export type AuditLogResponseIpAddress = string | null;
 export interface BLGUDashboardResponse {
   /** Assessment ID */
   assessment_id: number;
+  /** Assessment status (DRAFT, SUBMITTED, IN_REVIEW, REWORK, COMPLETED) */
+  status: string;
+  /** Number of times rework has been requested (0 or 1) */
+  rework_count: number;
+  /** Timestamp when rework was requested (ISO format) */
+  rework_requested_at?: BLGUDashboardResponseReworkRequestedAt;
+  /** User ID of assessor who requested rework */
+  rework_requested_by?: BLGUDashboardResponseReworkRequestedBy;
   /** Total number of indicators in the assessment */
   total_indicators: number;
   /** Number of indicators with all required fields filled */
@@ -142,6 +150,18 @@ export interface BLGUDashboardResponse {
  * BLGUDashboardResponseReworkComments
  */
 export type BLGUDashboardResponseReworkComments = ReworkComment[] | null;
+
+
+/**
+ * BLGUDashboardResponseReworkRequestedAt
+ */
+export type BLGUDashboardResponseReworkRequestedAt = string | null;
+
+
+/**
+ * BLGUDashboardResponseReworkRequestedBy
+ */
+export type BLGUDashboardResponseReworkRequestedBy = number | null;
 
 
 /**

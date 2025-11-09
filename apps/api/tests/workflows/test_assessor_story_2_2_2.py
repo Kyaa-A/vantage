@@ -82,7 +82,7 @@ def test_upload_mov_success(client, db_session):
     assessor = User(
         email="assessor_mov@test.com",
         name="Test Assessor MOV",
-        role=UserRole.AREA_ASSESSOR,
+        role=UserRole.ASSESSOR,
         governance_area_id=response.indicator.governance_area_id,
         hashed_password="hashed_password",
     )
@@ -148,7 +148,7 @@ def test_upload_mov_response_not_found(client, db_session):
     assessor = User(
         email="assessor_mov2@test.com",
         name="Test Assessor MOV 2",
-        role=UserRole.AREA_ASSESSOR,
+        role=UserRole.ASSESSOR,
         governance_area_id=1,
         hashed_password="hashed_password",
     )
@@ -257,7 +257,7 @@ def test_upload_mov_access_denied(client, db_session):
     assessor = User(
         email="assessor_mov3@test.com",
         name="Test Assessor MOV 3",
-        role=UserRole.AREA_ASSESSOR,
+        role=UserRole.ASSESSOR,
         governance_area_id=different_area.id,  # Different governance area
         hashed_password="hashed_password",
     )
@@ -316,7 +316,7 @@ def test_upload_mov_response_id_mismatch(client, db_session):
     assessor = User(
         email="assessor_mov4@test.com",
         name="Test Assessor MOV 4",
-        role=UserRole.AREA_ASSESSOR,
+        role=UserRole.ASSESSOR,
         governance_area_id=1,
         hashed_password="hashed_password",
     )

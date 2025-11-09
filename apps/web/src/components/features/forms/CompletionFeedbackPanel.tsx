@@ -97,7 +97,7 @@ export function CompletionFeedbackPanel({
   }
 
   return (
-    <Card>
+    <Card className="border-none shadow-sm">
       <CardHeader>
         <CardTitle className="text-lg">Form Completion</CardTitle>
       </CardHeader>

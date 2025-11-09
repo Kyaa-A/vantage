@@ -97,45 +97,48 @@ export function FileUpload({
   const displayError = error || validationError;
 
   return (
-    <div className={cn("w-full", className)}>
+    <div className={cn("w-full space-y-3", className)}>
       {!selectedFile ? (
         <div
           {...getRootProps()}
           className={cn(
-            "border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors",
+            "border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all duration-200",
             isDragActive
-              ? "border-primary bg-primary/5"
-              : "border-gray-300 hover:border-primary/50 hover:bg-gray-50",
-            disabled && "opacity-50 cursor-not-allowed hover:border-gray-300 hover:bg-transparent",
-            displayError && "border-red-500"
+              ? "border-blue-500 bg-blue-50 scale-[1.02]"
+              : "border-[var(--border)] hover:border-blue-400 hover:bg-[var(--hover)]",
+            disabled && "opacity-50 cursor-not-allowed hover:border-[var(--border)] hover:bg-transparent",
+            displayError && "border-red-500 bg-red-50"
           )}
         >
           <input {...getInputProps()} />
-          <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-          <p className="text-sm font-medium text-gray-700 mb-1">
+          <Upload className={cn(
+            "mx-auto h-12 w-12 mb-4 transition-colors",
+            isDragActive ? "text-blue-500" : "text-[var(--text-secondary)]"
+          )} />
+          <p className="text-sm font-medium text-[var(--text-primary)] mb-1">
             {isDragActive ? (
               "Drop file here"
             ) : (
               <>
                 Drag and drop a file here, or{" "}
-                <span className="text-primary">click to browse</span>
+                <span className="text-blue-600 hover:text-blue-700 font-semibold">click to browse</span>
               </>
             )}
           </p>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-[var(--text-secondary)] mt-2">
             Supported: PDF, DOCX, XLSX, JPG, PNG, MP4 (max 50MB)
           </p>
         </div>
       ) : (
-        <div className="border rounded-lg p-4 bg-gray-50">
+        <div className="border border-[var(--border)] rounded-lg p-4 bg-[var(--card)]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <FileIcon className="h-8 w-8 text-primary flex-shrink-0" />
+              <FileIcon className="h-8 w-8 text-blue-600 flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
+                <p className="text-sm font-medium text-[var(--text-primary)] truncate">
                   {selectedFile.name}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-[var(--text-secondary)]">
                   {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                 </p>
               </div>
@@ -145,7 +148,8 @@ export function FileUpload({
                 variant="ghost"
                 size="sm"
                 onClick={handleRemove}
-                className="flex-shrink-0 ml-2"
+                className="flex-shrink-0 ml-2 hover:bg-red-50 hover:text-red-600"
+                title="Remove file"
               >
                 <X className="h-4 w-4" />
               </Button>

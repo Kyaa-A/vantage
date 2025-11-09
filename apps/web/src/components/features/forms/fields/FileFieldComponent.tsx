@@ -25,6 +25,7 @@ interface FileFieldComponentProps {
   field: FileUploadField;
   assessmentId: number;
   indicatorId: number;
+  disabled?: boolean;
 }
 
 /**
@@ -43,6 +44,7 @@ export function FileFieldComponent({
   field,
   assessmentId,
   indicatorId,
+  disabled = false,
 }: FileFieldComponentProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -179,21 +181,23 @@ export function FileFieldComponent({
   const files = filesResponse?.files || [];
 
   // Permission checks
-  const assessmentStatus = assessmentData?.status;
+  const assessmentStatus = assessmentData?.assessment?.status;
   const isBLGU = user?.role === "BLGU_USER";
   const isAssessorOrValidator =
     user?.role === "ASSESSOR" ||
     user?.role === "VALIDATOR" ||
     user?.role === "MLGOO_DILG";
 
-  // Can upload: Only BLGU users, only for DRAFT or NEEDS_REWORK status
+  // Can upload: Only BLGU users, only for DRAFT or NEEDS_REWORK status, and not disabled
   const canUpload =
+    !disabled &&
     isBLGU &&
     (assessmentStatus === AssessmentStatus.Draft ||
       assessmentStatus === AssessmentStatus.Needs_Rework);
 
-  // Can delete: Only BLGU users, only for DRAFT or NEEDS_REWORK status
+  // Can delete: Only BLGU users, only for DRAFT or NEEDS_REWORK status, and not disabled
   const canDelete =
+    !disabled &&
     isBLGU &&
     (assessmentStatus === AssessmentStatus.Draft ||
       assessmentStatus === AssessmentStatus.Needs_Rework);
@@ -211,34 +215,36 @@ export function FileFieldComponent({
   return (
     <div className="space-y-4">
       {/* Field Label and Help Text */}
-      <div>
-        <Label className="text-sm font-medium">
+      <div className="space-y-1">
+        <Label className="text-sm font-medium text-[var(--text-primary)]">
           {field.label}
-          {field.required && <span className="text-destructive ml-1">*</span>}
+          {field.required && <span className="text-red-500 ml-1">*</span>}
         </Label>
 
         {field.help_text && (
-          <p className="text-sm text-muted-foreground mt-1">{field.help_text}</p>
+          <p className="text-sm text-[var(--text-secondary)]">{field.help_text}</p>
         )}
       </div>
 
       {/* Permission Info (show if upload is disabled) */}
       {uploadDisabledReason && (
-        <Alert>
-          <Info className="h-4 w-4" />
-          <AlertDescription>{uploadDisabledReason}</AlertDescription>
+        <Alert className="border-blue-200 bg-blue-50">
+          <Info className="h-4 w-4 text-blue-600" />
+          <AlertDescription className="text-blue-900">{uploadDisabledReason}</AlertDescription>
         </Alert>
       )}
 
       {/* File Upload Component (only show if user can upload) */}
       {canUpload && (
-        <FileUpload
-          onFileSelect={handleFileSelect}
-          onFileRemove={handleFileRemove}
-          selectedFile={selectedFile}
-          disabled={uploadMutation.isPending}
-          error={uploadError}
-        />
+        <div className="mb-4">
+          <FileUpload
+            onFileSelect={handleFileSelect}
+            onFileRemove={handleFileRemove}
+            selectedFile={selectedFile}
+            disabled={uploadMutation.isPending}
+            error={uploadError}
+          />
+        </div>
       )}
 
       {/* Upload Button (only show when file is selected and not uploading) */}
@@ -248,7 +254,7 @@ export function FileFieldComponent({
             type="button"
             onClick={handleUpload}
             disabled={uploadMutation.isPending}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-6 py-2.5 bg-[var(--cityscape-yellow)] hover:bg-[var(--cityscape-yellow)]/90 text-gray-900 font-semibold rounded-md shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
           >
             Upload File
           </button>
@@ -297,9 +303,9 @@ export function FileFieldComponent({
         isBLGU &&
         (assessmentStatus === AssessmentStatus.Submitted_for_Review ||
           assessmentStatus === AssessmentStatus.Validated) && (
-          <Alert>
-            <Info className="h-4 w-4" />
-            <AlertDescription>
+          <Alert className="border-blue-200 bg-blue-50">
+            <Info className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-blue-900">
               Files cannot be deleted after assessment submission. If you need to
               modify files, request the assessment to be sent back for rework.
             </AlertDescription>

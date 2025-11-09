@@ -47,6 +47,8 @@ interface DynamicFormRendererProps {
   onSaveSuccess?: () => void;
   /** Loading state */
   isLoading?: boolean;
+  /** Epic 5.0: Locked state - disables form editing when assessment is submitted */
+  isLocked?: boolean;
 }
 
 export function DynamicFormRenderer({
@@ -55,6 +57,7 @@ export function DynamicFormRenderer({
   indicatorId,
   onSaveSuccess,
   isLoading = false,
+  isLocked = false,
 }: DynamicFormRendererProps) {
   // Generate validation schema from form schema
   const validationSchema = useMemo(() => {
@@ -183,20 +186,23 @@ export function DynamicFormRenderer({
             errors={formState.errors}
             assessmentId={assessmentId}
             indicatorId={indicatorId}
+            isLocked={isLocked}
           />
         ))}
 
-        {/* Save Button */}
-        <div className="flex justify-end pt-4">
-          <Button
-            type="submit"
-            disabled={saveMutation.isPending || formState.isSubmitting}
-            className="min-w-32"
-          >
-            <Save className="mr-2 h-4 w-4" />
-            {saveMutation.isPending ? "Saving..." : "Save Responses"}
-          </Button>
-        </div>
+        {/* Epic 5.0: Hide save button when assessment is locked */}
+        {!isLocked && (
+          <div className="flex justify-end pt-4 border-t border-[var(--border)] mt-6">
+            <Button
+              type="submit"
+              disabled={saveMutation.isPending || formState.isSubmitting}
+              className="min-w-40 bg-[var(--cityscape-yellow)] hover:bg-[var(--cityscape-yellow)]/90 text-gray-900 font-semibold shadow-md hover:shadow-lg transition-all duration-200"
+            >
+              <Save className="mr-2 h-4 w-4" />
+              {saveMutation.isPending ? "Saving..." : "Save Responses"}
+            </Button>
+          </div>
+        )}
       </form>
     </FormProvider>
   );
@@ -214,6 +220,7 @@ interface SectionRendererProps {
   errors: ReturnType<typeof useForm>["formState"]["errors"];
   assessmentId: number;
   indicatorId: number;
+  isLocked: boolean;
 }
 
 function SectionRenderer({
@@ -224,6 +231,7 @@ function SectionRenderer({
   errors,
   assessmentId,
   indicatorId,
+  isLocked,
 }: SectionRendererProps) {
   // Get visible fields for this section based on conditional logic
   const visibleFields = useMemo(() => {
@@ -236,14 +244,14 @@ function SectionRenderer({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{section.title}</CardTitle>
+    <Card className="border-none shadow-none bg-transparent">
+      <CardHeader className="px-0">
+        <CardTitle className="text-lg">{section.title}</CardTitle>
         {section.description && (
           <CardDescription>{section.description}</CardDescription>
         )}
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 px-0">
         {visibleFields.map((field) => (
           <FieldRenderer
             key={field.field_id}
@@ -252,6 +260,7 @@ function SectionRenderer({
             error={errors[field.field_id]?.message as string | undefined}
             assessmentId={assessmentId}
             indicatorId={indicatorId}
+            isLocked={isLocked}
           />
         ))}
       </CardContent>
@@ -269,9 +278,10 @@ interface FieldRendererProps {
   error?: string;
   assessmentId: number;
   indicatorId: number;
+  isLocked: boolean;
 }
 
-function FieldRenderer({ field, control, error, assessmentId, indicatorId }: FieldRendererProps) {
+function FieldRenderer({ field, control, error, assessmentId, indicatorId, isLocked }: FieldRendererProps) {
   // Render appropriate field component based on field type
   switch (field.field_type) {
     case "text_input":
@@ -281,6 +291,7 @@ function FieldRenderer({ field, control, error, assessmentId, indicatorId }: Fie
           control={control}
           name={field.field_id}
           error={error}
+          disabled={isLocked}
         />
       );
 
@@ -291,6 +302,7 @@ function FieldRenderer({ field, control, error, assessmentId, indicatorId }: Fie
           control={control}
           name={field.field_id}
           error={error}
+          disabled={isLocked}
         />
       );
 
@@ -301,6 +313,7 @@ function FieldRenderer({ field, control, error, assessmentId, indicatorId }: Fie
           control={control}
           name={field.field_id}
           error={error}
+          disabled={isLocked}
         />
       );
 
@@ -311,6 +324,7 @@ function FieldRenderer({ field, control, error, assessmentId, indicatorId }: Fie
           control={control}
           name={field.field_id}
           error={error}
+          disabled={isLocked}
         />
       );
 
@@ -321,6 +335,7 @@ function FieldRenderer({ field, control, error, assessmentId, indicatorId }: Fie
           control={control}
           name={field.field_id}
           error={error}
+          disabled={isLocked}
         />
       );
 
@@ -331,6 +346,7 @@ function FieldRenderer({ field, control, error, assessmentId, indicatorId }: Fie
           control={control}
           name={field.field_id}
           error={error}
+          disabled={isLocked}
         />
       );
 
@@ -340,6 +356,7 @@ function FieldRenderer({ field, control, error, assessmentId, indicatorId }: Fie
           field={field}
           assessmentId={assessmentId}
           indicatorId={indicatorId}
+          disabled={isLocked}
         />
       );
 

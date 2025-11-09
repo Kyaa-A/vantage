@@ -91,7 +91,7 @@ def test_upload_mov_file_multipart_success(
     assessor = User(
         email="assessor_multipart@test.com",
         name="Test Assessor Multipart",
-        role=UserRole.AREA_ASSESSOR,
+        role=UserRole.ASSESSOR,
         governance_area_id=response.indicator.governance_area_id,
         hashed_password="hashed_password",
     )
@@ -180,7 +180,7 @@ def test_upload_mov_file_without_custom_filename(
     assessor = User(
         email="assessor_multipart2@test.com",
         name="Test Assessor Multipart 2",
-        role=UserRole.AREA_ASSESSOR,
+        role=UserRole.ASSESSOR,
         governance_area_id=response.indicator.governance_area_id,
         hashed_password="hashed_password",
     )
@@ -241,7 +241,7 @@ def test_upload_mov_file_response_not_found(
     assessor = User(
         email="assessor_multipart3@test.com",
         name="Test Assessor Multipart 3",
-        role=UserRole.AREA_ASSESSOR,
+        role=UserRole.ASSESSOR,
         governance_area_id=1,
         hashed_password="hashed_password",
     )
@@ -302,7 +302,7 @@ def test_upload_mov_file_access_denied(
     assessor = User(
         email="assessor_multipart4@test.com",
         name="Test Assessor Multipart 4",
-        role=UserRole.AREA_ASSESSOR,
+        role=UserRole.ASSESSOR,
         governance_area_id=different_area.id,  # Different governance area
         hashed_password="hashed_password",
     )
@@ -360,7 +360,7 @@ def test_upload_mov_file_storage_error(
     assessor = User(
         email="assessor_multipart5@test.com",
         name="Test Assessor Multipart 5",
-        role=UserRole.AREA_ASSESSOR,
+        role=UserRole.ASSESSOR,
         governance_area_id=response.indicator.governance_area_id,
         hashed_password="hashed_password",
     )
@@ -415,7 +415,7 @@ def test_upload_mov_file_storage_exception(
     assessor = User(
         email="assessor_multipart6@test.com",
         name="Test Assessor Multipart 6",
-        role=UserRole.AREA_ASSESSOR,
+        role=UserRole.ASSESSOR,
         governance_area_id=response.indicator.governance_area_id,
         hashed_password="hashed_password",
     )
@@ -470,7 +470,7 @@ def test_upload_mov_file_missing_file(
     assessor = User(
         email="assessor_multipart7@test.com",
         name="Test Assessor Multipart 7",
-        role=UserRole.AREA_ASSESSOR,
+        role=UserRole.ASSESSOR,
         governance_area_id=response.indicator.governance_area_id,
         hashed_password="hashed_password",
     )

@@ -62,6 +62,7 @@ export function NumberFieldComponent<TFieldValues extends FieldValues>({
             aria-describedby={
               error ? `${field.field_id}-error` : undefined
             }
+            value={controllerField.value ?? ""}
             onChange={(e) => {
               const value = e.target.value === "" ? undefined : Number(e.target.value);
               controllerField.onChange(value);

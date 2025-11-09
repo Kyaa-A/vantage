@@ -23,7 +23,7 @@ from sqlalchemy.orm import Session
 from typing import Dict
 
 from app.db.models.assessment import Assessment, AssessmentResponse
-from app.db.models.system import Indicator
+from app.db.models.governance_area import Indicator
 from app.db.models.user import User
 from app.db.enums import AssessmentStatus
 
@@ -56,10 +56,11 @@ class TestCompleteAssessmentSubmissionFlow:
         assert response.status_code == 200
         data = response.json()
 
-        # Verify assessment structure
-        assert "assessment_id" in data
-        assert "status" in data
-        assert data["status"] == AssessmentStatus.DRAFT.value
+        # Verify assessment structure (API returns nested structure)
+        assert "assessment" in data
+        assert "governance_areas" in data
+        assert data["assessment"]["status"] == AssessmentStatus.DRAFT.value
+        assert data["assessment"]["blgu_user_id"] == test_blgu_user.id
 
         # Verify assessment exists in database
         assessment = db_session.query(Assessment).filter_by(

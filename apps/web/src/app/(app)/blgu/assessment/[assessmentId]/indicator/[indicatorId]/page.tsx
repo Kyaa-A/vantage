@@ -3,21 +3,22 @@
 
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { AlertCircle, ArrowLeft, RefreshCw } from "lucide-react";
 import { DynamicFormRenderer } from "@/components/features/forms/DynamicFormRenderer";
+import { LockedStateBanner } from "@/components/features/assessments";
 import {
   useGetIndicatorsIndicatorIdFormSchema,
   useGetIndicatorsIndicatorId,
+  useGetBlguDashboardAssessmentId,
 } from "@vantage/shared";
 
 export default function IndicatorFormPage() {
   const params = useParams();
-  const router = useRouter();
 
   // Extract route parameters
   const assessmentId = Number(params.assessmentId);
@@ -32,7 +33,7 @@ export default function IndicatorFormPage() {
   } = useGetIndicatorsIndicatorId(indicatorId, {
     query: {
       enabled: !!indicatorId,
-    },
+    } as any,
   });
 
   // Fetch form schema for the indicator
@@ -44,8 +45,22 @@ export default function IndicatorFormPage() {
   } = useGetIndicatorsIndicatorIdFormSchema(indicatorId, {
     query: {
       enabled: !!indicatorId,
-    },
+    } as any,
   });
+
+  // Epic 5.0: Fetch assessment status for locked state
+  const {
+    data: dashboardData,
+    isLoading: isLoadingDashboard,
+  } = useGetBlguDashboardAssessmentId(assessmentId, {
+    query: {
+      enabled: !!assessmentId,
+    } as any,
+  });
+
+  // Determine if assessment is locked (SUBMITTED, IN_REVIEW, COMPLETED)
+  const isLocked = dashboardData?.status &&
+    ["SUBMITTED", "IN_REVIEW", "COMPLETED"].includes(dashboardData.status);
 
   // Handle save success - could redirect or show confirmation
   const handleSaveSuccess = () => {
@@ -54,7 +69,7 @@ export default function IndicatorFormPage() {
   };
 
   // Loading state
-  if (isLoadingIndicator || isLoadingSchema) {
+  if (isLoadingIndicator || isLoadingSchema || isLoadingDashboard) {
     return (
       <div className="container mx-auto py-8 space-y-6">
         {/* Header Skeleton */}
@@ -143,6 +158,16 @@ export default function IndicatorFormPage() {
 
   return (
     <div className="container mx-auto py-8 space-y-6">
+      {/* Epic 5.0: Locked State Banner */}
+      {dashboardData?.status && (
+        <div className="mb-6">
+          <LockedStateBanner
+            status={dashboardData.status as any}
+            reworkCount={dashboardData.rework_count}
+          />
+        </div>
+      )}
+
       {/* Header with Navigation */}
       <div className="space-y-4">
         {/* Breadcrumb Navigation */}
@@ -162,7 +187,7 @@ export default function IndicatorFormPage() {
           </Link>
           <span>/</span>
           <span className="text-foreground font-medium">
-            {indicator?.indicator_code || `Indicator ${indicatorId}`}
+            {indicator?.name || `Indicator ${indicatorId}`}
           </span>
         </div>
 
@@ -177,7 +202,7 @@ export default function IndicatorFormPage() {
         {/* Page Title */}
         <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">
-            {indicator?.title || "Assessment Form"}
+            {indicator?.name || "Assessment Form"}
           </h1>
           {indicator?.description && (
             <p className="text-muted-foreground">{indicator.description}</p>
@@ -192,6 +217,7 @@ export default function IndicatorFormPage() {
           assessmentId={assessmentId}
           indicatorId={indicatorId}
           onSaveSuccess={handleSaveSuccess}
+          isLocked={isLocked || false}
         />
       ) : (
         <Alert>

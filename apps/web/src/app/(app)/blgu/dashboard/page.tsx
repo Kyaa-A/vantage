@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * BLGU Dashboard Page - Epic 2.0: Completion Tracking
+ * BLGU Dashboard Page - Epic 2.0 + Epic 5.0: Completion Tracking & Submission Workflow
  *
  * This dashboard shows COMPLETION status only (complete/incomplete).
  * COMPLIANCE status (PASS/FAIL/CONDITIONAL) is NEVER exposed to BLGU users.
@@ -11,6 +11,12 @@
  * - Governance areas with indicator completion status
  * - Assessor rework comments (if assessment needs rework)
  * - Indicator navigation for quick access to incomplete items
+ *
+ * Epic 5.0 Features:
+ * - LockedStateBanner: Shows locked state during SUBMITTED/IN_REVIEW/COMPLETED
+ * - ReworkCommentsPanel: Shows assessor feedback during REWORK status
+ * - SubmitAssessmentButton: Allows submission when DRAFT and complete
+ * - ResubmitAssessmentButton: Allows resubmission after rework
  */
 
 import {
@@ -18,6 +24,12 @@ import {
   IndicatorNavigationList,
   AssessorCommentsPanel,
 } from "@/components/features/dashboard";
+import {
+  LockedStateBanner,
+  ReworkCommentsPanel,
+  SubmitAssessmentButton,
+  ResubmitAssessmentButton,
+} from "@/components/features/assessments";
 import { useGetBlguDashboardAssessmentId } from "@vantage/shared";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Loader2, AlertCircle } from "lucide-react";
@@ -85,6 +97,23 @@ export default function BLGUDashboardPage() {
           </p>
         </div>
 
+        {/* Epic 5.0: Locked State Banner */}
+        <div className="mb-6">
+          <LockedStateBanner
+            status={dashboardData.status as any}
+            reworkCount={dashboardData.rework_count}
+          />
+        </div>
+
+        {/* Epic 5.0: Rework Comments Panel (REWORK/NEEDS_REWORK status only) */}
+        {/* Note: Uses Epic 2.0 AssessorCommentsPanel for now since rework_comments is an array */}
+        {(dashboardData.status === "REWORK" || dashboardData.status === "NEEDS_REWORK") &&
+         dashboardData.rework_comments && (
+          <div className="mb-6">
+            <AssessorCommentsPanel comments={dashboardData.rework_comments as any} />
+          </div>
+        )}
+
         {/* Completion Metrics Section */}
         <div className="mb-8">
           <CompletionMetricsCard
@@ -95,8 +124,31 @@ export default function BLGUDashboardPage() {
           />
         </div>
 
-        {/* Assessor Comments Section (only if there are rework comments) */}
-        {dashboardData.rework_comments && (
+        {/* Epic 5.0: Submission Buttons */}
+        <div className="mb-8 flex gap-4">
+          {/* Show SubmitAssessmentButton if DRAFT status */}
+          {dashboardData.status === "DRAFT" && (
+            <SubmitAssessmentButton
+              assessmentId={assessmentId}
+              isComplete={dashboardData.completion_percentage === 100}
+              onSuccess={() => refetch()}
+            />
+          )}
+
+          {/* Show ResubmitAssessmentButton if REWORK/NEEDS_REWORK status */}
+          {(dashboardData.status === "REWORK" || dashboardData.status === "NEEDS_REWORK") && (
+            <ResubmitAssessmentButton
+              assessmentId={assessmentId}
+              isComplete={dashboardData.completion_percentage === 100}
+              onSuccess={() => refetch()}
+            />
+          )}
+        </div>
+
+        {/* Assessor Comments Section (fallback for other statuses with rework comments) */}
+        {dashboardData.rework_comments &&
+         dashboardData.status !== "REWORK" &&
+         dashboardData.status !== "NEEDS_REWORK" && (
           <div className="mb-8">
             <AssessorCommentsPanel comments={dashboardData.rework_comments} />
           </div>

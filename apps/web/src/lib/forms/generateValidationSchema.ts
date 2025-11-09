@@ -112,15 +112,7 @@ function createTextAreaValidator(field: FormSchemaFieldsItem): z.ZodTypeAny {
 function createNumberInputValidator(field: FormSchemaFieldsItem): z.ZodTypeAny {
   let validator = z.number();
 
-  if (field.required) {
-    validator = validator.refine((val) => val !== undefined && val !== null, {
-      message: `${field.label} is required`,
-    });
-  } else {
-    validator = validator.optional();
-  }
-
-  // Add min/max validation if specified
+  // Add min/max validation BEFORE making it optional
   if ("min_value" in field && typeof field.min_value === "number") {
     validator = validator.min(
       field.min_value,
@@ -133,6 +125,15 @@ function createNumberInputValidator(field: FormSchemaFieldsItem): z.ZodTypeAny {
       field.max_value,
       `${field.label} must be at most ${field.max_value}`
     );
+  }
+
+  // Apply required/optional AFTER constraints
+  if (field.required) {
+    validator = validator.refine((val) => val !== undefined && val !== null, {
+      message: `${field.label} is required`,
+    });
+  } else {
+    validator = validator.optional();
   }
 
   return validator;
