@@ -555,15 +555,15 @@ class AssessmentService:
                     "title": f"{config['code']} - {config['name']}",
                     "description": config["description"],
                     "properties": {
-                        config["field1"]["name"]: {
+                        config["field1"]["name"]: {  # type: ignore[index]
                             "type": "string",
-                            "title": config["field1"]["title"],
-                            "description": config["field1"]["description"],
-                            "mov_upload_section": config["field1"]["section"],
+                            "title": config["field1"]["title"],  # type: ignore[index]
+                            "description": config["field1"]["description"],  # type: ignore[index]
+                            "mov_upload_section": config["field1"]["section"],  # type: ignore[index]
                             "enum": ["yes", "no", "na"]
                         }
                     },
-                    "required": [config["field1"]["name"]]
+                    "required": [config["field1"]["name"]]  # type: ignore[index]
                 },
             }
         )
@@ -1000,27 +1000,27 @@ class AssessmentService:
                     return False
             
             # Extract sections that require MOVs (only those with "yes" answer)
-            required_sections_with_yes = set()
+            required_sections_flat = set()
             for field_name, value in flat_compliance_fields.items():
                 if value.lower() == "yes":
                     # Extract section from field name: "bfdp_monitoring_forms_compliance" -> "bfdp_monitoring_forms"
                     section = field_name.replace("_compliance", "")
-                    required_sections_with_yes.add(section)
+                    required_sections_flat.add(section)
             
             # Only check MOVs for sections that have "yes" answers
-            if required_sections_with_yes:
-                mov_section_hits = {s: False for s in required_sections_with_yes}
+            if required_sections_flat:
+                mov_section_hits = {s: False for s in required_sections_flat}
                 for m in (movs or []):
                     spath = getattr(m, "storage_path", "") or ""
                     # Storage path format: "assessmentId/responseId/section/filename" or "assessmentId/responseId/sectionSegmentfilename"
                     # Check if any required section appears in the path
-                    for s in required_sections_with_yes:
+                    for s in required_sections_flat:
                         # Check if section appears in path (e.g., "bfdp_monitoring_forms" in "1/207/bfdp_monitoring_forms/file.pdf")
                         if s in spath:
                             mov_section_hits[s] = True
                             print(f"[DEBUG] _check_response_completion: Found MOV for section '{s}' in path '{spath}'")
                 
-                print(f"[DEBUG] _check_response_completion: MOV section hits: {mov_section_hits}, required_sections_with_yes: {required_sections_with_yes}")
+                print(f"[DEBUG] _check_response_completion: MOV section hits: {mov_section_hits}, required_sections_flat: {required_sections_flat}")
                 if not all(mov_section_hits.values()):
                     missing = [s for s, hit in mov_section_hits.items() if not hit]
                     print(f"[DEBUG] _check_response_completion: Missing MOVs for 'yes' sections: {missing}")

@@ -489,97 +489,6 @@ export const usePostAssessmentsSubmit = <TError = unknown,
       return useMutation(mutationOptions );
     }
     /**
- * Submit an assessment for assessor review (Story 5.5).
-
-This endpoint allows a BLGU user to submit their completed assessment.
-The assessment must pass validation (all indicators complete, all MOVs uploaded)
-before submission is allowed.
-
-Authorization:
-    - BLGU_USER role required
-    - User must own the assessment (assessment.blgu_user_id == user.id)
-
-Workflow:
-    1. Validate user authorization
-    2. Validate assessment completeness using SubmissionValidationService
-    3. If valid, update status to SUBMITTED and set submitted_at timestamp
-    4. Lock assessment for editing (is_locked property becomes True)
-    5. Return success response
-
-Args:
-    assessment_id: ID of the assessment to submit
-    current_user: Current authenticated user
-    db: Database session
-
-Returns:
-    SubmitAssessmentResponse with success status and timestamp
-
-Raises:
-    HTTPException 403: User not authorized to submit this assessment
-    HTTPException 400: Assessment validation failed (incomplete or missing MOVs)
-    HTTPException 404: Assessment not found
- * @summary Submit Assessment
- */
-export const postAssessments$AssessmentIdSubmit = (
-    assessmentId: number,
- options?: SecondParameter<typeof mutator>,signal?: AbortSignal
-) => {
-      
-      
-      return mutator<SubmitAssessmentResponse>(
-      {url: `http://localhost:8000/api/v1/assessments/${assessmentId}/submit`, method: 'POST', signal
-    },
-      options);
-    }
-  
-
-
-export const getPostAssessmentsAssessmentIdSubmitMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAssessments$AssessmentIdSubmit>>, TError,{assessmentId: number}, TContext>, request?: SecondParameter<typeof mutator>}
-): UseMutationOptions<Awaited<ReturnType<typeof postAssessments$AssessmentIdSubmit>>, TError,{assessmentId: number}, TContext> => {
-
-const mutationKey = ['postAssessmentsAssessmentIdSubmit'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAssessments$AssessmentIdSubmit>>, {assessmentId: number}> = (props) => {
-          const {assessmentId} = props ?? {};
-
-          return  postAssessments$AssessmentIdSubmit(assessmentId,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type PostAssessmentsAssessmentIdSubmitMutationResult = NonNullable<Awaited<ReturnType<typeof postAssessments$AssessmentIdSubmit>>>
-    
-    export type PostAssessmentsAssessmentIdSubmitMutationError = HTTPValidationError
-
-    /**
- * @summary Submit Assessment
- */
-export const usePostAssessmentsAssessmentIdSubmit = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAssessments$AssessmentIdSubmit>>, TError,{assessmentId: number}, TContext>, request?: SecondParameter<typeof mutator>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof postAssessments$AssessmentIdSubmit>>,
-        TError,
-        {assessmentId: number},
-        TContext
-      > => {
-
-      const mutationOptions = getPostAssessmentsAssessmentIdSubmitMutationOptions(options);
-
-      return useMutation(mutationOptions );
-    }
-    /**
  * Upload a MOV (Means of Verification) file for an assessment response.
 
 Creates a record of the uploaded file in the database. The actual file
@@ -1166,6 +1075,97 @@ export const usePostAssessmentsAssessmentIdValidateCompleteness = <TError = HTTP
       > => {
 
       const mutationOptions = getPostAssessmentsAssessmentIdValidateCompletenessMutationOptions(options);
+
+      return useMutation(mutationOptions );
+    }
+    /**
+ * Submit an assessment for assessor review (Story 5.5).
+
+This endpoint allows a BLGU user to submit their completed assessment.
+The assessment must pass validation (all indicators complete, all MOVs uploaded)
+before submission is allowed.
+
+Authorization:
+    - BLGU_USER role required
+    - User must own the assessment (assessment.blgu_user_id == user.id)
+
+Workflow:
+    1. Validate user authorization
+    2. Validate assessment completeness using SubmissionValidationService
+    3. If valid, update status to SUBMITTED and set submitted_at timestamp
+    4. Lock assessment for editing (is_locked property becomes True)
+    5. Return success response
+
+Args:
+    assessment_id: ID of the assessment to submit
+    current_user: Current authenticated user
+    db: Database session
+
+Returns:
+    SubmitAssessmentResponse with success status and timestamp
+
+Raises:
+    HTTPException 403: User not authorized to submit this assessment
+    HTTPException 400: Assessment validation failed (incomplete or missing MOVs)
+    HTTPException 404: Assessment not found
+ * @summary Submit Assessment
+ */
+export const postAssessments$AssessmentIdSubmit = (
+    assessmentId: number,
+ options?: SecondParameter<typeof mutator>,signal?: AbortSignal
+) => {
+      
+      
+      return mutator<SubmitAssessmentResponse>(
+      {url: `http://localhost:8000/api/v1/assessments/${assessmentId}/submit`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getPostAssessmentsAssessmentIdSubmitMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAssessments$AssessmentIdSubmit>>, TError,{assessmentId: number}, TContext>, request?: SecondParameter<typeof mutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postAssessments$AssessmentIdSubmit>>, TError,{assessmentId: number}, TContext> => {
+
+const mutationKey = ['postAssessmentsAssessmentIdSubmit'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAssessments$AssessmentIdSubmit>>, {assessmentId: number}> = (props) => {
+          const {assessmentId} = props ?? {};
+
+          return  postAssessments$AssessmentIdSubmit(assessmentId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostAssessmentsAssessmentIdSubmitMutationResult = NonNullable<Awaited<ReturnType<typeof postAssessments$AssessmentIdSubmit>>>
+    
+    export type PostAssessmentsAssessmentIdSubmitMutationError = HTTPValidationError
+
+    /**
+ * @summary Submit Assessment
+ */
+export const usePostAssessmentsAssessmentIdSubmit = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAssessments$AssessmentIdSubmit>>, TError,{assessmentId: number}, TContext>, request?: SecondParameter<typeof mutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof postAssessments$AssessmentIdSubmit>>,
+        TError,
+        {assessmentId: number},
+        TContext
+      > => {
+
+      const mutationOptions = getPostAssessmentsAssessmentIdSubmitMutationOptions(options);
 
       return useMutation(mutationOptions );
     }

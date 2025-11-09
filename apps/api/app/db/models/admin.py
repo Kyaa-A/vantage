@@ -53,7 +53,7 @@ class AuditLog(Base):
     # What changed (JSON diff of before/after states)
     # Use JSON.with_variant() to support both PostgreSQL (JSONB) and SQLite (JSON)
     changes = Column(
-        JSON().with_variant(JSONB(astext_type=Text), "postgresql"),
+        JSON().with_variant(JSONB(astext_type=Text), "postgresql"),  # type: ignore[arg-type]
         nullable=True
     )  # Store structured change data: {"field": {"before": X, "after": Y}}
 

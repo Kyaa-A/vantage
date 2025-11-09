@@ -1,7 +1,7 @@
 import { BarangayMap } from "@/components/features/analytics";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ReportsDataResponse } from "@vantage/shared";
 import {
   AreaBreakdownBarChart,

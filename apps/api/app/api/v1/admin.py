@@ -518,15 +518,15 @@ async def apply_deadline_override(
 
         # Build response with related entity details
         return DeadlineOverrideResponse(
-            id=override.id,
-            cycle_id=override.cycle_id,
-            barangay_id=override.barangay_id,
-            indicator_id=override.indicator_id,
-            created_by=override.created_by,
-            original_deadline=override.original_deadline,
-            new_deadline=override.new_deadline,
-            reason=override.reason,
-            created_at=override.created_at,
+            id=override.id,  # type: ignore[arg-type]
+            cycle_id=override.cycle_id,  # type: ignore[arg-type]
+            barangay_id=override.barangay_id,  # type: ignore[arg-type]
+            indicator_id=override.indicator_id,  # type: ignore[arg-type]
+            created_by=override.created_by,  # type: ignore[arg-type]
+            original_deadline=override.original_deadline,  # type: ignore[arg-type]
+            new_deadline=override.new_deadline,  # type: ignore[arg-type]
+            reason=override.reason,  # type: ignore[arg-type]
+            created_at=override.created_at,  # type: ignore[arg-type]
             cycle_name=override.cycle.name,
             barangay_name=override.barangay.name,
             indicator_name=override.indicator.name,
@@ -579,15 +579,15 @@ async def get_deadline_overrides(
     for override in overrides:
         items.append(
             DeadlineOverrideResponse(
-                id=override.id,
-                cycle_id=override.cycle_id,
-                barangay_id=override.barangay_id,
-                indicator_id=override.indicator_id,
-                created_by=override.created_by,
-                original_deadline=override.original_deadline,
-                new_deadline=override.new_deadline,
-                reason=override.reason,
-                created_at=override.created_at,
+                id=override.id,  # type: ignore[arg-type]
+                cycle_id=override.cycle_id,  # type: ignore[arg-type]
+                barangay_id=override.barangay_id,  # type: ignore[arg-type]
+                indicator_id=override.indicator_id,  # type: ignore[arg-type]
+                created_by=override.created_by,  # type: ignore[arg-type]
+                original_deadline=override.original_deadline,  # type: ignore[arg-type]
+                new_deadline=override.new_deadline,  # type: ignore[arg-type]
+                reason=override.reason,  # type: ignore[arg-type]
+                created_at=override.created_at,  # type: ignore[arg-type]
                 cycle_name=override.cycle.name,
                 barangay_name=override.barangay.name,
                 indicator_name=override.indicator.name,

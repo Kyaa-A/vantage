@@ -70,7 +70,7 @@ class FileValidationService:
         # Get content type from upload
         content_type = file.content_type
 
-        if not content_type:
+        if not content_type and file.filename:
             # Fallback: guess MIME type from filename
             guessed_type, _ = mimetypes.guess_type(file.filename)
             content_type = guessed_type
@@ -132,11 +132,11 @@ class FileValidationService:
         """
         # Check extension matches MIME type
         content_type = file.content_type
-        if not content_type:
+        if not content_type and file.filename:
             guessed_type, _ = mimetypes.guess_type(file.filename)
             content_type = guessed_type
 
-        if content_type and content_type in self.MIME_TO_EXTENSIONS:
+        if content_type and content_type in self.MIME_TO_EXTENSIONS and file.filename:
             filename_lower = file.filename.lower()
             expected_extensions = self.MIME_TO_EXTENSIONS[content_type]
 

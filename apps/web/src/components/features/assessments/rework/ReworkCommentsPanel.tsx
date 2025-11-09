@@ -19,7 +19,7 @@ import { AlertTriangle, MessageSquare, Clock } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useGetAssessmentsAssessmentIdSubmissionStatus } from "@vantage/shared";
 import { formatDistanceToNow } from "date-fns";
 
@@ -106,8 +106,8 @@ export function ReworkCommentsPanel({ assessmentId }: ReworkCommentsPanelProps) 
           </div>
           {rework_requested_by && (
             <span className="text-xs">
-              by {typeof rework_requested_by === 'object' && 'email' in rework_requested_by
-                ? rework_requested_by.email
+              by {typeof rework_requested_by === 'object' && rework_requested_by && 'email' in rework_requested_by
+                ? (rework_requested_by as any).email
                 : 'Assessor'}
             </span>
           )}

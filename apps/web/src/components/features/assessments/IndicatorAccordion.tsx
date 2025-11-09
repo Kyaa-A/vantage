@@ -124,8 +124,6 @@ export function IndicatorAccordion({
         return "Completed";
       case "needs_rework":
         return "Needs Rework";
-      case "in_progress":
-        return "In Progress";
       case "not_started":
       default:
         return "Not Started";
@@ -391,7 +389,7 @@ export function IndicatorAccordion({
               {/* Epic 3 Dynamic Form Renderer */}
               {isEpic3Format() && assessment?.id && (
                 <DynamicFormRenderer
-                  formSchema={indicator.formSchema}
+                  formSchema={indicator.formSchema as any}
                   assessmentId={parseInt(assessment.id)}
                   indicatorId={parseInt(indicator.id)}
                   onSaveSuccess={() => {
@@ -468,9 +466,7 @@ export function IndicatorAccordion({
                     const hasYes = requiredSectionsWithYes.size > 0;
                     const newStatus = allAnswered && (!hasYes || allSectionsSatisfied)
                       ? 'completed'
-                      : (allAnswered && hasYes && !allSectionsSatisfied)
-                        ? 'in_progress'
-                        : 'not_started';
+                      : 'not_started';
 
                     // Areas 2-6 now use the same flat structure as Area 1, no nested wrapping needed
                     const dataToSave = data;
@@ -626,7 +622,7 @@ export function IndicatorAccordion({
                                       status:
                                         (current.complianceAnswer || localCompliance) === "yes" && allSatisfied
                                           ? "completed"
-                                          : "in_progress",
+                                          : "not_started",
                                     };
                                     return true;
                                   }
@@ -693,9 +689,7 @@ export function IndicatorAccordion({
                                     status:
                                       (current.complianceAnswer || localCompliance) === "yes" && allSatisfied
                                         ? "completed"
-                                        : files.length === 0
-                                          ? "not_started"
-                                          : "in_progress",
+                                        : "not_started",
                                   };
                                   return true;
                                 }

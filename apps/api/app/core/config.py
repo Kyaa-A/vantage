@@ -111,7 +111,7 @@ class Settings(BaseSettings):
     FIRST_SUPERUSER: str = "admin@vantage.com"
     FIRST_SUPERUSER_PASSWORD: str = "changethis"
 
-    model_config = ConfigDict(env_file=".env", case_sensitive=True)
+    model_config = ConfigDict(env_file=".env", case_sensitive=True, extra="ignore")
 
 
 # Global settings instance

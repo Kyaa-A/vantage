@@ -248,25 +248,29 @@ def test_indicator(db_session: Session, governance_area: GovernanceArea) -> Indi
         form_schema={
             "fields": [
                 {
-                    "id": "test_text_field",
+                    "field_id": "test_text_field",
                     "label": "Test Text Field",
-                    "field_type": "text",
+                    "field_type": "text_input",
                     "required": True,
                 },
                 {
-                    "id": "test_number_field",
+                    "field_id": "test_number_field",
                     "label": "Test Number Field",
-                    "field_type": "number",
+                    "field_type": "number_input",
                     "required": True,
-                    "min": 0,
-                    "max": 100,
+                    "min_value": 0,
+                    "max_value": 100,
                 },
                 {
-                    "id": "test_select_field",
-                    "label": "Test Select Field",
-                    "field_type": "select",
+                    "field_id": "test_radio_field",
+                    "label": "Test Radio Field",
+                    "field_type": "radio_button",
                     "required": True,
-                    "options": ["Option A", "Option B", "Option C"],
+                    "options": [
+                        {"label": "Option A", "value": "option_a"},
+                        {"label": "Option B", "value": "option_b"},
+                        {"label": "Option C", "value": "option_c"},
+                    ],
                 },
             ]
         },

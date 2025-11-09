@@ -288,6 +288,8 @@ def sanitize_rich_text(text: Optional[str]) -> Optional[str]:
 
     # Pattern to match HTML tags
     pattern = r'<(/?\w+)(?:\s[^>]*)?>'
+    if sanitized is None:
+        return None
     sanitized = re.sub(pattern, replace_tag, sanitized, flags=re.IGNORECASE)
 
     return sanitized

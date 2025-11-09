@@ -61,7 +61,7 @@ export function ResubmitAssessmentButton({
         toast({
           title: "Assessment Resubmitted",
           description: `Your assessment was successfully resubmitted on ${new Date(
-            data.submitted_at
+            data.resubmitted_at
           ).toLocaleString()}. This is your final submission.`,
           variant: "default",
         });

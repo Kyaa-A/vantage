@@ -336,50 +336,8 @@ async def submit_assessment(
         ) from e
 
 
-@router.post(
-    "/{assessment_id}/submit",
-    response_model=AssessmentSubmissionValidation,
-    tags=["assessments"],
-)
-async def submit_assessment_by_id(
-    assessment_id: int,
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(get_current_blgu_user),
-):
-    """
-    Submit a specific assessment for review by ID.
-
-    Validates that the assessment belongs to the current BLGU user, runs the
-    preliminary compliance check (no "YES" answers without MOVs), and updates
-    the status to "Submitted for Review" if valid.
-    """
-    assessment = assessment_service.get_assessment_for_blgu(
-        db, getattr(current_user, "id")
-    )
-    if not assessment or assessment.id != assessment_id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Assessment not found for current user",
-        )
-
-    try:
-        validation_result = assessment_service.submit_assessment(db, assessment_id)
-        if not getattr(validation_result, "is_valid", False):
-            # Return 400 with a concise detail message for failed indicators per PRD
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=(
-                    "Submission failed: YES answers without MOV detected."
-                ),
-            )
-        return validation_result
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error submitting assessment: {str(e)}",
-        ) from e
+# NOTE: Old duplicate submit endpoint removed (was at line 339-357)
+# Epic 5.0 submit_assessment endpoint is the correct one (now at line ~1070)
 
 @router.post("/responses/{response_id}/movs", response_model=MOV, tags=["assessments"])
 async def upload_mov(

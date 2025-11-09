@@ -35,7 +35,7 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     name = Column(String, nullable=False)
     phone_number = Column(String, nullable=True)
-    role = Column(
+    role: UserRole = Column(
         Enum(UserRole, name="user_role_enum", create_constraint=True),
         nullable=False,
         default=UserRole.BLGU_USER,

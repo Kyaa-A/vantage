@@ -25,7 +25,7 @@ class GovernanceArea(Base):
 
     # Area information
     name = Column(String, nullable=False, unique=True)
-    area_type = Column(
+    area_type: AreaType = Column(
         Enum(AreaType, name="area_type_enum", create_constraint=True), nullable=False
     )
 
