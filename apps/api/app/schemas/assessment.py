@@ -303,6 +303,20 @@ class FormSchemaValidation(BaseModel):
     warnings: List[str] = []
 
 
+class SubmissionValidationResult(BaseModel):
+    """
+    Schema for Epic 5.0 submission validation result.
+
+    Used by SubmissionValidationService to return detailed validation results
+    before allowing assessment submission.
+    """
+
+    is_valid: bool
+    incomplete_indicators: List[str] = []  # List of indicator names/IDs that are incomplete
+    missing_movs: List[str] = []  # List of indicator names/IDs missing required MOV files
+    error_message: Optional[str] = None
+
+
 # ============================================================================
 # Dashboard Schemas
 # ============================================================================
