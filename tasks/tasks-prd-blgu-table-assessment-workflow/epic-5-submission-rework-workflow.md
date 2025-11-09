@@ -4,6 +4,22 @@
 
 **Objective:** Implement the complete submission and rework workflow, including completeness validation before submission, locked state after submission, assessor-initiated rework with comments, and BLGU resubmission capabilities. Ensure only one rework cycle is allowed.
 
+## Implementation Progress
+
+**Status as of 2025-11-09:**
+- **Backend Stories Complete:** 9 of 9 backend stories (100%)
+- **Overall Progress:** 9 of 21 stories (43%)
+- **Stories 5.1-5.9:** ✅ Complete
+- **Story 5.10:** ⏸️ Ready for execution (requires running backend API)
+- **Stories 5.11-5.21:** Pending (frontend components, notifications, testing)
+
+**Key Deliverables Completed:**
+- 4 new REST API endpoints (submit, request-rework, resubmit, submission-status)
+- Database schema updates with rework tracking
+- Comprehensive validation service for submission readiness
+- Full Pydantic schema documentation
+- 43 backend unit tests passing
+
 ## Stories
 
 ### Three-Tier Structure: Epic → Story → Atomic
@@ -705,19 +721,22 @@
     - **Time Estimate:** 1 hour
     - **Completed:** 2025-11-09
 
-- [ ] **5.10 Story: Type Generation for Submission APIs**
+- [ ] **5.10 Story: Type Generation for Submission APIs** ⏸️
   - Run `pnpm generate-types` to generate TypeScript types and React Query hooks
   - Verify generated hooks: `useSubmitAssessment`, `useRequestRework`, `useResubmitAssessment`, `useGetSubmissionStatus`
   - Ensure all schemas are correctly typed
   - Tech stack involved: Orval, TypeScript, React Query
   - Dependencies: Story 5.9 must be complete
+  - **Status:** Ready for execution - Requires backend API running at localhost:8000
+  - **Note:** All backend endpoints complete and properly tagged. Run `pnpm generate-types` when backend is running.
 
-  - [ ] **5.10.1 Atomic: Run pnpm generate-types after submission endpoints complete**
+  - [ ] **5.10.1 Atomic: Run pnpm generate-types after submission endpoints complete** ⏸️
     - **Files:** Generated files in `packages/shared/src/generated/`
     - **Dependencies:** Stories 5.5-5.9 must be complete
     - **Acceptance:** Run `pnpm generate-types`. Command succeeds. No errors. Generated files updated in packages/shared/src/generated/.
     - **Tech:** Orval, pnpm, type generation
     - **Time Estimate:** 1 hour
+    - **Prerequisites:** Start backend API with `cd apps/api && uvicorn app.main:app --reload` or `./scripts/docker-dev.sh up`
 
   - [ ] **5.10.2 Atomic: Verify SubmissionStatusResponse TypeScript type generated**
     - **Files:** `packages/shared/src/generated/schemas/assessments/submissionStatusResponse.ts`
