@@ -26,7 +26,7 @@ from sqlalchemy.orm import Session
 import logging
 
 from app.db.models.assessment import Assessment, AssessmentResponse, MOVFile
-from app.db.models.governance import Indicator
+from app.db.models.governance_area import Indicator
 from app.services.completeness_validation_service import completeness_validation_service
 from app.schemas.assessment import SubmissionValidationResult
 

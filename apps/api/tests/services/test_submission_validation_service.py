@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.db.models.assessment import Assessment, AssessmentResponse, MOVFile
 from app.db.models.user import User
-from app.db.models.governance import Indicator, GovernanceArea
+from app.db.models.governance_area import Indicator, GovernanceArea
 from app.db.enums import AssessmentStatus, UserRole, AreaType
 from app.services.submission_validation_service import (
     submission_validation_service,
