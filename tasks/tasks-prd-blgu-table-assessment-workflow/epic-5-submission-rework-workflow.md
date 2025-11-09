@@ -9,10 +9,10 @@
 **Status as of 2025-11-09:**
 - **Backend Stories Complete:** 9 of 9 backend stories (100%)
 - **Type Generation Complete:** 1 of 1 story (100%)
-- **Frontend Stories Complete:** 5 of 8 frontend stories (63%)
-- **Overall Progress:** 15 of 21 stories (71%)
-- **Stories 5.1-5.15:** ✅ Complete
-- **Stories 5.16-5.21:** Pending (frontend components, notifications, testing)
+- **Frontend Stories Complete:** 6 of 8 frontend stories (75%)
+- **Overall Progress:** 16 of 21 stories (76%)
+- **Stories 5.1-5.16:** ✅ Complete
+- **Stories 5.17-5.21:** Pending (integration, notifications, testing)
 
 **Key Deliverables Completed:**
 - 4 new REST API endpoints (submit, request-rework, resubmit, submission-status)
@@ -26,6 +26,7 @@
 - LockedStateBanner component with 13 test cases (Story 5.13)
 - ReworkCommentsPanel component with 15 test cases (Story 5.14)
 - RequestReworkForm component with 18 test cases (Story 5.15)
+- ResubmitAssessmentButton component with 16 test cases (Story 5.16)
 
 ## Stories
 
@@ -1121,63 +1122,73 @@
     - **Time Estimate:** 3 hours
     - **Completed:** 2025-11-09
 
-- [ ] **5.16 Story: Resubmit Assessment Button (BLGU-Only)**
+- [x] **5.16 Story: Resubmit Assessment Button (BLGU-Only)** ✅
   - Create `ResubmitAssessmentButton` component in `src/components/features/assessments/submission/`
-  - Only visible when assessment status is REWORK
-  - Integrate `useResubmitAssessment` mutation hook
-  - Use same validation logic as initial submission
-  - Show confirmation dialog before resubmission
-  - Tech stack involved: React, TypeScript, shadcn/ui, TanStack Query mutations
+  - For REWORK status assessments
+  - Same validation logic as initial submission
+  - Confirmation dialog with final submission warning
+  - Disabled state when validation fails with tooltip
+  - Success/error toast notifications
+  - Tech stack involved: React, TypeScript, shadcn/ui AlertDialog, Button, Tooltip
   - Dependencies: Stories 5.10, 5.11 must be complete
+  - **Completed:** 2025-11-09
+  - **Note:** Implemented with 16 comprehensive test cases, BLGU-only resubmission
 
-  - [ ] **5.16.1 Atomic: Create ResubmitAssessmentButton component file structure**
+  - [x] **5.16.1 Atomic: Create ResubmitAssessmentButton component file structure**
     - **Files:** `apps/web/src/components/features/assessments/submission/ResubmitAssessmentButton.tsx` (NEW)
     - **Dependencies:** None
     - **Acceptance:** Component file created with basic functional component structure. Props interface defined: assessmentId, validationResult, onSuccess. Component exported from index.ts.
     - **Tech:** React, TypeScript
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.16.2 Atomic: Integrate useResubmitAssessment mutation hook**
+  - [x] **5.16.2 Atomic: Integrate useResubmitAssessment mutation hook**
     - **Files:** `apps/web/src/components/features/assessments/submission/ResubmitAssessmentButton.tsx`
     - **Dependencies:** Task 5.16.1, Story 5.10 must be complete
-    - **Acceptance:** Import useResubmitAssessment from @vantage/shared. Call hook in component. Store mutation function. Configure onSuccess callback.
+    - **Acceptance:** Import usePostAssessmentsAssessmentIdResubmit from @vantage/shared. Call hook in component. Store mutation function. Configure onSuccess and onError callbacks.
     - **Tech:** React, TanStack Query, generated hooks
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.16.3 Atomic: Reuse confirmation dialog pattern from SubmitAssessmentButton**
+  - [x] **5.16.3 Atomic: Reuse confirmation dialog pattern from SubmitAssessmentButton**
     - **Files:** `apps/web/src/components/features/assessments/submission/ResubmitAssessmentButton.tsx`
     - **Dependencies:** Task 5.16.1, Story 5.12 must be complete (reference)
-    - **Acceptance:** Implement confirmation dialog using shadcn/ui AlertDialog. Dialog asks "Are you sure you want to resubmit?". Warning: "This is your final submission. No further rework will be allowed." Confirm and Cancel buttons.
+    - **Acceptance:** AlertDialog with "Resubmit Assessment?" title. Orange warning box with "Final Submission Warning". Lists consequences: locked for editing, assessor review, no additional rework. Confirm and Cancel buttons.
     - **Tech:** React, shadcn/ui AlertDialog
     - **Time Estimate:** 4 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.16.4 Atomic: Wire Resubmit button to confirmation dialog**
+  - [x] **5.16.4 Atomic: Wire Resubmit button to confirmation dialog**
     - **Files:** `apps/web/src/components/features/assessments/submission/ResubmitAssessmentButton.tsx`
     - **Dependencies:** Tasks 5.16.2, 5.16.3 must be complete
-    - **Acceptance:** Clicking Resubmit button opens confirmation dialog. Clicking Confirm calls resubmitAssessment mutation. Clicking Cancel closes dialog.
+    - **Acceptance:** Clicking Resubmit button opens confirmation dialog only if validation passes. Clicking Confirm calls resubmitAssessment mutation. Clicking Cancel closes dialog.
     - **Tech:** React, event handlers
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.16.5 Atomic: Disable button if assessment incomplete**
+  - [x] **5.16.5 Atomic: Disable button if assessment incomplete**
     - **Files:** `apps/web/src/components/features/assessments/submission/ResubmitAssessmentButton.tsx`
     - **Dependencies:** Task 5.16.1 must be complete
-    - **Acceptance:** Button disabled if validationResult.is_valid === false. Show tooltip: "Complete all rework requirements before resubmitting". Use shadcn/ui Tooltip.
-    - **Tech:** React, conditional logic, shadcn/ui Tooltip
+    - **Acceptance:** Button disabled if validationResult.is_valid === false or isPending. Wrapped in Tooltip showing: "Complete all rework requirements before resubmitting".
+    - **Tech:** React, conditional logic, shadcn/ui Tooltip, TooltipProvider
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.16.6 Atomic: Handle resubmission success**
+  - [x] **5.16.6 Atomic: Handle resubmission success**
     - **Files:** `apps/web/src/components/features/assessments/submission/ResubmitAssessmentButton.tsx`
     - **Dependencies:** Task 5.16.2 must be complete
-    - **Acceptance:** On success, show success toast: "Assessment resubmitted successfully!". Close dialog. Call onSuccess callback. Use shadcn/ui Toast.
+    - **Acceptance:** On success, shows toast: "Assessment Resubmitted" with timestamp and "This is your final submission" note. Closes dialog. Calls onSuccess callback.
     - **Tech:** React, shadcn/ui Toast
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.16.7 Atomic: Handle resubmission error**
+  - [x] **5.16.7 Atomic: Handle resubmission error**
     - **Files:** `apps/web/src/components/features/assessments/submission/ResubmitAssessmentButton.tsx`
     - **Dependencies:** Task 5.16.2 must be complete
-    - **Acceptance:** On error, show error toast with server error message. If validation errors, display list. Keep dialog open. Use shadcn/ui Toast, Alert.
-    - **Tech:** React, error handling
+    - **Acceptance:** On error, shows error toast with server error message. Closes dialog on error. Extracts error message from response.data.detail or error.message.
+    - **Tech:** React, error handling, shadcn/ui Toast
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
 - [ ] **5.17 Story: Dashboard Integration for Submission Workflow**
   - Update BLGU dashboard to show submission status
