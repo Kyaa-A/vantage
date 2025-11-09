@@ -286,7 +286,7 @@
     - **Tech:** Pytest, comprehensive validation testing
     - **Time Estimate:** 4 hours
 
-- [ ] **5.5 Story: Backend API for Assessment Submission**
+- [x] **5.5 Story: Backend API for Assessment Submission** ✅
   - Create `POST /api/v1/assessments/{assessment_id}/submit` endpoint
   - Use SubmissionValidationService to validate completeness
   - Return validation errors if incomplete
@@ -295,55 +295,63 @@
   - Send notification to assigned assessor (if applicable)
   - Tech stack involved: FastAPI, Pydantic, SQLAlchemy, notification integration
   - Dependencies: Story 5.4 must be complete
+  - **Completed:** 2025-11-09
 
-  - [ ] **5.5.1 Atomic: Create POST submit endpoint structure**
+  - [x] **5.5.1 Atomic: Create POST submit endpoint structure**
     - **Files:** `apps/api/app/api/v1/assessments.py`
     - **Dependencies:** Story 5.4 must be complete
     - **Acceptance:** Endpoint defined: @router.post("/{assessment_id}/submit", tags=["assessments"]). Accepts path param: assessment_id. Dependencies: get_db, get_current_user. Returns 200 status code on success.
     - **Tech:** FastAPI, dependency injection, path parameters
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.5.2 Atomic: Add authorization check for BLGU_USER role**
+  - [x] **5.5.2 Atomic: Add authorization check for BLGU_USER role**
     - **Files:** `apps/api/app/api/v1/assessments.py`
     - **Dependencies:** Task 5.5.1 must be complete
     - **Acceptance:** Endpoint checks current_user.role is BLGU_USER. Checks user owns the assessment (assessment.barangay_id matches user.barangay_id). Returns 403 Forbidden if unauthorized.
     - **Tech:** FastAPI, role-based access control, authorization
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.5.3 Atomic: Integrate SubmissionValidationService in endpoint**
+  - [x] **5.5.3 Atomic: Integrate SubmissionValidationService in endpoint**
     - **Files:** `apps/api/app/api/v1/assessments.py`
     - **Dependencies:** Task 5.5.1, Story 5.4 must be complete
     - **Acceptance:** Endpoint calls submission_validation_service.validate_submission(assessment_id, db). If validation fails, returns 400 Bad Request with SubmissionValidationResult showing errors.
     - **Tech:** FastAPI, service integration, error responses
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.5.4 Atomic: Update assessment status to SUBMITTED**
+  - [x] **5.5.4 Atomic: Update assessment status to SUBMITTED**
     - **Files:** `apps/api/app/api/v1/assessments.py`
     - **Dependencies:** Task 5.5.3 must be complete
     - **Acceptance:** If validation passes, update assessment.status to AssessmentStatus.SUBMITTED. Commit to database. Assessment is now locked for BLGU editing.
     - **Tech:** SQLAlchemy update, database commit
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.5.5 Atomic: Create SubmitAssessmentResponse Pydantic schema**
+  - [x] **5.5.5 Atomic: Create SubmitAssessmentResponse Pydantic schema**
     - **Files:** `apps/api/app/schemas/assessment.py`
     - **Dependencies:** None (can be done in parallel)
     - **Acceptance:** Pydantic schema created: SubmitAssessmentResponse with fields: success (bool), message (str), assessment_id (int), submitted_at (datetime). Schema used for API response.
     - **Tech:** Pydantic, Python type hints
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.5.6 Atomic: Return SubmitAssessmentResponse on success**
+  - [x] **5.5.6 Atomic: Return SubmitAssessmentResponse on success**
     - **Files:** `apps/api/app/api/v1/assessments.py`
     - **Dependencies:** Tasks 5.5.4, 5.5.5 must be complete
     - **Acceptance:** Endpoint returns SubmitAssessmentResponse with success=True, message="Assessment submitted successfully", assessment_id, submitted_at timestamp. Response model configured.
     - **Tech:** FastAPI response models, Pydantic
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.5.7 Atomic: Add notification trigger for assessor (placeholder)**
+  - [x] **5.5.7 Atomic: Add notification trigger for assessor (placeholder)**
     - **Files:** `apps/api/app/api/v1/assessments.py`
     - **Dependencies:** Task 5.5.4 must be complete
     - **Acceptance:** After successful submission, add TODO comment or placeholder call for notification service. Notification sends email to assigned assessor. Implementation deferred to Story 5.19.
     - **Tech:** Python, code comments, notification planning
     - **Time Estimate:** 1 hour
+    - **Completed:** 2025-11-09
 
   - [ ] **5.5.8 Atomic: Test submit endpoint with valid complete assessment**
     - **Files:** `apps/api/tests/api/v1/test_assessments.py`
@@ -366,7 +374,7 @@
     - **Tech:** Pytest, authorization testing
     - **Time Estimate:** 3 hours
 
-- [ ] **5.6 Story: Backend API for Rework Initiation (Assessor-Only)**
+- [x] **5.6 Story: Backend API for Rework Initiation (Assessor-Only)** ✅
   - Create `POST /api/v1/assessments/{assessment_id}/request-rework` endpoint
   - Require ASSESSOR or VALIDATOR role
   - Accept rework comments (required field)
@@ -378,74 +386,85 @@
   - Send notification to BLGU user
   - Tech stack involved: FastAPI, role-based access control, notification integration
   - Dependencies: Story 5.3 must be complete
+  - **Completed:** 2025-11-09
 
-  - [ ] **5.6.1 Atomic: Create POST request-rework endpoint structure**
+  - [x] **5.6.1 Atomic: Create POST request-rework endpoint structure**
     - **Files:** `apps/api/app/api/v1/assessments.py`
     - **Dependencies:** Story 5.3 must be complete
     - **Acceptance:** Endpoint defined: @router.post("/{assessment_id}/request-rework", tags=["assessments"]). Accepts path param: assessment_id. Dependencies: get_db, get_current_user. Returns 200 status code on success.
     - **Tech:** FastAPI, dependency injection
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.6.2 Atomic: Add authorization check for ASSESSOR/VALIDATOR roles**
+  - [x] **5.6.2 Atomic: Add authorization check for ASSESSOR/VALIDATOR roles**
     - **Files:** `apps/api/app/api/v1/assessments.py`
     - **Dependencies:** Task 5.6.1 must be complete
     - **Acceptance:** Endpoint checks current_user.role in [ASSESSOR, VALIDATOR, MLGOO_DILG]. Returns 403 Forbidden if BLGU_USER or unauthorized role.
     - **Tech:** FastAPI, role-based access control
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.6.3 Atomic: Create RequestReworkRequest Pydantic schema**
+  - [x] **5.6.3 Atomic: Create RequestReworkRequest Pydantic schema**
     - **Files:** `apps/api/app/schemas/assessment.py`
     - **Dependencies:** None (can be done in parallel)
     - **Acceptance:** Pydantic schema created: RequestReworkRequest with field: comments (str, required, min_length=10). Validates rework comments are provided.
     - **Tech:** Pydantic, validation, Python type hints
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.6.4 Atomic: Accept and validate rework comments from request body**
+  - [x] **5.6.4 Atomic: Accept and validate rework comments from request body**
     - **Files:** `apps/api/app/api/v1/assessments.py`
     - **Dependencies:** Tasks 5.6.1, 5.6.3 must be complete
     - **Acceptance:** Endpoint accepts request body: RequestReworkRequest. Extracts comments field. Validates comments not empty. Returns 400 if validation fails.
     - **Tech:** FastAPI request body, Pydantic validation
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.6.5 Atomic: Check rework_count < 1 before allowing rework**
+  - [x] **5.6.5 Atomic: Check rework_count < 1 before allowing rework**
     - **Files:** `apps/api/app/api/v1/assessments.py`
     - **Dependencies:** Task 5.6.1, Story 5.3 must be complete
     - **Acceptance:** Endpoint loads assessment from database. Checks assessment.rework_count < 1. If rework_count >= 1, returns 400 Bad Request with error: "Rework limit reached. Only one rework cycle allowed."
     - **Tech:** SQLAlchemy query, business logic validation
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.6.6 Atomic: Check assessment status is SUBMITTED**
+  - [x] **5.6.6 Atomic: Check assessment status is SUBMITTED**
     - **Files:** `apps/api/app/api/v1/assessments.py`
     - **Dependencies:** Task 5.6.1 must be complete
     - **Acceptance:** Endpoint checks assessment.status == SUBMITTED. If status is DRAFT, REWORK, or COMPLETED, returns 400 Bad Request with error: "Assessment must be in SUBMITTED status to request rework."
     - **Tech:** Status validation, business rules
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.6.7 Atomic: Update assessment to REWORK status and increment count**
+  - [x] **5.6.7 Atomic: Update assessment to REWORK status and increment count**
     - **Files:** `apps/api/app/api/v1/assessments.py`
     - **Dependencies:** Tasks 5.6.5, 5.6.6 must be complete
     - **Acceptance:** Update assessment.status to AssessmentStatus.REWORK. Increment assessment.rework_count by 1. Set assessment.rework_comments to comments from request. Set assessment.rework_requested_by to current_user.id. Set assessment.rework_requested_at to current timestamp. Commit to database.
     - **Tech:** SQLAlchemy update, timestamp handling
     - **Time Estimate:** 4 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.6.8 Atomic: Create RequestReworkResponse Pydantic schema**
+  - [x] **5.6.8 Atomic: Create RequestReworkResponse Pydantic schema**
     - **Files:** `apps/api/app/schemas/assessment.py`
     - **Dependencies:** None (can be done in parallel)
     - **Acceptance:** Pydantic schema created: RequestReworkResponse with fields: success (bool), message (str), assessment_id (int), rework_count (int), rework_requested_at (datetime). Schema used for API response.
     - **Tech:** Pydantic, Python type hints
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.6.9 Atomic: Return RequestReworkResponse on success**
+  - [x] **5.6.9 Atomic: Return RequestReworkResponse on success**
     - **Files:** `apps/api/app/api/v1/assessments.py`
     - **Dependencies:** Tasks 5.6.7, 5.6.8 must be complete
     - **Acceptance:** Endpoint returns RequestReworkResponse with success=True, message="Rework requested successfully", assessment_id, rework_count, rework_requested_at. Response model configured.
     - **Tech:** FastAPI response models
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.6.10 Atomic: Add notification trigger for BLGU (placeholder)**
+  - [x] **5.6.10 Atomic: Add notification trigger for BLGU (placeholder)**
     - **Files:** `apps/api/app/api/v1/assessments.py`
     - **Dependencies:** Task 5.6.7 must be complete
     - **Acceptance:** After successful rework request, add placeholder for notification service. Notification sends email to BLGU user with rework comments. Implementation deferred to Story 5.19.
+    - **Completed:** 2025-11-09
     - **Tech:** Python, notification planning
     - **Time Estimate:** 1 hour
 
@@ -477,7 +496,7 @@
     - **Tech:** Pytest, validation testing
     - **Time Estimate:** 2 hours
 
-- [ ] **5.7 Story: Backend API for Resubmission (BLGU-Only)**
+- [x] **5.7 Story: Backend API for Resubmission (BLGU-Only)** ✅
   - Create `POST /api/v1/assessments/{assessment_id}/resubmit` endpoint
   - Require BLGU_USER role
   - Only allow if assessment status is REWORK
@@ -488,62 +507,71 @@
   - Send notification to assigned assessor
   - Tech stack involved: FastAPI, Pydantic, role-based access control
   - Dependencies: Stories 5.4, 5.6 must be complete
+  - **Completed:** 2025-11-09
 
-  - [ ] **5.7.1 Atomic: Create POST resubmit endpoint structure**
+  - [x] **5.7.1 Atomic: Create POST resubmit endpoint structure**
     - **Files:** `apps/api/app/api/v1/assessments.py`
     - **Dependencies:** Stories 5.4, 5.6 must be complete
     - **Acceptance:** Endpoint defined: @router.post("/{assessment_id}/resubmit", tags=["assessments"]). Accepts path param: assessment_id. Dependencies: get_db, get_current_user. Returns 200 status code on success.
     - **Tech:** FastAPI, dependency injection
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.7.2 Atomic: Add authorization check for BLGU_USER role**
+  - [x] **5.7.2 Atomic: Add authorization check for BLGU_USER role**
     - **Files:** `apps/api/app/api/v1/assessments.py`
     - **Dependencies:** Task 5.7.1 must be complete
     - **Acceptance:** Endpoint checks current_user.role is BLGU_USER. Checks user owns the assessment. Returns 403 Forbidden if unauthorized.
     - **Tech:** FastAPI, role-based access control
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.7.3 Atomic: Check assessment status is REWORK**
+  - [x] **5.7.3 Atomic: Check assessment status is REWORK**
     - **Files:** `apps/api/app/api/v1/assessments.py`
     - **Dependencies:** Task 5.7.1 must be complete
     - **Acceptance:** Endpoint checks assessment.status == REWORK. If status is DRAFT, SUBMITTED, or COMPLETED, returns 400 Bad Request with error: "Assessment must be in REWORK status to resubmit."
     - **Tech:** Status validation
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.7.4 Atomic: Integrate SubmissionValidationService for resubmission**
+  - [x] **5.7.4 Atomic: Integrate SubmissionValidationService for resubmission**
     - **Files:** `apps/api/app/api/v1/assessments.py`
     - **Dependencies:** Task 5.7.1, Story 5.4 must be complete
     - **Acceptance:** Endpoint calls submission_validation_service.validate_submission(assessment_id, db). If validation fails, returns 400 Bad Request with validation errors. BLGU must address rework feedback before resubmitting.
     - **Tech:** Service integration, validation
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.7.5 Atomic: Update assessment status to SUBMITTED on resubmission**
+  - [x] **5.7.5 Atomic: Update assessment status to SUBMITTED on resubmission**
     - **Files:** `apps/api/app/api/v1/assessments.py`
     - **Dependencies:** Task 5.7.4 must be complete
     - **Acceptance:** If validation passes, update assessment.status to AssessmentStatus.SUBMITTED. Do NOT increment rework_count (already at 1). Commit to database. Assessment locked again.
     - **Tech:** SQLAlchemy update
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.7.6 Atomic: Create ResubmitAssessmentResponse Pydantic schema**
+  - [x] **5.7.6 Atomic: Create ResubmitAssessmentResponse Pydantic schema**
     - **Files:** `apps/api/app/schemas/assessment.py`
     - **Dependencies:** None (can be done in parallel)
     - **Acceptance:** Pydantic schema created: ResubmitAssessmentResponse with fields: success (bool), message (str), assessment_id (int), resubmitted_at (datetime). Schema used for API response.
     - **Tech:** Pydantic, Python type hints
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.7.7 Atomic: Return ResubmitAssessmentResponse on success**
+  - [x] **5.7.7 Atomic: Return ResubmitAssessmentResponse on success**
     - **Files:** `apps/api/app/api/v1/assessments.py`
     - **Dependencies:** Tasks 5.7.5, 5.7.6 must be complete
     - **Acceptance:** Endpoint returns ResubmitAssessmentResponse with success=True, message="Assessment resubmitted successfully", assessment_id, resubmitted_at timestamp. Response model configured.
     - **Tech:** FastAPI response models
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.7.8 Atomic: Add notification trigger for assessor (placeholder)**
+  - [x] **5.7.8 Atomic: Add notification trigger for assessor (placeholder)**
     - **Files:** `apps/api/app/api/v1/assessments.py`
     - **Dependencies:** Task 5.7.5 must be complete
     - **Acceptance:** After successful resubmission, add placeholder for notification service. Notification sends email to assessor. Implementation deferred to Story 5.19.
     - **Tech:** Notification planning
     - **Time Estimate:** 1 hour
+    - **Completed:** 2025-11-09
 
   - [ ] **5.7.9 Atomic: Test resubmit endpoint with valid REWORK assessment**
     - **Files:** `apps/api/tests/api/v1/test_assessments.py`
