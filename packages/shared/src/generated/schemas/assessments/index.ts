@@ -304,10 +304,14 @@ export type AssessmentStatus = typeof AssessmentStatus[keyof typeof AssessmentSt
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const AssessmentStatus = {
-  Draft: 'Draft',
-  Submitted_for_Review: 'Submitted for Review',
-  Validated: 'Validated',
-  Needs_Rework: 'Needs Rework',
+  DRAFT: 'DRAFT',
+  SUBMITTED: 'SUBMITTED',
+  IN_REVIEW: 'IN_REVIEW',
+  REWORK: 'REWORK',
+  COMPLETED: 'COMPLETED',
+  SUBMITTED_FOR_REVIEW: 'SUBMITTED_FOR_REVIEW',
+  VALIDATED: 'VALIDATED',
+  NEEDS_REWORK: 'NEEDS_REWORK',
 } as const;
 
 
@@ -425,3 +429,26 @@ indicator_id: number;
  * PostAssessmentsIdGenerateInsights202
  */
 export type PostAssessmentsIdGenerateInsights202 = { [key: string]: unknown };
+
+
+/**
+ * ResubmitAssessmentResponse
+ */
+export interface ResubmitAssessmentResponse {
+  success: boolean;
+  message: string;
+  assessment_id: number;
+  resubmitted_at: string;
+  rework_count: number;
+}
+
+
+/**
+ * SubmitAssessmentResponse
+ */
+export interface SubmitAssessmentResponse {
+  success: boolean;
+  message: string;
+  assessment_id: number;
+  submitted_at: string;
+}

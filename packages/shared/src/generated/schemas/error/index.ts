@@ -12,6 +12,23 @@ export interface HTTPValidationError {
 
 
 /**
+ * SubmissionValidationResult
+ */
+export interface SubmissionValidationResult {
+  is_valid: boolean;
+  incomplete_indicators?: string[];
+  missing_movs?: string[];
+  error_message?: SubmissionValidationResultErrorMessage;
+}
+
+
+/**
+ * SubmissionValidationResultErrorMessage
+ */
+export type SubmissionValidationResultErrorMessage = string | null;
+
+
+/**
  * ValidationError
  */
 export interface ValidationError {

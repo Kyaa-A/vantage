@@ -17,6 +17,8 @@ import type { DeadlineOverrideResponse } from '../deadlineoverride';
 import type { ChartData } from '../common';
 import type { MapData } from '../common';
 import type { TableData } from '../common';
+import type { AssessmentStatus } from '../assessments';
+import type { SubmissionValidationResult } from '../error';
 
 /**
  * SystemicWeakness
@@ -385,3 +387,36 @@ export interface ReportsDataResponse {
   /** Report generation metadata and applied filters */
   metadata: ReportMetadata;
 }
+
+
+/**
+ * SubmissionStatusResponse
+ */
+export interface SubmissionStatusResponse {
+  assessment_id: number;
+  status: AssessmentStatus;
+  is_locked: boolean;
+  rework_count: number;
+  rework_comments?: SubmissionStatusResponseReworkComments;
+  rework_requested_at?: SubmissionStatusResponseReworkRequestedAt;
+  rework_requested_by?: SubmissionStatusResponseReworkRequestedBy;
+  validation_result: SubmissionValidationResult;
+}
+
+
+/**
+ * SubmissionStatusResponseReworkComments
+ */
+export type SubmissionStatusResponseReworkComments = string | null;
+
+
+/**
+ * SubmissionStatusResponseReworkRequestedAt
+ */
+export type SubmissionStatusResponseReworkRequestedAt = string | null;
+
+
+/**
+ * SubmissionStatusResponseReworkRequestedBy
+ */
+export type SubmissionStatusResponseReworkRequestedBy = number | null;

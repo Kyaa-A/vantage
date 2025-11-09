@@ -37,8 +37,13 @@ import type {
   Mov,
   PostAssessmentsAssessmentIdAnswersParams,
   PostAssessmentsIdGenerateInsights202,
+  RequestReworkRequest,
+  RequestReworkResponse,
+  ResubmitAssessmentResponse,
   SaveAnswersRequest,
-  SaveAnswersResponse
+  SaveAnswersResponse,
+  SubmissionStatusResponse,
+  SubmitAssessmentResponse
 } from '../../schemas';
 
 import { mutator } from '../../../../../../apps/web/src/lib/api';
@@ -484,12 +489,36 @@ export const usePostAssessmentsSubmit = <TError = unknown,
       return useMutation(mutationOptions );
     }
     /**
- * Submit a specific assessment for review by ID.
+ * Submit an assessment for assessor review (Story 5.5).
 
-Validates that the assessment belongs to the current BLGU user, runs the
-preliminary compliance check (no "YES" answers without MOVs), and updates
-the status to "Submitted for Review" if valid.
- * @summary Submit Assessment By Id
+This endpoint allows a BLGU user to submit their completed assessment.
+The assessment must pass validation (all indicators complete, all MOVs uploaded)
+before submission is allowed.
+
+Authorization:
+    - BLGU_USER role required
+    - User must own the assessment (assessment.blgu_user_id == user.id)
+
+Workflow:
+    1. Validate user authorization
+    2. Validate assessment completeness using SubmissionValidationService
+    3. If valid, update status to SUBMITTED and set submitted_at timestamp
+    4. Lock assessment for editing (is_locked property becomes True)
+    5. Return success response
+
+Args:
+    assessment_id: ID of the assessment to submit
+    current_user: Current authenticated user
+    db: Database session
+
+Returns:
+    SubmitAssessmentResponse with success status and timestamp
+
+Raises:
+    HTTPException 403: User not authorized to submit this assessment
+    HTTPException 400: Assessment validation failed (incomplete or missing MOVs)
+    HTTPException 404: Assessment not found
+ * @summary Submit Assessment
  */
 export const postAssessments$AssessmentIdSubmit = (
     assessmentId: number,
@@ -497,7 +526,7 @@ export const postAssessments$AssessmentIdSubmit = (
 ) => {
       
       
-      return mutator<AssessmentSubmissionValidation>(
+      return mutator<SubmitAssessmentResponse>(
       {url: `http://localhost:8000/api/v1/assessments/${assessmentId}/submit`, method: 'POST', signal
     },
       options);
@@ -535,7 +564,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type PostAssessmentsAssessmentIdSubmitMutationError = HTTPValidationError
 
     /**
- * @summary Submit Assessment By Id
+ * @summary Submit Assessment
  */
 export const usePostAssessmentsAssessmentIdSubmit = <TError = HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAssessments$AssessmentIdSubmit>>, TError,{assessmentId: number}, TContext>, request?: SecondParameter<typeof mutator>}
@@ -1140,4 +1169,299 @@ export const usePostAssessmentsAssessmentIdValidateCompleteness = <TError = HTTP
 
       return useMutation(mutationOptions );
     }
+    /**
+ * Request rework on a submitted assessment (Story 5.6).
+
+This endpoint allows an assessor/validator to request changes to a BLGU submission.
+Only one rework cycle is allowed per assessment (enforced by rework_count check).
+
+Authorization:
+    - ASSESSOR, VALIDATOR, or MLGOO_DILG role required
+    - BLGU_USER role is forbidden
+
+Business Rules:
+    - Assessment must be in SUBMITTED status
+    - rework_count must be less than 1 (only one rework cycle allowed)
+    - Comments are required (min 10 characters)
+
+Workflow:
+    1. Validate user authorization (role check)
+    2. Load assessment and check status is SUBMITTED
+    3. Check rework_count < 1
+    4. Update status to REWORK
+    5. Increment rework_count
+    6. Record rework_requested_by, rework_requested_at, rework_comments
+    7. Unlock assessment for BLGU editing (is_locked becomes False)
+    8. Return success response
+
+Args:
+    assessment_id: ID of the assessment to request rework on
+    request_data: Request body containing rework comments
+    current_user: Current authenticated user
+    db: Database session
+
+Returns:
+    RequestReworkResponse with success status and rework details
+
+Raises:
+    HTTPException 403: User not authorized (must be assessor/validator)
+    HTTPException 400: Invalid status or rework limit reached
+    HTTPException 404: Assessment not found
+ * @summary Request Rework
+ */
+export const postAssessments$AssessmentIdRequestRework = (
+    assessmentId: number,
+    requestReworkRequest: RequestReworkRequest,
+ options?: SecondParameter<typeof mutator>,signal?: AbortSignal
+) => {
+      
+      
+      return mutator<RequestReworkResponse>(
+      {url: `http://localhost:8000/api/v1/assessments/${assessmentId}/request-rework`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: requestReworkRequest, signal
+    },
+      options);
+    }
+  
+
+
+export const getPostAssessmentsAssessmentIdRequestReworkMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAssessments$AssessmentIdRequestRework>>, TError,{assessmentId: number;data: RequestReworkRequest}, TContext>, request?: SecondParameter<typeof mutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postAssessments$AssessmentIdRequestRework>>, TError,{assessmentId: number;data: RequestReworkRequest}, TContext> => {
+
+const mutationKey = ['postAssessmentsAssessmentIdRequestRework'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAssessments$AssessmentIdRequestRework>>, {assessmentId: number;data: RequestReworkRequest}> = (props) => {
+          const {assessmentId,data} = props ?? {};
+
+          return  postAssessments$AssessmentIdRequestRework(assessmentId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostAssessmentsAssessmentIdRequestReworkMutationResult = NonNullable<Awaited<ReturnType<typeof postAssessments$AssessmentIdRequestRework>>>
+    export type PostAssessmentsAssessmentIdRequestReworkMutationBody = RequestReworkRequest
+    export type PostAssessmentsAssessmentIdRequestReworkMutationError = HTTPValidationError
+
+    /**
+ * @summary Request Rework
+ */
+export const usePostAssessmentsAssessmentIdRequestRework = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAssessments$AssessmentIdRequestRework>>, TError,{assessmentId: number;data: RequestReworkRequest}, TContext>, request?: SecondParameter<typeof mutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof postAssessments$AssessmentIdRequestRework>>,
+        TError,
+        {assessmentId: number;data: RequestReworkRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getPostAssessmentsAssessmentIdRequestReworkMutationOptions(options);
+
+      return useMutation(mutationOptions );
+    }
+    /**
+ * Resubmit an assessment after completing rework (Story 5.7).
+
+This endpoint allows a BLGU user to resubmit their assessment after
+addressing the assessor's rework comments. The assessment must be in
+REWORK status and pass validation again.
+
+Authorization:
+    - BLGU_USER role required
+    - User must own the assessment
+
+Business Rules:
+    - Assessment must be in REWORK status
+    - Assessment must pass validation (completeness + MOVs)
+    - No further rework is allowed after resubmission (rework_count = 1)
+
+Workflow:
+    1. Validate user authorization
+    2. Check assessment status is REWORK
+    3. Validate completeness using SubmissionValidationService
+    4. Update status back to SUBMITTED
+    5. Update submitted_at timestamp
+    6. Lock assessment again (is_locked becomes True)
+    7. Return success response
+
+Args:
+    assessment_id: ID of the assessment to resubmit
+    current_user: Current authenticated user
+    db: Database session
+
+Returns:
+    ResubmitAssessmentResponse with success status and rework count
+
+Raises:
+    HTTPException 403: User not authorized
+    HTTPException 400: Invalid status or validation failed
+    HTTPException 404: Assessment not found
+ * @summary Resubmit Assessment
+ */
+export const postAssessments$AssessmentIdResubmit = (
+    assessmentId: number,
+ options?: SecondParameter<typeof mutator>,signal?: AbortSignal
+) => {
+      
+      
+      return mutator<ResubmitAssessmentResponse>(
+      {url: `http://localhost:8000/api/v1/assessments/${assessmentId}/resubmit`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getPostAssessmentsAssessmentIdResubmitMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAssessments$AssessmentIdResubmit>>, TError,{assessmentId: number}, TContext>, request?: SecondParameter<typeof mutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof postAssessments$AssessmentIdResubmit>>, TError,{assessmentId: number}, TContext> => {
+
+const mutationKey = ['postAssessmentsAssessmentIdResubmit'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAssessments$AssessmentIdResubmit>>, {assessmentId: number}> = (props) => {
+          const {assessmentId} = props ?? {};
+
+          return  postAssessments$AssessmentIdResubmit(assessmentId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostAssessmentsAssessmentIdResubmitMutationResult = NonNullable<Awaited<ReturnType<typeof postAssessments$AssessmentIdResubmit>>>
     
+    export type PostAssessmentsAssessmentIdResubmitMutationError = HTTPValidationError
+
+    /**
+ * @summary Resubmit Assessment
+ */
+export const usePostAssessmentsAssessmentIdResubmit = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAssessments$AssessmentIdResubmit>>, TError,{assessmentId: number}, TContext>, request?: SecondParameter<typeof mutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof postAssessments$AssessmentIdResubmit>>,
+        TError,
+        {assessmentId: number},
+        TContext
+      > => {
+
+      const mutationOptions = getPostAssessmentsAssessmentIdResubmitMutationOptions(options);
+
+      return useMutation(mutationOptions );
+    }
+    /**
+ * Get the submission status of an assessment (Story 5.8).
+
+This endpoint provides comprehensive information about an assessment's submission state,
+including:
+- Current status (DRAFT, SUBMITTED, IN_REVIEW, REWORK, COMPLETED)
+- Whether the assessment is locked for editing
+- Rework information (count, comments, timestamp, requester)
+- Validation results (completeness check)
+
+This allows BLGU users to:
+- Check what needs to be completed before submission
+- View rework feedback from assessors
+- Understand current assessment state
+
+This allows Assessors to:
+- Check assessment status before taking action
+- View validation details
+
+Authorization:
+- BLGU_USER: Can only check their own assessments
+- ASSESSOR/VALIDATOR/MLGOO_DILG: Can check any assessment
+
+Args:
+    assessment_id: The ID of the assessment to check
+    current_user: Current authenticated user
+    db: Database session
+
+Returns:
+    SubmissionStatusResponse with comprehensive status information
+
+Raises:
+    HTTPException 404: Assessment not found
+    HTTPException 403: BLGU user trying to access another barangay's assessment
+ * @summary Get Submission Status
+ */
+export const getAssessments$AssessmentIdSubmissionStatus = (
+    assessmentId: number,
+ options?: SecondParameter<typeof mutator>,signal?: AbortSignal
+) => {
+      
+      
+      return mutator<SubmissionStatusResponse>(
+      {url: `http://localhost:8000/api/v1/assessments/${assessmentId}/submission-status`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+export const getGetAssessmentsAssessmentIdSubmissionStatusQueryKey = (assessmentId: number,) => {
+    return [`http://localhost:8000/api/v1/assessments/${assessmentId}/submission-status`] as const;
+    }
+
+    
+export const getGetAssessmentsAssessmentIdSubmissionStatusQueryOptions = <TData = Awaited<ReturnType<typeof getAssessments$AssessmentIdSubmissionStatus>>, TError = HTTPValidationError>(assessmentId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAssessments$AssessmentIdSubmissionStatus>>, TError, TData>, request?: SecondParameter<typeof mutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAssessmentsAssessmentIdSubmissionStatusQueryKey(assessmentId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAssessments$AssessmentIdSubmissionStatus>>> = ({ signal }) => getAssessments$AssessmentIdSubmissionStatus(assessmentId, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(assessmentId),  staleTime: 300000, refetchOnWindowFocus: false,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAssessments$AssessmentIdSubmissionStatus>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAssessmentsAssessmentIdSubmissionStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getAssessments$AssessmentIdSubmissionStatus>>>
+export type GetAssessmentsAssessmentIdSubmissionStatusQueryError = HTTPValidationError
+
+
+/**
+ * @summary Get Submission Status
+ */
+
+export function useGetAssessmentsAssessmentIdSubmissionStatus<TData = Awaited<ReturnType<typeof getAssessments$AssessmentIdSubmissionStatus>>, TError = HTTPValidationError>(
+ assessmentId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAssessments$AssessmentIdSubmissionStatus>>, TError, TData>, request?: SecondParameter<typeof mutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAssessmentsAssessmentIdSubmissionStatusQueryOptions(assessmentId,options)
+
+  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
