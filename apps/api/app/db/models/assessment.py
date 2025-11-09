@@ -6,7 +6,7 @@ from datetime import datetime
 from app.db.base import Base
 from app.db.enums import AssessmentStatus, ComplianceStatus, MOVStatus, ValidationStatus
 from sqlalchemy import JSON, Boolean, DateTime, Enum, ForeignKey, Integer, String, Text
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 
 class Assessment(Base):
@@ -29,8 +29,13 @@ class Assessment(Base):
         default=AssessmentStatus.DRAFT,
     )
 
-    # Rework tracking
+    # Rework tracking (Epic 5.0)
     rework_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    rework_requested_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    rework_requested_by: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    rework_comments: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Intelligence layer fields
     final_compliance_status: Mapped[ComplianceStatus | None] = mapped_column(
@@ -54,7 +59,10 @@ class Assessment(Base):
     validated_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
     # Relationships
-    blgu_user = relationship("User", back_populates="assessments")
+    blgu_user = relationship("User", foreign_keys=[blgu_user_id], back_populates="assessments")
+    rework_requester = relationship(
+        "User", foreign_keys=[rework_requested_by], post_update=True
+    )
     responses = relationship(
         "AssessmentResponse", back_populates="assessment", cascade="all, delete-orphan"
     )
@@ -64,6 +72,68 @@ class Assessment(Base):
     mov_files = relationship(
         "MOVFile", back_populates="assessment", cascade="all, delete-orphan"
     )
+
+    # Validation methods (Epic 5.0)
+    @validates('rework_count')
+    def validate_rework_count(self, key, value):
+        """
+        Validate that rework_count does not exceed 1.
+
+        Only one rework cycle is allowed per assessment in the Epic 5.0 workflow.
+
+        Args:
+            key: The attribute name being validated
+            value: The new value for rework_count
+
+        Returns:
+            The validated value
+
+        Raises:
+            ValueError: If rework_count exceeds 1
+        """
+        if value > 1:
+            raise ValueError(
+                "rework_count cannot exceed 1. Only one rework cycle is allowed per assessment."
+            )
+        if value < 0:
+            raise ValueError("rework_count cannot be negative.")
+        return value
+
+    # Helper properties (Epic 5.0)
+    @property
+    def can_request_rework(self) -> bool:
+        """
+        Check if rework can be requested for this assessment.
+
+        Rework can only be requested if:
+        1. The assessment is in SUBMITTED status (ready for review)
+        2. The rework count is less than 1 (no rework has been requested yet)
+
+        Returns:
+            True if rework can be requested, False otherwise
+        """
+        return self.status == AssessmentStatus.SUBMITTED and self.rework_count < 1
+
+    @property
+    def is_locked(self) -> bool:
+        """
+        Check if the assessment is locked for editing by the BLGU user.
+
+        An assessment is locked when it's in one of these states:
+        - SUBMITTED: Submitted for assessor review
+        - IN_REVIEW: Currently being reviewed by assessor
+        - COMPLETED: Final validation complete
+
+        Locked assessments cannot be edited by BLGU users.
+
+        Returns:
+            True if assessment is locked, False otherwise (DRAFT or REWORK states)
+        """
+        return self.status in [
+            AssessmentStatus.SUBMITTED,
+            AssessmentStatus.IN_REVIEW,
+            AssessmentStatus.COMPLETED,
+        ]
 
 
 class AssessmentResponse(Base):
