@@ -670,7 +670,7 @@
     - **Tech:** Pytest, locked state testing
     - **Time Estimate:** 4 hours
 
-- [ ] **5.9 Story: Pydantic Schemas for Submission Workflow**
+- [x] **5.9 Story: Pydantic Schemas for Submission Workflow** ✅
   - Create `SubmissionValidationResponse` schema with validation errors
   - Create `SubmitAssessmentRequest` schema (empty body, confirmation only)
   - Create `RequestReworkRequest` schema with comments field
@@ -679,27 +679,31 @@
   - Ensure proper Orval tags
   - Tech stack involved: Pydantic, Python type hints
   - Dependencies: Stories 5.5, 5.6, 5.7, 5.8 must be complete
+  - **Completed:** 2025-11-09
 
-  - [ ] **5.9.1 Atomic: Verify all submission schemas already created**
+  - [x] **5.9.1 Atomic: Verify all submission schemas already created**
     - **Files:** `apps/api/app/schemas/assessment.py`
     - **Dependencies:** Stories 5.5-5.8 must be complete
     - **Acceptance:** Review schemas created in Tasks 5.4.4, 5.5.5, 5.6.3, 5.6.8, 5.7.6, 5.8.3. Verify all schemas exist: SubmissionValidationResult, SubmitAssessmentResponse, RequestReworkRequest, RequestReworkResponse, ResubmitAssessmentResponse, SubmissionStatusResponse.
     - **Tech:** Schema review, code audit
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.9.2 Atomic: Add comprehensive docstrings to all submission schemas**
+  - [x] **5.9.2 Atomic: Add comprehensive docstrings to all submission schemas**
     - **Files:** `apps/api/app/schemas/assessment.py`
     - **Dependencies:** Task 5.9.1 must be complete
     - **Acceptance:** All submission-related schemas have comprehensive docstrings. Field descriptions added. Usage examples added where helpful.
     - **Tech:** Python docstrings, documentation
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.9.3 Atomic: Ensure all submission endpoints use proper tags**
+  - [x] **5.9.3 Atomic: Ensure all submission endpoints use proper tags**
     - **Files:** `apps/api/app/api/v1/assessments.py`
     - **Dependencies:** Stories 5.5-5.8 must be complete
     - **Acceptance:** All submission endpoints use tags=["assessments"]. Orval will generate types in assessments folder.
     - **Tech:** FastAPI tags
     - **Time Estimate:** 1 hour
+    - **Completed:** 2025-11-09
 
 - [ ] **5.10 Story: Type Generation for Submission APIs**
   - Run `pnpm generate-types` to generate TypeScript types and React Query hooks
