@@ -9,10 +9,10 @@
 **Status as of 2025-11-09:**
 - **Backend Stories Complete:** 9 of 9 backend stories (100%)
 - **Type Generation Complete:** 1 of 1 story (100%)
-- **Frontend Stories Complete:** 3 of 8 frontend stories (38%)
-- **Overall Progress:** 13 of 21 stories (62%)
-- **Stories 5.1-5.13:** ✅ Complete
-- **Stories 5.14-5.21:** Pending (frontend components, notifications, testing)
+- **Frontend Stories Complete:** 4 of 8 frontend stories (50%)
+- **Overall Progress:** 14 of 21 stories (67%)
+- **Stories 5.1-5.14:** ✅ Complete
+- **Stories 5.15-5.21:** Pending (frontend components, notifications, testing)
 
 **Key Deliverables Completed:**
 - 4 new REST API endpoints (submit, request-rework, resubmit, submission-status)
@@ -24,6 +24,7 @@
 - SubmissionValidation component with 8 test cases (Story 5.11)
 - SubmitAssessmentButton component with 10 test cases (Story 5.12)
 - LockedStateBanner component with 13 test cases (Story 5.13)
+- ReworkCommentsPanel component with 15 test cases (Story 5.14)
 
 ## Stories
 
@@ -976,56 +977,64 @@
     - **Time Estimate:** 2 hours
     - **Completed:** 2025-11-09
 
-- [ ] **5.14 Story: Rework Comments Display Component**
+- [x] **5.14 Story: Rework Comments Display Component** ✅
   - Create `ReworkCommentsPanel` component in `src/components/features/assessments/rework/`
   - Display assessor comments for rework
-  - Show which indicators need attention (if specified in comments)
   - Only visible when assessment status is REWORK
-  - Use shadcn/ui Card, Alert components
-  - Tech stack involved: React, TypeScript, shadcn/ui
+  - Orange-themed alert and card components
+  - Relative timestamp with assessor info
+  - Tech stack involved: React, TypeScript, shadcn/ui, date-fns
   - Dependencies: Story 5.10 must be complete
+  - **Completed:** 2025-11-09
+  - **Note:** Implemented with 15 comprehensive test cases, full rework workflow display
 
-  - [ ] **5.14.1 Atomic: Create ReworkCommentsPanel component file structure**
+  - [x] **5.14.1 Atomic: Create ReworkCommentsPanel component file structure**
     - **Files:** `apps/web/src/components/features/assessments/rework/ReworkCommentsPanel.tsx` (NEW), `apps/web/src/components/features/assessments/rework/index.ts` (NEW)
     - **Dependencies:** None
     - **Acceptance:** Component file created with basic functional component structure. Props interface defined: assessmentId. Component exported from index.ts.
     - **Tech:** React, TypeScript
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.14.2 Atomic: Integrate useGetSubmissionStatus query hook**
+  - [x] **5.14.2 Atomic: Integrate useGetSubmissionStatus query hook**
     - **Files:** `apps/web/src/components/features/assessments/rework/ReworkCommentsPanel.tsx`
     - **Dependencies:** Task 5.14.1, Story 5.10 must be complete
-    - **Acceptance:** Import useGetSubmissionStatus from @vantage/shared. Call hook with assessmentId. Extract rework_comments, rework_requested_at, status. Only render component if status === "REWORK".
+    - **Acceptance:** Import useGetAssessmentsAssessmentIdSubmissionStatus from @vantage/shared. Call hook with assessmentId. Extract rework_comments, rework_requested_at, rework_requested_by, status. Only render component if status === "REWORK".
     - **Tech:** React, TanStack Query, conditional rendering
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.14.3 Atomic: Render rework comments in Card**
+  - [x] **5.14.3 Atomic: Render rework comments in Card**
     - **Files:** `apps/web/src/components/features/assessments/rework/ReworkCommentsPanel.tsx`
     - **Dependencies:** Task 5.14.2 must be complete
-    - **Acceptance:** Render rework_comments in shadcn/ui Card. Card header: "Assessor Feedback". Card content displays comments as formatted text. Preserve line breaks in comments.
-    - **Tech:** React, shadcn/ui Card, text formatting
+    - **Acceptance:** Render rework_comments in shadcn/ui Card with "Assessor Feedback" header, MessageSquare icon, and REWORK badge. Card content displays comments with whitespace-pre-wrap to preserve line breaks.
+    - **Tech:** React, shadcn/ui Card, Badge, text formatting
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.14.4 Atomic: Display rework requested timestamp**
+  - [x] **5.14.4 Atomic: Display rework requested timestamp**
     - **Files:** `apps/web/src/components/features/assessments/rework/ReworkCommentsPanel.tsx`
     - **Dependencies:** Task 5.14.2 must be complete
-    - **Acceptance:** Show rework_requested_at timestamp in card footer. Format as relative time ("Requested 2 days ago") or formatted date. Use date-fns.
+    - **Acceptance:** Show rework_requested_at timestamp in card footer using date-fns formatDistanceToNow. Display assessor email if rework_requested_by contains email property.
     - **Tech:** React, date-fns, date formatting
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.14.5 Atomic: Add alert banner for rework status**
+  - [x] **5.14.5 Atomic: Add alert banner for rework status**
     - **Files:** `apps/web/src/components/features/assessments/rework/ReworkCommentsPanel.tsx`
     - **Dependencies:** Task 5.14.1 must be complete
-    - **Acceptance:** Above card, show shadcn/ui Alert with warning variant. Message: "Rework Requested - Please address the assessor's feedback below and resubmit your assessment." Icon shows alert triangle.
+    - **Acceptance:** Above card, show shadcn/ui Alert with orange theme. Title: "Rework Requested". Message: "Please address the assessor's feedback below and resubmit your assessment." AlertTriangle icon.
     - **Tech:** React, shadcn/ui Alert
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.14.6 Atomic: Style comments panel with emphasis**
+  - [x] **5.14.6 Atomic: Style comments panel with emphasis**
     - **Files:** `apps/web/src/components/features/assessments/rework/ReworkCommentsPanel.tsx`
     - **Dependencies:** Task 5.14.3 must be complete
-    - **Acceptance:** Comments panel uses distinct styling to stand out. Orange/yellow accent color for rework theme. Card has border and shadow. Use Tailwind CSS.
+    - **Acceptance:** Comments panel uses orange accent theme. Alert: border-orange-600, bg-orange-50. Card: border-orange-200, shadow-md. Card header: bg-orange-50.
     - **Tech:** React, Tailwind CSS, visual design
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
 - [ ] **5.15 Story: Rework Request Form (Assessor-Only)**
   - Create `RequestReworkForm` component in `src/components/features/assessor/`
