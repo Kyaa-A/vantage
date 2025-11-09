@@ -56,7 +56,7 @@
     - **Time Estimate:** 3 hours
     - **Completed:** 2025-11-09
 
-- [ ] **5.2 Story: Rework Tracking Schema**
+- [x] **5.2 Story: Rework Tracking Schema** ✅
   - Add `rework_count` integer column to assessments table (default 0, max 1)
   - Add `rework_requested_at` timestamp column
   - Add `rework_requested_by` foreign key to users table
@@ -64,62 +64,71 @@
   - Create Alembic migration
   - Tech stack involved: SQLAlchemy, Alembic, PostgreSQL
   - Dependencies: Story 5.1 must be complete
+  - **Completed:** 2025-11-09
 
-  - [ ] **5.2.1 Atomic: Create Alembic migration for rework tracking columns**
-    - **Files:** `apps/api/alembic/versions/xxxx_add_rework_tracking_columns.py` (NEW)
+  - [x] **5.2.1 Atomic: Create Alembic migration for rework tracking columns**
+    - **Files:** `apps/api/alembic/versions/ucz4sottgz50_add_rework_tracking_columns.py` (NEW)
     - **Dependencies:** Story 5.1 must be complete
     - **Acceptance:** Migration file created with `alembic revision --autogenerate -m "add rework tracking columns"`. File contains upgrade and downgrade functions.
     - **Tech:** Alembic, SQLAlchemy
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.2.2 Atomic: Add rework_count column with check constraint**
-    - **Files:** `apps/api/alembic/versions/xxxx_add_rework_tracking_columns.py`
+  - [x] **5.2.2 Atomic: Add rework_count column with check constraint**
+    - **Files:** `apps/api/alembic/versions/ucz4sottgz50_add_rework_tracking_columns.py`
     - **Dependencies:** Task 5.2.1 must be complete
     - **Acceptance:** Upgrade function adds rework_count INTEGER column with default 0, NOT NULL. Add CHECK constraint: rework_count >= 0 AND rework_count <= 1. Constraint named chk_rework_count_limit.
     - **Tech:** Alembic op.add_column(), CheckConstraint, PostgreSQL
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.2.3 Atomic: Add rework_requested_at timestamp column**
-    - **Files:** `apps/api/alembic/versions/xxxx_add_rework_tracking_columns.py`
+  - [x] **5.2.3 Atomic: Add rework_requested_at timestamp column**
+    - **Files:** `apps/api/alembic/versions/ucz4sottgz50_add_rework_tracking_columns.py`
     - **Dependencies:** Task 5.2.1 must be complete
     - **Acceptance:** Upgrade function adds rework_requested_at TIMESTAMP column, nullable. Column stores when rework was requested by assessor.
     - **Tech:** Alembic op.add_column(), PostgreSQL TIMESTAMP
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.2.4 Atomic: Add rework_requested_by foreign key column**
-    - **Files:** `apps/api/alembic/versions/xxxx_add_rework_tracking_columns.py`
+  - [x] **5.2.4 Atomic: Add rework_requested_by foreign key column**
+    - **Files:** `apps/api/alembic/versions/ucz4sottgz50_add_rework_tracking_columns.py`
     - **Dependencies:** Task 5.2.1 must be complete
     - **Acceptance:** Upgrade function adds rework_requested_by INTEGER column, nullable. Foreign key to users.id. SET NULL on delete. Constraint named fk_assessment_rework_requested_by.
     - **Tech:** Alembic op.add_column(), ForeignKeyConstraint
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.2.5 Atomic: Add rework_comments text column**
-    - **Files:** `apps/api/alembic/versions/xxxx_add_rework_tracking_columns.py`
+  - [x] **5.2.5 Atomic: Add rework_comments text column**
+    - **Files:** `apps/api/alembic/versions/ucz4sottgz50_add_rework_tracking_columns.py`
     - **Dependencies:** Task 5.2.1 must be complete
     - **Acceptance:** Upgrade function adds rework_comments TEXT column, nullable. Stores assessor's rework feedback to BLGU user.
     - **Tech:** Alembic op.add_column(), PostgreSQL TEXT
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.2.6 Atomic: Add index on rework_requested_by for query performance**
-    - **Files:** `apps/api/alembic/versions/xxxx_add_rework_tracking_columns.py`
+  - [x] **5.2.6 Atomic: Add index on rework_requested_by for query performance**
+    - **Files:** `apps/api/alembic/versions/ucz4sottgz50_add_rework_tracking_columns.py`
     - **Dependencies:** Task 5.2.4 must be complete
     - **Acceptance:** Upgrade function creates index: idx_assessments_rework_requested_by. Improves query performance for assessor rework tracking.
     - **Tech:** Alembic op.create_index()
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.2.7 Atomic: Implement downgrade function**
-    - **Files:** `apps/api/alembic/versions/xxxx_add_rework_tracking_columns.py`
+  - [x] **5.2.7 Atomic: Implement downgrade function**
+    - **Files:** `apps/api/alembic/versions/ucz4sottgz50_add_rework_tracking_columns.py`
     - **Dependencies:** Tasks 5.2.2-5.2.6 must be complete
     - **Acceptance:** Downgrade function drops index, drops foreign key, drops all rework columns. Migration rollback succeeds.
     - **Tech:** Alembic op.drop_column(), op.drop_index()
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.2.8 Atomic: Test migration upgrade and downgrade**
+  - [x] **5.2.8 Atomic: Test migration upgrade and downgrade**
     - **Files:** `apps/api/tests/migrations/test_rework_tracking_migration.py` (NEW)
     - **Dependencies:** Tasks 5.2.2-5.2.7 must be complete
     - **Acceptance:** Migration applies successfully. All columns exist with correct types and constraints. Check constraint enforces rework_count <= 1. Rollback removes all columns.
     - **Tech:** Pytest, Alembic, SQLAlchemy inspection
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
 - [ ] **5.3 Story: SQLAlchemy Model Updates for Rework**
   - Update Assessment model with rework tracking fields
