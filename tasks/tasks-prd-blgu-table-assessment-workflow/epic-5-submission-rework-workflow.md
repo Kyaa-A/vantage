@@ -601,47 +601,53 @@
     - **Tech:** Pytest, role-based testing
     - **Time Estimate:** 3 hours
 
-- [ ] **5.8 Story: Backend API for Submission Status Check**
+- [x] **5.8 Story: Backend API for Submission Status Check** ✅
   - Create `GET /api/v1/assessments/{assessment_id}/submission-status` endpoint
   - Return current status, rework_count, rework_comments, locked state
   - Include submission validation result (completeness check)
   - Tech stack involved: FastAPI, Pydantic schemas
   - Dependencies: Story 5.3 must be complete
+  - **Completed:** 2025-11-09
 
-  - [ ] **5.8.1 Atomic: Create GET submission-status endpoint structure**
+  - [x] **5.8.1 Atomic: Create GET submission-status endpoint structure**
     - **Files:** `apps/api/app/api/v1/assessments.py`
     - **Dependencies:** Story 5.3 must be complete
     - **Acceptance:** Endpoint defined: @router.get("/{assessment_id}/submission-status", tags=["assessments"]). Accepts path param: assessment_id. Dependencies: get_db, get_current_user. Returns 200 status code.
     - **Tech:** FastAPI, dependency injection
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.8.2 Atomic: Load assessment and check permissions**
+  - [x] **5.8.2 Atomic: Load assessment and check permissions**
     - **Files:** `apps/api/app/api/v1/assessments.py`
     - **Dependencies:** Task 5.8.1 must be complete
     - **Acceptance:** Endpoint loads assessment from database. If BLGU_USER, checks ownership. Returns 403 if unauthorized. Assessors can check any assessment.
     - **Tech:** SQLAlchemy query, authorization
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.8.3 Atomic: Create SubmissionStatusResponse Pydantic schema**
+  - [x] **5.8.3 Atomic: Create SubmissionStatusResponse Pydantic schema**
     - **Files:** `apps/api/app/schemas/assessment.py`
     - **Dependencies:** Story 5.4 must be complete (SubmissionValidationResult exists)
     - **Acceptance:** Pydantic schema created: SubmissionStatusResponse with fields: assessment_id, status (AssessmentStatus), is_locked (bool), rework_count (int), rework_comments (Optional[str]), rework_requested_at (Optional[datetime]), validation_result (SubmissionValidationResult). Schema used for API response.
     - **Tech:** Pydantic, nested schemas, Python type hints
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.8.4 Atomic: Run validation check for current completeness**
+  - [x] **5.8.4 Atomic: Run validation check for current completeness**
     - **Files:** `apps/api/app/api/v1/assessments.py`
     - **Dependencies:** Task 5.8.1, Story 5.4 must be complete
     - **Acceptance:** Endpoint calls submission_validation_service.validate_submission(assessment_id, db). Returns current validation status. Allows BLGU to see what needs completion before submit/resubmit.
     - **Tech:** Service integration
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.8.5 Atomic: Return SubmissionStatusResponse with all data**
+  - [x] **5.8.5 Atomic: Return SubmissionStatusResponse with all data**
     - **Files:** `apps/api/app/api/v1/assessments.py`
     - **Dependencies:** Tasks 5.8.3, 5.8.4 must be complete
     - **Acceptance:** Endpoint returns SubmissionStatusResponse with: current status, is_locked (from assessment.is_locked property), rework_count, rework_comments, rework_requested_at, validation_result. Response model configured.
     - **Tech:** FastAPI response models, Pydantic
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
   - [ ] **5.8.6 Atomic: Test submission-status endpoint for DRAFT assessment**
     - **Files:** `apps/api/tests/api/v1/test_assessments.py`
