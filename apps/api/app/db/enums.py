@@ -35,12 +35,31 @@ class AreaType(str, enum.Enum):
 class AssessmentStatus(str, enum.Enum):
     """
     Enum for assessment status throughout the workflow.
+
+    New workflow states (Epic 5.0):
+    - DRAFT: Initial state, assessment is being worked on by BLGU
+    - SUBMITTED: BLGU has submitted, assessment is locked for editing
+    - IN_REVIEW: Assessor is actively reviewing the submission
+    - REWORK: Assessor has requested changes, assessment is unlocked for BLGU
+    - COMPLETED: Final validation complete, assessment is finalized
+
+    Legacy states (preserved for backward compatibility):
+    - SUBMITTED_FOR_REVIEW: Old submission state (maps to SUBMITTED)
+    - VALIDATED: Old validation state (maps to COMPLETED)
+    - NEEDS_REWORK: Old rework state (maps to REWORK)
     """
 
-    DRAFT = "Draft"
-    SUBMITTED_FOR_REVIEW = "Submitted for Review"
-    VALIDATED = "Validated"
-    NEEDS_REWORK = "Needs Rework"
+    # New workflow states (Epic 5.0)
+    DRAFT = "DRAFT"
+    SUBMITTED = "SUBMITTED"
+    IN_REVIEW = "IN_REVIEW"
+    REWORK = "REWORK"
+    COMPLETED = "COMPLETED"
+
+    # Legacy states (backward compatibility)
+    SUBMITTED_FOR_REVIEW = "SUBMITTED_FOR_REVIEW"
+    VALIDATED = "VALIDATED"
+    NEEDS_REWORK = "NEEDS_REWORK"
 
 
 class MOVStatus(str, enum.Enum):
