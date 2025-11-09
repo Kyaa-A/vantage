@@ -9,10 +9,10 @@
 **Status as of 2025-11-09:**
 - **Backend Stories Complete:** 9 of 9 backend stories (100%)
 - **Type Generation Complete:** 1 of 1 story (100%)
-- **Frontend Stories Complete:** 4 of 8 frontend stories (50%)
-- **Overall Progress:** 14 of 21 stories (67%)
-- **Stories 5.1-5.14:** ✅ Complete
-- **Stories 5.15-5.21:** Pending (frontend components, notifications, testing)
+- **Frontend Stories Complete:** 5 of 8 frontend stories (63%)
+- **Overall Progress:** 15 of 21 stories (71%)
+- **Stories 5.1-5.15:** ✅ Complete
+- **Stories 5.16-5.21:** Pending (frontend components, notifications, testing)
 
 **Key Deliverables Completed:**
 - 4 new REST API endpoints (submit, request-rework, resubmit, submission-status)
@@ -25,6 +25,7 @@
 - SubmitAssessmentButton component with 10 test cases (Story 5.12)
 - LockedStateBanner component with 13 test cases (Story 5.13)
 - ReworkCommentsPanel component with 15 test cases (Story 5.14)
+- RequestReworkForm component with 18 test cases (Story 5.15)
 
 ## Stories
 
@@ -1036,78 +1037,89 @@
     - **Time Estimate:** 3 hours
     - **Completed:** 2025-11-09
 
-- [ ] **5.15 Story: Rework Request Form (Assessor-Only)**
+- [x] **5.15 Story: Rework Request Form (Assessor-Only)** ✅
   - Create `RequestReworkForm` component in `src/components/features/assessor/`
-  - Require assessor role to access
-  - Include textarea for rework comments (required field)
-  - Integrate `useRequestRework` mutation hook
-  - Show confirmation dialog before requesting rework
-  - Disable if rework_count >= 1
-  - Tech stack involved: React, TypeScript, shadcn/ui Textarea, Dialog, Button
+  - Textarea for rework comments with 10-character minimum validation
+  - Character count indicator with helpful feedback
+  - Confirmation dialog with comment preview and warnings
+  - Disabled state when rework limit reached (reworkCount >= 1)
+  - Success/error toast notifications
+  - Tech stack involved: React, TypeScript, shadcn/ui Textarea, AlertDialog, Alert, Button, Label
   - Dependencies: Story 5.10 must be complete
+  - **Completed:** 2025-11-09
+  - **Note:** Implemented with 18 comprehensive test cases, assessor-only form
 
-  - [ ] **5.15.1 Atomic: Create RequestReworkForm component file structure**
-    - **Files:** `apps/web/src/components/features/assessor/RequestReworkForm.tsx` (NEW), `apps/web/src/components/features/assessor/index.ts` (create if not exists)
+  - [x] **5.15.1 Atomic: Create RequestReworkForm component file structure**
+    - **Files:** `apps/web/src/components/features/assessor/RequestReworkForm.tsx` (NEW), `apps/web/src/components/features/assessor/index.ts`
     - **Dependencies:** None
     - **Acceptance:** Component file created with basic functional component structure. Props interface defined: assessmentId, reworkCount, onSuccess. Component exported from index.ts.
     - **Tech:** React, TypeScript
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.15.2 Atomic: Integrate useRequestRework mutation hook**
+  - [x] **5.15.2 Atomic: Integrate useRequestRework mutation hook**
     - **Files:** `apps/web/src/components/features/assessor/RequestReworkForm.tsx`
     - **Dependencies:** Task 5.15.1, Story 5.10 must be complete
-    - **Acceptance:** Import useRequestRework from @vantage/shared. Call hook in component. Store mutation function. Configure onSuccess callback.
+    - **Acceptance:** Import usePostAssessmentsAssessmentIdRequestRework from @vantage/shared. Call hook in component. Store mutation function. Configure onSuccess and onError callbacks.
     - **Tech:** React, TanStack Query, generated hooks
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.15.3 Atomic: Render textarea for rework comments**
+  - [x] **5.15.3 Atomic: Render textarea for rework comments**
     - **Files:** `apps/web/src/components/features/assessor/RequestReworkForm.tsx`
     - **Dependencies:** Task 5.15.1 must be complete
-    - **Acceptance:** Render shadcn/ui Textarea for comments input. Label: "Rework Comments". Placeholder: "Explain what needs to be revised...". Required field. Min length 10 characters. Use form state (useState or react-hook-form).
-    - **Tech:** React, shadcn/ui Textarea, form state
+    - **Acceptance:** Render shadcn/ui Textarea with Label "Rework Comments". Placeholder: "Explain what needs to be revised... (minimum 10 characters)". Required field indicator (*). Uses useState for form state.
+    - **Tech:** React, shadcn/ui Textarea, Label, form state
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.15.4 Atomic: Add character count indicator**
+  - [x] **5.15.4 Atomic: Add character count indicator**
     - **Files:** `apps/web/src/components/features/assessor/RequestReworkForm.tsx`
     - **Dependencies:** Task 5.15.3 must be complete
-    - **Acceptance:** Below textarea, show character count: "X characters (minimum 10)". Count updates as user types. Validate min length before enabling submit.
+    - **Acceptance:** Below textarea, shows real-time count: "X character(s) (minimum 10)". When below minimum, displays "Need X more" in red. Validates before enabling submit button.
     - **Tech:** React, state management, validation
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.15.5 Atomic: Create confirmation dialog**
+  - [x] **5.15.5 Atomic: Create confirmation dialog**
     - **Files:** `apps/web/src/components/features/assessor/RequestReworkForm.tsx`
     - **Dependencies:** Task 5.15.1 must be complete
-    - **Acceptance:** Implement confirmation dialog using shadcn/ui AlertDialog. Dialog shows preview of comments. Asks "Are you sure you want to request rework?". Warning: "This assessment will be sent back to the BLGU for revisions." Confirm and Cancel buttons.
+    - **Acceptance:** AlertDialog with "Request Rework?" title. Shows preview of comments in muted box. Warning section with orange background listing consequences: "Send back to BLGU", "Change status to REWORK", "Use one rework cycle". Confirm and Cancel buttons.
     - **Tech:** React, shadcn/ui AlertDialog
     - **Time Estimate:** 4 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.15.6 Atomic: Wire Request Rework button to confirmation**
+  - [x] **5.15.6 Atomic: Wire Request Rework button to confirmation**
     - **Files:** `apps/web/src/components/features/assessor/RequestReworkForm.tsx`
     - **Dependencies:** Tasks 5.15.2, 5.15.3, 5.15.5 must be complete
-    - **Acceptance:** Clicking Request Rework button opens confirmation dialog. Button disabled if comments < 10 characters. Clicking Confirm calls requestRework mutation with comments. Clicking Cancel closes dialog.
+    - **Acceptance:** Button opens confirmation dialog only if comments >= 10 chars. Button disabled otherwise. Confirm button calls requestRework mutation with trimmed comments. Cancel closes dialog.
     - **Tech:** React, event handlers, validation
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.15.7 Atomic: Disable form if rework limit reached**
+  - [x] **5.15.7 Atomic: Disable form if rework limit reached**
     - **Files:** `apps/web/src/components/features/assessor/RequestReworkForm.tsx`
     - **Dependencies:** Task 5.15.1 must be complete
-    - **Acceptance:** If reworkCount >= 1, disable entire form. Show alert: "Rework limit reached. This BLGU has already used their one rework cycle." Use shadcn/ui Alert with destructive variant.
+    - **Acceptance:** If reworkCount >= 1, replaces entire form with red Alert: "Rework Limit Reached". Message: "This BLGU has already used their one rework cycle. No further rework requests are allowed."
     - **Tech:** React, conditional rendering, shadcn/ui Alert
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.15.8 Atomic: Handle request rework success**
+  - [x] **5.15.8 Atomic: Handle request rework success**
     - **Files:** `apps/web/src/components/features/assessor/RequestReworkForm.tsx`
     - **Dependencies:** Task 5.15.2 must be complete
-    - **Acceptance:** On success, show success toast: "Rework requested successfully. BLGU has been notified." Clear comments textarea. Call onSuccess callback. Use shadcn/ui Toast.
+    - **Acceptance:** On success, shows toast: "Rework Requested - The BLGU has been notified and can now make revisions". Clears comments textarea. Closes dialog. Calls onSuccess callback.
     - **Tech:** React, shadcn/ui Toast, state reset
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.15.9 Atomic: Handle request rework error**
+  - [x] **5.15.9 Atomic: Handle request rework error**
     - **Files:** `apps/web/src/components/features/assessor/RequestReworkForm.tsx`
     - **Dependencies:** Task 5.15.2 must be complete
-    - **Acceptance:** On error, show error toast with server error message. If rework limit error, show specific message. Keep form data intact for retry. Use shadcn/ui Toast.
-    - **Tech:** React, error handling
+    - **Acceptance:** On error, shows error toast with server message. Detects rework limit errors and shows specific message. Closes dialog but keeps form data. Form remains filled for retry.
+    - **Tech:** React, error handling, shadcn/ui Toast
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
 - [ ] **5.16 Story: Resubmit Assessment Button (BLGU-Only)**
   - Create `ResubmitAssessmentButton` component in `src/components/features/assessments/submission/`
