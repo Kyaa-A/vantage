@@ -9,10 +9,10 @@
 **Status as of 2025-11-09:**
 - **Backend Stories Complete:** 9 of 9 backend stories (100%)
 - **Type Generation Complete:** 1 of 1 story (100%)
-- **Frontend Stories Complete:** 1 of 8 frontend stories (13%)
-- **Overall Progress:** 11 of 21 stories (52%)
-- **Stories 5.1-5.11:** ✅ Complete
-- **Stories 5.12-5.21:** Pending (frontend components, notifications, testing)
+- **Frontend Stories Complete:** 2 of 8 frontend stories (25%)
+- **Overall Progress:** 12 of 21 stories (57%)
+- **Stories 5.1-5.12:** ✅ Complete
+- **Stories 5.13-5.21:** Pending (frontend components, notifications, testing)
 
 **Key Deliverables Completed:**
 - 4 new REST API endpoints (submit, request-rework, resubmit, submission-status)
@@ -21,7 +21,8 @@
 - Full Pydantic schema documentation
 - 43 backend unit tests passing
 - TypeScript types and React Query hooks generated for all Epic 5.0 endpoints
-- SubmissionValidation component with comprehensive test coverage (Story 5.11)
+- SubmissionValidation component with 8 test cases (Story 5.11)
+- SubmitAssessmentButton component with 10 test cases (Story 5.12)
 
 ## Stories
 
@@ -848,58 +849,60 @@
     - **Tech:** React, shadcn/ui Alert, error handling
     - **Time Estimate:** 2 hours
 
-- [ ] **5.12 Story: Submit Assessment Button and Confirmation**
+- [x] **5.12 Story: Submit Assessment Button and Confirmation** ✅
   - Create `SubmitAssessmentButton` component in `src/components/features/assessments/submission/`
-  - Integrate `useSubmitAssessment` mutation hook
+  - Integrate `usePostAssessmentsAssessmentIdSubmit` mutation hook
   - Show validation errors if submission fails
   - Show confirmation dialog before submission
   - Disable button if assessment is incomplete
-  - Tech stack involved: React, TypeScript, shadcn/ui Dialog, Button, TanStack Query mutations
+  - Tech stack involved: React, TypeScript, shadcn/ui AlertDialog, Button, Tooltip, TanStack Query mutations
   - Dependencies: Stories 5.10, 5.11 must be complete
+  - **Completed:** 2025-11-09
+  - **Note:** Implemented with 10 comprehensive test cases and toast notifications
 
-  - [ ] **5.12.1 Atomic: Create SubmitAssessmentButton component file structure**
+  - [x] **5.12.1 Atomic: Create SubmitAssessmentButton component file structure**
     - **Files:** `apps/web/src/components/features/assessments/submission/SubmitAssessmentButton.tsx` (NEW)
     - **Dependencies:** None
     - **Acceptance:** Component file created with basic functional component structure. Props interface defined: assessmentId, validationResult, onSuccess. Component exported from index.ts.
     - **Tech:** React, TypeScript
     - **Time Estimate:** 2 hours
 
-  - [ ] **5.12.2 Atomic: Integrate useSubmitAssessment mutation hook**
+  - [x] **5.12.2 Atomic: Integrate useSubmitAssessment mutation hook**
     - **Files:** `apps/web/src/components/features/assessments/submission/SubmitAssessmentButton.tsx`
     - **Dependencies:** Task 5.12.1, Story 5.10 must be complete
     - **Acceptance:** Import useSubmitAssessment from @vantage/shared. Call hook in component. Store mutation function. Configure onSuccess callback to call props.onSuccess.
     - **Tech:** React, TanStack Query, generated hooks
     - **Time Estimate:** 3 hours
 
-  - [ ] **5.12.3 Atomic: Create confirmation dialog**
+  - [x] **5.12.3 Atomic: Create confirmation dialog**
     - **Files:** `apps/web/src/components/features/assessments/submission/SubmitAssessmentButton.tsx`
     - **Dependencies:** Task 5.12.1 must be complete
     - **Acceptance:** Implement confirmation dialog using shadcn/ui AlertDialog. Dialog asks "Are you sure you want to submit this assessment?". Show warning: "You will not be able to edit after submission unless rework is requested." Confirm and Cancel buttons.
     - **Tech:** React, shadcn/ui AlertDialog, state management
     - **Time Estimate:** 4 hours
 
-  - [ ] **5.12.4 Atomic: Wire Submit button to confirmation dialog**
+  - [x] **5.12.4 Atomic: Wire Submit button to confirmation dialog**
     - **Files:** `apps/web/src/components/features/assessments/submission/SubmitAssessmentButton.tsx`
     - **Dependencies:** Tasks 5.12.2, 5.12.3 must be complete
     - **Acceptance:** Clicking Submit button opens confirmation dialog. Clicking Confirm in dialog calls submitAssessment mutation. Clicking Cancel closes dialog without action.
     - **Tech:** React, event handlers, state management
     - **Time Estimate:** 3 hours
 
-  - [ ] **5.12.5 Atomic: Disable button if assessment incomplete**
+  - [x] **5.12.5 Atomic: Disable button if assessment incomplete**
     - **Files:** `apps/web/src/components/features/assessments/submission/SubmitAssessmentButton.tsx`
     - **Dependencies:** Task 5.12.1 must be complete
     - **Acceptance:** Button disabled if validationResult.is_valid === false. Show tooltip: "Complete all indicators and upload required MOVs before submitting". Use shadcn/ui Tooltip.
     - **Tech:** React, conditional logic, shadcn/ui Tooltip
     - **Time Estimate:** 3 hours
 
-  - [ ] **5.12.6 Atomic: Show loading state during submission**
+  - [x] **5.12.6 Atomic: Show loading state during submission**
     - **Files:** `apps/web/src/components/features/assessments/submission/SubmitAssessmentButton.tsx`
     - **Dependencies:** Task 5.12.2 must be complete
     - **Acceptance:** While mutation is pending, disable button and show loading spinner. Use mutation.isPending from TanStack Query. Button text changes to "Submitting...".
     - **Tech:** React, TanStack Query loading states, UI feedback
     - **Time Estimate:** 2 hours
 
-  - [ ] **5.12.7 Atomic: Handle submission success with toast**
+  - [x] **5.12.7 Atomic: Handle submission success with toast**
     - **Files:** `apps/web/src/components/features/assessments/submission/SubmitAssessmentButton.tsx`
     - **Dependencies:** Task 5.12.2 must be complete
     - **Acceptance:** On submission success, show success toast: "Assessment submitted successfully!". Close confirmation dialog. Call onSuccess callback to refresh parent component. Use shadcn/ui Toast.
