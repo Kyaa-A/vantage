@@ -528,6 +528,24 @@ class ResubmitAssessmentResponse(BaseModel):
     rework_count: int
 
 
+class SubmissionStatusResponse(BaseModel):
+    """
+    Response schema for submission status check (Story 5.8).
+
+    Provides comprehensive information about an assessment's submission state,
+    including validation status, rework details, and locked state.
+    """
+
+    assessment_id: int
+    status: AssessmentStatus
+    is_locked: bool
+    rework_count: int
+    rework_comments: Optional[str] = None
+    rework_requested_at: Optional[datetime] = None
+    rework_requested_by: Optional[int] = None
+    validation_result: SubmissionValidationResult
+
+
 # ============================================================================
 # Update forward references for nested models
 # ============================================================================

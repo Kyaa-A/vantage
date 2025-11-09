@@ -26,6 +26,7 @@ from app.schemas.assessment import (
     RequestReworkResponse,
     ResubmitAssessmentResponse,
     SubmissionValidationResult,
+    SubmissionStatusResponse,
 )
 from app.db.models.assessment import MOV as MOVModel, Assessment
 from app.services.assessment_service import assessment_service
@@ -1394,4 +1395,88 @@ def resubmit_assessment(
         assessment_id=assessment.id,
         resubmitted_at=assessment.submitted_at,
         rework_count=assessment.rework_count
+    )
+
+
+@router.get(
+    "/{assessment_id}/submission-status",
+    response_model=SubmissionStatusResponse,
+    tags=["assessments"],
+    status_code=status.HTTP_200_OK
+)
+def get_submission_status(
+    assessment_id: int,
+    current_user: User = Depends(deps.get_current_active_user),
+    db: Session = Depends(deps.get_db),
+) -> SubmissionStatusResponse:
+    """
+    Get the submission status of an assessment (Story 5.8).
+
+    This endpoint provides comprehensive information about an assessment's submission state,
+    including:
+    - Current status (DRAFT, SUBMITTED, IN_REVIEW, REWORK, COMPLETED)
+    - Whether the assessment is locked for editing
+    - Rework information (count, comments, timestamp, requester)
+    - Validation results (completeness check)
+
+    This allows BLGU users to:
+    - Check what needs to be completed before submission
+    - View rework feedback from assessors
+    - Understand current assessment state
+
+    This allows Assessors to:
+    - Check assessment status before taking action
+    - View validation details
+
+    Authorization:
+    - BLGU_USER: Can only check their own assessments
+    - ASSESSOR/VALIDATOR/MLGOO_DILG: Can check any assessment
+
+    Args:
+        assessment_id: The ID of the assessment to check
+        current_user: Current authenticated user
+        db: Database session
+
+    Returns:
+        SubmissionStatusResponse with comprehensive status information
+
+    Raises:
+        HTTPException 404: Assessment not found
+        HTTPException 403: BLGU user trying to access another barangay's assessment
+    """
+    # Load the assessment
+    assessment = db.query(Assessment).filter_by(id=assessment_id).first()
+    if not assessment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Assessment {assessment_id} not found"
+        )
+
+    # Authorization check
+    # BLGU users can only check their own assessments
+    if current_user.role == UserRole.BLGU_USER:
+        if assessment.blgu_user_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can only check the status of your own assessments"
+            )
+
+    # Assessors/Validators can check any assessment (no additional check needed)
+
+    # Run validation check to get current completeness status
+    validation_result = submission_validation_service.validate_submission(
+        assessment_id=assessment_id,
+        db=db
+    )
+
+    # Return comprehensive status response
+    return SubmissionStatusResponse(
+        assessment_id=assessment.id,
+        status=assessment.status,
+        is_locked=assessment.is_locked,
+        rework_count=assessment.rework_count,
+        rework_comments=assessment.rework_comments,
+        rework_requested_at=assessment.rework_requested_at,
+        rework_requested_by=assessment.rework_requested_by,
+        validation_result=validation_result
     )
