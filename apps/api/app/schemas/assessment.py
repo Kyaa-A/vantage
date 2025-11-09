@@ -482,6 +482,53 @@ class MOVFileListResponse(BaseModel):
 
 
 # ============================================================================
+# Submission Workflow Schemas (Epic 5.0)
+# ============================================================================
+
+
+class SubmitAssessmentResponse(BaseModel):
+    """Response schema for assessment submission (Story 5.5)."""
+
+    success: bool
+    message: str
+    assessment_id: int
+    submitted_at: datetime
+
+
+class RequestReworkRequest(BaseModel):
+    """Request schema for requesting rework on an assessment (Story 5.6)."""
+
+    comments: str  # Assessor's feedback to BLGU user
+
+    @classmethod
+    def validate_comments(cls, v):
+        """Validate that comments are not empty and have minimum length."""
+        if not v or len(v.strip()) < 10:
+            raise ValueError("Rework comments must be at least 10 characters long")
+        return v.strip()
+
+
+class RequestReworkResponse(BaseModel):
+    """Response schema for rework request (Story 5.6)."""
+
+    success: bool
+    message: str
+    assessment_id: int
+    rework_count: int
+    rework_requested_at: datetime
+
+
+class ResubmitAssessmentResponse(BaseModel):
+    """Response schema for assessment resubmission (Story 5.7)."""
+
+    success: bool
+    message: str
+    assessment_id: int
+    resubmitted_at: datetime
+    rework_count: int
+
+
+# ============================================================================
 # Update forward references for nested models
 # ============================================================================
 

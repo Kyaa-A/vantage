@@ -21,9 +21,15 @@ from app.schemas.assessment import (
     AnswerResponse,
     CompletenessValidationResponse,
     IncompleteIndicatorDetail,
+    SubmitAssessmentResponse,
+    RequestReworkRequest,
+    RequestReworkResponse,
+    ResubmitAssessmentResponse,
+    SubmissionValidationResult,
 )
-from app.db.models.assessment import MOV as MOVModel
+from app.db.models.assessment import MOV as MOVModel, Assessment
 from app.services.assessment_service import assessment_service
+from app.services.submission_validation_service import submission_validation_service
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
@@ -1067,4 +1073,325 @@ async def validate_assessment_completeness(
         complete_indicators=complete_count,
         incomplete_indicators=incomplete_count,
         incomplete_details=incomplete_details
+    )
+
+
+# ============================================================================
+# Epic 5.0: Submission & Rework Workflow Endpoints
+# ============================================================================
+
+
+@router.post(
+    "/{assessment_id}/submit",
+    response_model=SubmitAssessmentResponse,
+    tags=["assessments"],
+    status_code=status.HTTP_200_OK
+)
+def submit_assessment(
+    assessment_id: int,
+    current_user: User = Depends(deps.get_current_active_user),
+    db: Session = Depends(deps.get_db),
+) -> SubmitAssessmentResponse:
+    """
+    Submit an assessment for assessor review (Story 5.5).
+
+    This endpoint allows a BLGU user to submit their completed assessment.
+    The assessment must pass validation (all indicators complete, all MOVs uploaded)
+    before submission is allowed.
+
+    Authorization:
+        - BLGU_USER role required
+        - User must own the assessment (assessment.blgu_user_id == user.id)
+
+    Workflow:
+        1. Validate user authorization
+        2. Validate assessment completeness using SubmissionValidationService
+        3. If valid, update status to SUBMITTED and set submitted_at timestamp
+        4. Lock assessment for editing (is_locked property becomes True)
+        5. Return success response
+
+    Args:
+        assessment_id: ID of the assessment to submit
+        current_user: Current authenticated user
+        db: Database session
+
+    Returns:
+        SubmitAssessmentResponse with success status and timestamp
+
+    Raises:
+        HTTPException 403: User not authorized to submit this assessment
+        HTTPException 400: Assessment validation failed (incomplete or missing MOVs)
+        HTTPException 404: Assessment not found
+    """
+    # Authorization check: must be BLGU_USER
+    if current_user.role != UserRole.BLGU_USER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only BLGU users can submit assessments"
+        )
+
+    # Load the assessment
+    assessment = db.query(Assessment).filter_by(id=assessment_id).first()
+    if not assessment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Assessment {assessment_id} not found"
+        )
+
+    # Check ownership: user must own this assessment
+    if assessment.blgu_user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only submit your own assessments"
+        )
+
+    # Validate assessment completeness using SubmissionValidationService
+    validation_result = submission_validation_service.validate_submission(
+        assessment_id=assessment_id,
+        db=db
+    )
+
+    if not validation_result.is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "message": validation_result.error_message,
+                "incomplete_indicators": validation_result.incomplete_indicators,
+                "missing_movs": validation_result.missing_movs
+            }
+        )
+
+    # Update assessment status to SUBMITTED
+    assessment.status = AssessmentStatus.SUBMITTED
+    assessment.submitted_at = datetime.utcnow()
+    db.commit()
+    db.refresh(assessment)
+
+    # TODO (Story 5.19): Send notification to assigned assessor
+
+    return SubmitAssessmentResponse(
+        success=True,
+        message="Assessment submitted successfully",
+        assessment_id=assessment.id,
+        submitted_at=assessment.submitted_at
+    )
+
+
+@router.post(
+    "/{assessment_id}/request-rework",
+    response_model=RequestReworkResponse,
+    tags=["assessments"],
+    status_code=status.HTTP_200_OK
+)
+def request_rework(
+    assessment_id: int,
+    request_data: RequestReworkRequest,
+    current_user: User = Depends(deps.get_current_active_user),
+    db: Session = Depends(deps.get_db),
+) -> RequestReworkResponse:
+    """
+    Request rework on a submitted assessment (Story 5.6).
+
+    This endpoint allows an assessor/validator to request changes to a BLGU submission.
+    Only one rework cycle is allowed per assessment (enforced by rework_count check).
+
+    Authorization:
+        - ASSESSOR, VALIDATOR, or MLGOO_DILG role required
+        - BLGU_USER role is forbidden
+
+    Business Rules:
+        - Assessment must be in SUBMITTED status
+        - rework_count must be less than 1 (only one rework cycle allowed)
+        - Comments are required (min 10 characters)
+
+    Workflow:
+        1. Validate user authorization (role check)
+        2. Load assessment and check status is SUBMITTED
+        3. Check rework_count < 1
+        4. Update status to REWORK
+        5. Increment rework_count
+        6. Record rework_requested_by, rework_requested_at, rework_comments
+        7. Unlock assessment for BLGU editing (is_locked becomes False)
+        8. Return success response
+
+    Args:
+        assessment_id: ID of the assessment to request rework on
+        request_data: Request body containing rework comments
+        current_user: Current authenticated user
+        db: Database session
+
+    Returns:
+        RequestReworkResponse with success status and rework details
+
+    Raises:
+        HTTPException 403: User not authorized (must be assessor/validator)
+        HTTPException 400: Invalid status or rework limit reached
+        HTTPException 404: Assessment not found
+    """
+    # Authorization check: must be ASSESSOR, VALIDATOR, or MLGOO_DILG
+    allowed_roles = [UserRole.ASSESSOR, UserRole.VALIDATOR, UserRole.MLGOO_DILG]
+    if current_user.role not in allowed_roles:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only assessors and validators can request rework"
+        )
+
+    # Load the assessment
+    assessment = db.query(Assessment).filter_by(id=assessment_id).first()
+    if not assessment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Assessment {assessment_id} not found"
+        )
+
+    # Check assessment status is SUBMITTED
+    if assessment.status != AssessmentStatus.SUBMITTED:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Assessment must be in SUBMITTED status to request rework. Current status: {assessment.status.value}"
+        )
+
+    # Check rework limit using model property
+    if not assessment.can_request_rework:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Rework limit reached. Only one rework cycle is allowed per assessment."
+        )
+
+    # Validate comments (already validated by Pydantic, but double-check)
+    comments = request_data.comments.strip()
+    if len(comments) < 10:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Rework comments must be at least 10 characters long"
+        )
+
+    # Update assessment to REWORK status
+    assessment.status = AssessmentStatus.REWORK
+    assessment.rework_count += 1
+    assessment.rework_requested_by = current_user.id
+    assessment.rework_requested_at = datetime.utcnow()
+    assessment.rework_comments = comments
+    db.commit()
+    db.refresh(assessment)
+
+    # TODO (Story 5.19): Send notification to BLGU user with rework comments
+
+    return RequestReworkResponse(
+        success=True,
+        message="Rework requested successfully",
+        assessment_id=assessment.id,
+        rework_count=assessment.rework_count,
+        rework_requested_at=assessment.rework_requested_at
+    )
+
+
+@router.post(
+    "/{assessment_id}/resubmit",
+    response_model=ResubmitAssessmentResponse,
+    tags=["assessments"],
+    status_code=status.HTTP_200_OK
+)
+def resubmit_assessment(
+    assessment_id: int,
+    current_user: User = Depends(deps.get_current_active_user),
+    db: Session = Depends(deps.get_db),
+) -> ResubmitAssessmentResponse:
+    """
+    Resubmit an assessment after completing rework (Story 5.7).
+
+    This endpoint allows a BLGU user to resubmit their assessment after
+    addressing the assessor's rework comments. The assessment must be in
+    REWORK status and pass validation again.
+
+    Authorization:
+        - BLGU_USER role required
+        - User must own the assessment
+
+    Business Rules:
+        - Assessment must be in REWORK status
+        - Assessment must pass validation (completeness + MOVs)
+        - No further rework is allowed after resubmission (rework_count = 1)
+
+    Workflow:
+        1. Validate user authorization
+        2. Check assessment status is REWORK
+        3. Validate completeness using SubmissionValidationService
+        4. Update status back to SUBMITTED
+        5. Update submitted_at timestamp
+        6. Lock assessment again (is_locked becomes True)
+        7. Return success response
+
+    Args:
+        assessment_id: ID of the assessment to resubmit
+        current_user: Current authenticated user
+        db: Database session
+
+    Returns:
+        ResubmitAssessmentResponse with success status and rework count
+
+    Raises:
+        HTTPException 403: User not authorized
+        HTTPException 400: Invalid status or validation failed
+        HTTPException 404: Assessment not found
+    """
+    # Authorization check: must be BLGU_USER
+    if current_user.role != UserRole.BLGU_USER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only BLGU users can resubmit assessments"
+        )
+
+    # Load the assessment
+    assessment = db.query(Assessment).filter_by(id=assessment_id).first()
+    if not assessment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Assessment {assessment_id} not found"
+        )
+
+    # Check ownership
+    if assessment.blgu_user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only resubmit your own assessments"
+        )
+
+    # Check assessment status is REWORK
+    if assessment.status != AssessmentStatus.REWORK:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Assessment must be in REWORK status to resubmit. Current status: {assessment.status.value}"
+        )
+
+    # Validate assessment completeness again
+    validation_result = submission_validation_service.validate_submission(
+        assessment_id=assessment_id,
+        db=db
+    )
+
+    if not validation_result.is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "message": validation_result.error_message,
+                "incomplete_indicators": validation_result.incomplete_indicators,
+                "missing_movs": validation_result.missing_movs
+            }
+        )
+
+    # Update assessment status back to SUBMITTED
+    assessment.status = AssessmentStatus.SUBMITTED
+    assessment.submitted_at = datetime.utcnow()
+    db.commit()
+    db.refresh(assessment)
+
+    # TODO (Story 5.19): Send notification to assessor about resubmission
+
+    return ResubmitAssessmentResponse(
+        success=True,
+        message="Assessment resubmitted successfully",
+        assessment_id=assessment.id,
+        resubmitted_at=assessment.submitted_at,
+        rework_count=assessment.rework_count
     )
