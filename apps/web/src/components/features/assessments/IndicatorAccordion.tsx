@@ -19,6 +19,7 @@ import { postAssessmentsResponses } from "@vantage/shared";
 import { AlertCircle, CheckCircle, Circle } from "lucide-react";
 import { useState } from "react";
 import { DynamicIndicatorForm } from "./DynamicIndicatorForm";
+import { DynamicFormRenderer } from "../forms/DynamicFormRenderer";
 
 interface IndicatorAccordionProps {
   indicator: Indicator;
@@ -114,6 +115,20 @@ export function IndicatorAccordion({
     }
   };
 
+  // Detect if this indicator uses Epic 3/4 format (has "fields" or "sections" array)
+  const isEpic3Format = () => {
+    const schema = indicator.formSchema;
+    if (!schema || typeof schema !== 'object') return false;
+
+    // Epic 3: root-level fields array
+    if ('fields' in schema && Array.isArray(schema.fields)) return true;
+
+    // Epic 4: sections array with fields inside
+    if ('sections' in schema && Array.isArray(schema.sections)) return true;
+
+    return false;
+  };
+
   return (
     <Accordion
       type="single"
@@ -136,7 +151,7 @@ export function IndicatorAccordion({
               </div>
               <div className="text-left">
                 <div className="font-semibold text-[var(--foreground)]">
-                  {indicator.code} - {indicator.name}
+                  {indicator.code ? `${indicator.code} - ` : ''}{indicator.name}
                 </div>
                 <div className="text-sm text-[var(--text-secondary)] mt-1">
                   {indicator.description.length > 100
@@ -178,18 +193,33 @@ export function IndicatorAccordion({
             (indicator as any).children.length > 0
           ) && (
             <div className="space-y-8">
-              <DynamicIndicatorForm
-                formSchema={indicator.formSchema}
-                initialData={indicator.responseData}
-                isDisabled={isLocked}
-                indicatorId={indicator.id}
-                responseId={indicator.responseId}
-                assessmentId={assessment?.id}
-                responseIndicatorId={(indicator as any).responseIndicatorId}
-                movFiles={indicator.movFiles || []}
-                updateAssessmentData={updateAssessmentData}
-                ensureResponseId={ensureResponseId}
-                onChange={(data: Record<string, any>) => {
+              {/* Epic 3 Dynamic Form Renderer */}
+              {isEpic3Format() && assessment?.id && (
+                <DynamicFormRenderer
+                  formSchema={indicator.formSchema}
+                  assessmentId={parseInt(assessment.id)}
+                  indicatorId={parseInt(indicator.id)}
+                  onSaveSuccess={() => {
+                    // Optionally refresh assessment data after save
+                    console.log('Answers saved successfully for indicator', indicator.id);
+                  }}
+                />
+              )}
+
+              {/* Legacy Form (for old format indicators) */}
+              {!isEpic3Format() && (
+                <DynamicIndicatorForm
+                  formSchema={indicator.formSchema}
+                  initialData={indicator.responseData}
+                  isDisabled={isLocked}
+                  indicatorId={indicator.id}
+                  responseId={indicator.responseId}
+                  assessmentId={assessment?.id}
+                  responseIndicatorId={(indicator as any).responseIndicatorId}
+                  movFiles={indicator.movFiles || []}
+                  updateAssessmentData={updateAssessmentData}
+                  ensureResponseId={ensureResponseId}
+                  onChange={(data: Record<string, any>) => {
                   if (!isLocked && indicator.id && updateAssessmentData) {
                     // Determine completion locally based on required answers
                     const required = (indicator.formSchema as any)?.required || [];
@@ -316,10 +346,11 @@ export function IndicatorAccordion({
                     );
                   }
                 }}
-              />
+                />
+              )}
 
               {/* MOV File Uploader Section (shown only when compliant == yes and no per-section uploads are defined) */}
-              {shouldShowMov && !hasSectionUploads && (
+              {!isEpic3Format() && shouldShowMov && !hasSectionUploads && (
                 <div className="space-y-4 bg-[var(--card)] p-6 rounded-lg border border-[var(--border)] shadow-sm">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-[var(--cityscape-yellow)] rounded-full"></div>
