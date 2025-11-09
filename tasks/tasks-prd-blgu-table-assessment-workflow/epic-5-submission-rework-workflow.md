@@ -194,85 +194,92 @@
     - **Time Estimate:** 5 hours
     - **Completed:** 2025-11-09
 
-- [ ] **5.4 Story: Submission Validation Service**
+- [x] **5.4 Story: Submission Validation Service** ✅
   - Create `SubmissionValidationService` in `apps/api/app/services/submission_validation_service.py`
   - Use CompletenessValidationService to check all indicators are complete
   - Check that all required MOVs are uploaded (from Epic 4)
   - Return validation result with list of incomplete items
   - Tech stack involved: Python, service layer pattern, business logic
   - Dependencies: Epic 1 Story 1.5 (CompletenessValidationService), Epic 4 Story 4.6 (MOVFile model)
+  - **Completed:** 2025-11-09
 
-  - [ ] **5.4.1 Atomic: Create SubmissionValidationService class structure**
+  - [x] **5.4.1 Atomic: Create SubmissionValidationService class structure**
     - **Files:** `apps/api/app/services/submission_validation_service.py` (NEW)
     - **Dependencies:** None
     - **Acceptance:** Service class created with __init__ method. Method signatures defined: validate_completeness, validate_movs, validate_submission (main method). Docstrings added.
     - **Tech:** Python classes, Google-style docstrings, type hints
+    - **Completed:** 2025-11-09
     - **Time Estimate:** 2 hours
 
-  - [ ] **5.4.2 Atomic: Implement validate_completeness method**
+  - [x] **5.4.2 Atomic: Implement validate_completeness method**
     - **Files:** `apps/api/app/services/submission_validation_service.py`
     - **Dependencies:** Task 5.4.1, Epic 1 Story 1.5 must be complete
     - **Acceptance:** Method accepts assessment_id, db session. Uses CompletenessValidationService to check all indicators. Returns list of incomplete indicator names/IDs. Returns empty list if all complete.
     - **Tech:** Python, service composition, SQLAlchemy queries
+    - **Completed:** 2025-11-09
     - **Time Estimate:** 4 hours
 
-  - [ ] **5.4.3 Atomic: Implement validate_movs method**
+  - [x] **5.4.3 Atomic: Implement validate_movs method**
     - **Files:** `apps/api/app/services/submission_validation_service.py`
     - **Dependencies:** Task 5.4.1, Epic 4 Story 4.3 must be complete
     - **Acceptance:** Method accepts assessment_id, db session. Queries MOVFile table for indicators that require file uploads. Returns list of indicators missing required MOVs. Assumes all file-type fields require at least one file.
     - **Tech:** Python, SQLAlchemy queries, MOVFile model
     - **Time Estimate:** 5 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.4.4 Atomic: Create SubmissionValidationResult Pydantic schema**
+  - [x] **5.4.4 Atomic: Create SubmissionValidationResult Pydantic schema**
     - **Files:** `apps/api/app/schemas/assessment.py`
     - **Dependencies:** None (can be done in parallel)
     - **Acceptance:** Pydantic schema created: SubmissionValidationResult with fields: is_valid (bool), incomplete_indicators (List[str]), missing_movs (List[str]), error_message (Optional[str]). Schema used by service.
     - **Tech:** Pydantic, Python type hints
     - **Time Estimate:** 2 hours
 
-  - [ ] **5.4.5 Atomic: Implement main validate_submission method**
+    - **Completed:** 2025-11-09
+  - [x] **5.4.5 Atomic: Implement main validate_submission method**
     - **Files:** `apps/api/app/services/submission_validation_service.py`
     - **Dependencies:** Tasks 5.4.2, 5.4.3, 5.4.4 must be complete
     - **Acceptance:** Method accepts assessment_id, db session. Calls validate_completeness and validate_movs. Returns SubmissionValidationResult. is_valid = True only if both checks pass. Aggregates all validation errors.
     - **Tech:** Python, validation orchestration, Pydantic
     - **Time Estimate:** 3 hours
 
-  - [ ] **5.4.6 Atomic: Export SubmissionValidationService singleton instance**
+  - [x] **5.4.6 Atomic: Export SubmissionValidationService singleton instance**
+    - **Completed:** 2025-11-09
     - **Files:** `apps/api/app/services/submission_validation_service.py`
     - **Dependencies:** Task 5.4.5 must be complete
     - **Acceptance:** Singleton instance created: submission_validation_service = SubmissionValidationService(). Instance exported for use in routers.
     - **Tech:** Python singleton pattern
     - **Time Estimate:** 1 hour
 
-  - [ ] **5.4.7 Atomic: Test validate_completeness with complete assessment**
+  - [x] **5.4.7 Atomic: Test validate_completeness with complete assessment**
     - **Files:** `apps/api/tests/services/test_submission_validation_service.py` (NEW)
+    - **Completed:** 2025-11-09
     - **Dependencies:** Task 5.4.2 must be complete
     - **Acceptance:** Unit test creates assessment with all indicators complete. validate_completeness returns empty list. Validation passes.
     - **Tech:** Pytest, test database, test fixtures
     - **Time Estimate:** 3 hours
 
-  - [ ] **5.4.8 Atomic: Test validate_completeness with incomplete assessment**
+  - [x] **5.4.8 Atomic: Test validate_completeness with incomplete assessment**
     - **Files:** `apps/api/tests/services/test_submission_validation_service.py`
     - **Dependencies:** Task 5.4.2 must be complete
     - **Acceptance:** Unit test creates assessment with some incomplete indicators. validate_completeness returns list of incomplete indicator names. Validation fails.
     - **Tech:** Pytest, test data creation
     - **Time Estimate:** 3 hours
 
-  - [ ] **5.4.9 Atomic: Test validate_movs with all files uploaded**
+  - [x] **5.4.9 Atomic: Test validate_movs with all files uploaded**
     - **Files:** `apps/api/tests/services/test_submission_validation_service.py`
     - **Dependencies:** Task 5.4.3 must be complete
     - **Acceptance:** Unit test creates assessment with file-type fields and all MOVs uploaded. validate_movs returns empty list. Validation passes.
     - **Tech:** Pytest, MOVFile fixtures
     - **Time Estimate:** 4 hours
 
-  - [ ] **5.4.10 Atomic: Test validate_movs with missing files**
+  - [x] **5.4.10 Atomic: Test validate_movs with missing files**
     - **Files:** `apps/api/tests/services/test_submission_validation_service.py`
     - **Dependencies:** Task 5.4.3 must be complete
     - **Acceptance:** Unit test creates assessment with file-type fields but some MOVs missing. validate_movs returns list of indicators missing files. Validation fails.
     - **Tech:** Pytest, incomplete test data
     - **Time Estimate:** 4 hours
 
-  - [ ] **5.4.11 Atomic: Test validate_submission integrates both checks**
+  - [x] **5.4.11 Atomic: Test validate_submission integrates both checks**
     - **Files:** `apps/api/tests/services/test_submission_validation_service.py`
     - **Dependencies:** Tasks 5.4.5 must be complete
     - **Acceptance:** Unit test with both incomplete indicators and missing MOVs. validate_submission returns SubmissionValidationResult with is_valid=False. Both incomplete_indicators and missing_movs populated.
