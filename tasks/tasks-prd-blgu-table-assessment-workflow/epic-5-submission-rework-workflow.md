@@ -9,10 +9,10 @@
 **Status as of 2025-11-09:**
 - **Backend Stories Complete:** 9 of 9 backend stories (100%)
 - **Type Generation Complete:** 1 of 1 story (100%)
-- **Frontend Stories Complete:** 2 of 8 frontend stories (25%)
-- **Overall Progress:** 12 of 21 stories (57%)
-- **Stories 5.1-5.12:** ✅ Complete
-- **Stories 5.13-5.21:** Pending (frontend components, notifications, testing)
+- **Frontend Stories Complete:** 3 of 8 frontend stories (38%)
+- **Overall Progress:** 13 of 21 stories (62%)
+- **Stories 5.1-5.13:** ✅ Complete
+- **Stories 5.14-5.21:** Pending (frontend components, notifications, testing)
 
 **Key Deliverables Completed:**
 - 4 new REST API endpoints (submit, request-rework, resubmit, submission-status)
@@ -23,6 +23,7 @@
 - TypeScript types and React Query hooks generated for all Epic 5.0 endpoints
 - SubmissionValidation component with 8 test cases (Story 5.11)
 - SubmitAssessmentButton component with 10 test cases (Story 5.12)
+- LockedStateBanner component with 13 test cases (Story 5.13)
 
 ## Stories
 
@@ -916,56 +917,64 @@
     - **Tech:** React, error handling, shadcn/ui
     - **Time Estimate:** 4 hours
 
-- [ ] **5.13 Story: Locked State UI Components**
-  - Create `LockedAssessmentBanner` component in `src/components/features/assessments/`
-  - Display "Assessment submitted - no further edits allowed" message
-  - Disable all form inputs when assessment is locked
-  - Disable file upload/delete when assessment is locked
-  - Show banner at top of dashboard and form pages
-  - Tech stack involved: React, TypeScript, shadcn/ui Alert, conditional rendering
+- [x] **5.13 Story: Locked State UI Components** ✅
+  - Create `LockedStateBanner` component in `src/components/features/assessments/`
+  - Display status-based messages for locked states
+  - Show rework warning when rework cycle used
+  - Use sticky positioning for persistent visibility
+  - Color-coded alerts for different statuses
+  - Tech stack involved: React, TypeScript, shadcn/ui Alert, Badge, conditional rendering
   - Dependencies: Story 5.10 must be complete
+  - **Completed:** 2025-11-09
+  - **Note:** Implemented with 13 comprehensive test cases, renamed from LockedAssessmentBanner to LockedStateBanner
 
-  - [ ] **5.13.1 Atomic: Create LockedAssessmentBanner component file structure**
-    - **Files:** `apps/web/src/components/features/assessments/LockedAssessmentBanner.tsx` (NEW), `apps/web/src/components/features/assessments/index.ts`
+  - [x] **5.13.1 Atomic: Create LockedStateBanner component file structure**
+    - **Files:** `apps/web/src/components/features/assessments/LockedStateBanner.tsx` (NEW), `apps/web/src/components/features/assessments/index.ts`
     - **Dependencies:** None
     - **Acceptance:** Component file created with basic functional component structure. Props interface defined: status, reworkCount. Component exported from index.ts.
     - **Tech:** React, TypeScript
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.13.2 Atomic: Render banner for SUBMITTED status**
-    - **Files:** `apps/web/src/components/features/assessments/LockedAssessmentBanner.tsx`
+  - [x] **5.13.2 Atomic: Render banner for SUBMITTED status**
+    - **Files:** `apps/web/src/components/features/assessments/LockedStateBanner.tsx`
     - **Dependencies:** Task 5.13.1 must be complete
-    - **Acceptance:** If status === "SUBMITTED", show shadcn/ui Alert with info variant. Message: "Assessment Submitted - Your assessment is under review. You cannot make edits at this time." Icon shows lock symbol from lucide-react.
-    - **Tech:** React, shadcn/ui Alert, conditional rendering, lucide-react icons
+    - **Acceptance:** If status === "SUBMITTED", show shadcn/ui Alert with blue variant. Message: "Assessment Submitted - Your assessment is under review. You cannot make edits at this time." Icon shows lock symbol from lucide-react. Status badge displayed.
+    - **Tech:** React, shadcn/ui Alert, Badge, conditional rendering, lucide-react icons
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.13.3 Atomic: Render banner for IN_REVIEW status**
-    - **Files:** `apps/web/src/components/features/assessments/LockedAssessmentBanner.tsx`
+  - [x] **5.13.3 Atomic: Render banner for IN_REVIEW status**
+    - **Files:** `apps/web/src/components/features/assessments/LockedStateBanner.tsx`
     - **Dependencies:** Task 5.13.1 must be complete
-    - **Acceptance:** If status === "IN_REVIEW", show shadcn/ui Alert. Message: "Assessment In Review - An assessor is currently reviewing your submission." Icon shows eye symbol.
-    - **Tech:** React, shadcn/ui Alert
+    - **Acceptance:** If status === "IN_REVIEW", show shadcn/ui Alert with blue variant. Message: "Assessment In Review - An assessor is currently reviewing your submission." Icon shows eye symbol. Status badge displayed.
+    - **Tech:** React, shadcn/ui Alert, Badge
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.13.4 Atomic: Render banner for COMPLETED status**
-    - **Files:** `apps/web/src/components/features/assessments/LockedAssessmentBanner.tsx`
+  - [x] **5.13.4 Atomic: Render banner for COMPLETED status**
+    - **Files:** `apps/web/src/components/features/assessments/LockedStateBanner.tsx`
     - **Dependencies:** Task 5.13.1 must be complete
-    - **Acceptance:** If status === "COMPLETED", show shadcn/ui Alert with success variant. Message: "Assessment Completed - This assessment has been finalized. No further edits allowed." Icon shows check circle.
-    - **Tech:** React, shadcn/ui Alert
+    - **Acceptance:** If status === "COMPLETED", show shadcn/ui Alert with green variant. Message: "Assessment Completed - This assessment has been finalized. No further edits allowed." Icon shows check circle. Status badge displayed.
+    - **Tech:** React, shadcn/ui Alert, Badge
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.13.5 Atomic: Render rework limit banner**
-    - **Files:** `apps/web/src/components/features/assessments/LockedAssessmentBanner.tsx`
+  - [x] **5.13.5 Atomic: Render rework limit banner**
+    - **Files:** `apps/web/src/components/features/assessments/LockedStateBanner.tsx`
     - **Dependencies:** Task 5.13.1 must be complete
-    - **Acceptance:** If status === "SUBMITTED" and reworkCount >= 1, show additional warning: "Note: You have used your one rework cycle. This is your final submission." Use shadcn/ui Alert with warning variant.
+    - **Acceptance:** If status === "SUBMITTED" and reworkCount >= 1, show additional orange Alert with warning: "Note: You have used your one rework cycle. This is your final submission. The assessor cannot request further changes."
     - **Tech:** React, shadcn/ui Alert, conditional rendering
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.13.6 Atomic: Add sticky positioning for banner**
-    - **Files:** `apps/web/src/components/features/assessments/LockedAssessmentBanner.tsx`
+  - [x] **5.13.6 Atomic: Add sticky positioning for banner**
+    - **Files:** `apps/web/src/components/features/assessments/LockedStateBanner.tsx`
     - **Dependencies:** Task 5.13.1 must be complete
-    - **Acceptance:** Banner uses sticky positioning at top of page. Remains visible when scrolling. Use Tailwind CSS sticky positioning classes.
+    - **Acceptance:** Banner uses sticky positioning at top of page with z-10. Remains visible when scrolling. Uses Tailwind CSS: "sticky top-0 z-10".
     - **Tech:** React, Tailwind CSS, sticky positioning
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
 - [ ] **5.14 Story: Rework Comments Display Component**
   - Create `ReworkCommentsPanel` component in `src/components/features/assessments/rework/`
