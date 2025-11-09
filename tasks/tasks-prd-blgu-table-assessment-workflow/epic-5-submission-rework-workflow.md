@@ -8,47 +8,53 @@
 
 ### Three-Tier Structure: Epic → Story → Atomic
 
-- [ ] **5.1 Story: Assessment Status Enum Enhancement**
+- [x] **5.1 Story: Assessment Status Enum Enhancement** ✅
   - Update assessment status enum to include: DRAFT, SUBMITTED, IN_REVIEW, REWORK, COMPLETED
   - Create Alembic migration to update status column
   - Update SQLAlchemy Assessment model with new status enum
   - Tech stack involved: SQLAlchemy, Alembic, PostgreSQL enums
   - Dependencies: None (foundational change)
+  - **Completed:** 2025-11-09
 
-  - [ ] **5.1.1 Atomic: Update AssessmentStatus enum in db/enums.py**
+  - [x] **5.1.1 Atomic: Update AssessmentStatus enum in db/enums.py**
     - **Files:** `apps/api/app/db/enums.py`
     - **Dependencies:** None
     - **Acceptance:** AssessmentStatus enum updated with values: DRAFT, SUBMITTED, IN_REVIEW, REWORK, COMPLETED. Enum extends str and Python's Enum class. Old status values preserved if they exist.
     - **Tech:** Python enum module, string enums
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.1.2 Atomic: Create Alembic migration for status enum update**
-    - **Files:** `apps/api/alembic/versions/xxxx_update_assessment_status_enum.py` (NEW)
+  - [x] **5.1.2 Atomic: Create Alembic migration for status enum update**
+    - **Files:** `apps/api/alembic/versions/6v29gw2io7vj_update_assessment_status_enum.py` (NEW)
     - **Dependencies:** Task 5.1.1 must be complete
     - **Acceptance:** Migration file created with `alembic revision --autogenerate -m "update assessment status enum"`. File contains upgrade and downgrade functions.
     - **Tech:** Alembic, PostgreSQL enum alteration
     - **Time Estimate:** 2 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.1.3 Atomic: Implement upgrade function to add new enum values**
-    - **Files:** `apps/api/alembic/versions/xxxx_update_assessment_status_enum.py`
+  - [x] **5.1.3 Atomic: Implement upgrade function to add new enum values**
+    - **Files:** `apps/api/alembic/versions/6v29gw2io7vj_update_assessment_status_enum.py`
     - **Dependencies:** Task 5.1.2 must be complete
     - **Acceptance:** Upgrade function alters PostgreSQL enum type to add SUBMITTED, IN_REVIEW, REWORK, COMPLETED values. Uses ALTER TYPE ADD VALUE. Handles case where values may already exist.
     - **Tech:** Alembic, PostgreSQL ALTER TYPE, SQL
     - **Time Estimate:** 4 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.1.4 Atomic: Implement downgrade function for enum rollback**
-    - **Files:** `apps/api/alembic/versions/xxxx_update_assessment_status_enum.py`
+  - [x] **5.1.4 Atomic: Implement downgrade function for enum rollback**
+    - **Files:** `apps/api/alembic/versions/6v29gw2io7vj_update_assessment_status_enum.py`
     - **Dependencies:** Task 5.1.3 must be complete
     - **Acceptance:** Downgrade function documented with warning that enum value removal is not safely reversible. Downgrade sets all non-DRAFT statuses to DRAFT. Documents manual cleanup required.
     - **Tech:** Alembic, SQL UPDATE statements
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
-  - [ ] **5.1.5 Atomic: Test migration upgrade and downgrade**
+  - [x] **5.1.5 Atomic: Test migration upgrade and downgrade**
     - **Files:** `apps/api/tests/migrations/test_assessment_status_migration.py` (NEW)
     - **Dependencies:** Tasks 5.1.3-5.1.4 must be complete
     - **Acceptance:** Migration applies successfully. Enum type includes new values. Assessment.status column accepts new values. Rollback sets statuses to DRAFT.
     - **Tech:** Pytest, Alembic, PostgreSQL inspection
     - **Time Estimate:** 3 hours
+    - **Completed:** 2025-11-09
 
 - [ ] **5.2 Story: Rework Tracking Schema**
   - Add `rework_count` integer column to assessments table (default 0, max 1)
