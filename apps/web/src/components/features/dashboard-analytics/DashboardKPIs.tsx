@@ -216,7 +216,7 @@ export function TopFailedIndicatorsCard({ data }: TopFailedIndicatorsCardProps) 
             {data.map((indicator, index) => (
               <div
                 key={indicator.indicator_id}
-                className="flex items-start gap-3 rounded-lg border border-gray-200 p-3 hover:bg-gray-50 transition-colors"
+                className="flex items-start gap-3 rounded p-3 hover:bg-gray-50 transition-colors shadow-sm border border-gray-200"
               >
                 <div
                   className="flex h-6 w-6 items-center justify-center rounded-full bg-red-100 text-xs font-semibold text-red-700 flex-shrink-0"
@@ -274,7 +274,7 @@ export function BarangayRankingsCard({ data }: BarangayRankingsCardProps) {
             {topRankings.map((ranking) => (
               <div
                 key={ranking.barangay_id}
-                className="flex items-center gap-4 rounded-lg border border-gray-200 p-3 hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-4 rounded p-3 hover:bg-gray-50 transition-colors shadow-sm border border-gray-200"
               >
                 {/* Rank Badge */}
                 <div

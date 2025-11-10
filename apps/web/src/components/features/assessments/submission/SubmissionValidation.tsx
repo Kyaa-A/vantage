@@ -11,12 +11,12 @@
 
 "use client";
 
-import { CheckCircle2, XCircle, AlertCircle, Loader2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGetAssessmentsAssessmentIdSubmissionStatus } from "@vantage/shared";
+import { AlertCircle, CheckCircle2, XCircle } from "lucide-react";
 
 interface SubmissionValidationProps {
   assessmentId: number;

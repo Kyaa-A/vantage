@@ -39,7 +39,7 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string> 
     const passRate = total > 0 ? ((passed / total) * 100).toFixed(1) : 0;
 
     return (
-      <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
+      <div className="bg-card rounded p-3 shadow-lg border border-gray-200">
         <p className="font-semibold text-sm mb-2">{label}</p>
         <div className="space-y-1 text-xs">
           <div className="flex items-center gap-2">
@@ -56,7 +56,7 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string> 
             />
             <span>Failed: {failed}</span>
           </div>
-          <div className="pt-1 border-t border-border mt-1">
+          <div className="pt-1 mt-1">
             <span>Pass Rate: {passRate}%</span>
           </div>
         </div>

@@ -254,9 +254,15 @@ export interface IndicatorItem {
   indicator_name: string;
   /** Completion status: True if all required fields filled, False otherwise */
   is_complete: boolean;
-  /** Assessment response ID for this indicator */
-  response_id: number;
+  /** Assessment response ID for this indicator (null if no response yet) */
+  response_id?: IndicatorItemResponseId;
 }
+
+
+/**
+ * IndicatorItemResponseId
+ */
+export type IndicatorItemResponseId = number | null;
 
 
 /**

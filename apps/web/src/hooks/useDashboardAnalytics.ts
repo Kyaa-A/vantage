@@ -1,5 +1,10 @@
 import { useGetAnalyticsDashboard } from '@vantage/shared';
 import type { DashboardKPIResponse } from '@vantage/shared';
+import type { BBIFunctionalityData } from '@/components/features/dashboard-analytics/BBIFunctionalityWidget';
+
+export interface DashboardAnalyticsResponse extends DashboardKPIResponse {
+  bbi_functionality?: BBIFunctionalityData;
+}
 
 /**
  * Custom hook wrapper for analytics dashboard data fetching
@@ -23,30 +28,33 @@ export function useDashboardAnalytics(cycleId?: number | null) {
     cycle_id: cycleId,
   });
 
+  const rawData = data as DashboardAnalyticsResponse | undefined;
+
   // Format error message for user display
   const error = queryError
     ? formatErrorMessage(queryError)
     : null;
 
   // Provide typed data with defaults for missing fields
-  const dashboardData: DashboardKPIResponse | undefined = data
+  const dashboardData: DashboardAnalyticsResponse | undefined = rawData
     ? {
-        overall_compliance_rate: data.overall_compliance_rate || {
+        overall_compliance_rate: rawData.overall_compliance_rate || {
           total_barangays: 0,
           passed: 0,
           failed: 0,
           pass_percentage: 0,
         },
-        completion_status: data.completion_status || {
+        completion_status: rawData.completion_status || {
           total_barangays: 0,
           passed: 0,
           failed: 0,
           pass_percentage: 0,
         },
-        area_breakdown: data.area_breakdown || [],
-        top_failed_indicators: data.top_failed_indicators || [],
-        barangay_rankings: data.barangay_rankings || [],
-        trends: data.trends || [],
+        area_breakdown: rawData.area_breakdown || [],
+        top_failed_indicators: rawData.top_failed_indicators || [],
+        barangay_rankings: rawData.barangay_rankings || [],
+        trends: rawData.trends || [],
+        bbi_functionality: rawData.bbi_functionality,
       }
     : undefined;
 

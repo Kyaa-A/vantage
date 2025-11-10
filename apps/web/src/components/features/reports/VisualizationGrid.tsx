@@ -84,14 +84,9 @@ export function VisualizationGrid({ data, isLoading }: VisualizationGridProps) {
       {/* Geographic Map Section - Full Width */}
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold">Geographic Distribution</h2>
-        <Card>
-          <CardHeader>
-            <CardTitle>Barangay Performance Map</CardTitle>
-          </CardHeader>
-          <CardContent id="map-container">
-            <BarangayMap barangays={data.map_data.barangays || []} />
-          </CardContent>
-        </Card>
+        <div id="map-container">
+          <BarangayMap barangays={data.map_data.barangays || []} />
+        </div>
       </section>
 
       {/* Data Table Section - Full Width */}

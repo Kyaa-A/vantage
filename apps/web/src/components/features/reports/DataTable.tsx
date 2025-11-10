@@ -129,7 +129,7 @@ export function AssessmentDataTable({
   // Handle empty data - render after hooks are called
   if (rows.length === 0) {
     return (
-      <div className="border rounded-lg p-8">
+      <div className="border-2 border-gray-200 rounded p-8 shadow-sm">
         <p className="text-center text-muted-foreground">
           No assessment data available
         </p>
@@ -156,7 +156,7 @@ export function AssessmentDataTable({
       </div>
 
       {/* Table */}
-      <div className="rounded-md border">
+      <div className="rounded border-2 border-gray-200 shadow-sm overflow-hidden">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
