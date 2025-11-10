@@ -16,8 +16,16 @@ import {
   isAncestor,
   getNodePath,
   getBreadcrumbs,
+  // NEW: Leaf indicator functions (Phase 6)
+  isLeafIndicator,
+  getAllLeafIndicators,
+  getAllDescendantLeaves,
+  getParentStatus,
+  getFirstIncompleteLeaf,
+  canConfigureSchemas,
+  getLeafSchemaProgress,
 } from '../indicator-tree-utils';
-import type { IndicatorNode } from '@/store/useIndicatorBuilderStore';
+import type { IndicatorNode, SchemaStatus } from '@/store/useIndicatorBuilderStore';
 
 describe('indicator-tree-utils', () => {
   // Helper function to create a test node
@@ -670,6 +678,358 @@ describe('indicator-tree-utils', () => {
       const breadcrumbs = getBreadcrumbs(nodes, 'nonexistent');
 
       expect(breadcrumbs).toEqual([]);
+    });
+  });
+
+  // ============================================================================
+  // NEW: Leaf Indicator Functions (Phase 6: Hierarchical Indicators)
+  // ============================================================================
+
+  describe('isLeafIndicator', () => {
+    it('should return true for indicator with no children', () => {
+      const parent = createNode('parent', 'Parent');
+      const leaf = createNode('leaf', 'Leaf', 'parent');
+      const allIndicators = [parent, leaf];
+
+      expect(isLeafIndicator(leaf, allIndicators)).toBe(true);
+    });
+
+    it('should return false for indicator with children', () => {
+      const parent = createNode('parent', 'Parent');
+      const child = createNode('child', 'Child', 'parent');
+      const allIndicators = [parent, child];
+
+      expect(isLeafIndicator(parent, allIndicators)).toBe(false);
+    });
+
+    it('should return true for root node with no children', () => {
+      const root = createNode('root', 'Root');
+      const allIndicators = [root];
+
+      expect(isLeafIndicator(root, allIndicators)).toBe(true);
+    });
+
+    it('should handle deeply nested trees correctly', () => {
+      const nodes = [
+        createNode('1', 'Level 1', null, '1'),
+        createNode('1.1', 'Level 2', '1', '1.1'),
+        createNode('1.1.1', 'Level 3', '1.1', '1.1.1'),
+        createNode('1.1.2', 'Level 3 Leaf', '1.1', '1.1.2'),
+      ];
+
+      expect(isLeafIndicator(nodes[0], nodes)).toBe(false); // Has children
+      expect(isLeafIndicator(nodes[1], nodes)).toBe(false); // Has children
+      expect(isLeafIndicator(nodes[2], nodes)).toBe(true);  // Leaf
+      expect(isLeafIndicator(nodes[3], nodes)).toBe(true);  // Leaf
+    });
+  });
+
+  describe('getAllLeafIndicators', () => {
+    it('should return all leaf nodes from tree', () => {
+      const nodes = new Map<string, IndicatorNode>([
+        ['1', createNode('1', 'Parent 1', null, '1')],
+        ['1.1', createNode('1.1', 'Leaf 1', '1', '1.1')],
+        ['1.2', createNode('1.2', 'Leaf 2', '1', '1.2')],
+        ['2', createNode('2', 'Parent 2', null, '2')],
+        ['2.1', createNode('2.1', 'Leaf 3', '2', '2.1')],
+      ]);
+
+      const leaves = getAllLeafIndicators(nodes);
+
+      expect(leaves).toHaveLength(3);
+      expect(leaves.map(l => l.code)).toEqual(['1.1', '1.2', '2.1']);
+    });
+
+    it('should return empty array when all nodes are parents', () => {
+      const nodes = new Map<string, IndicatorNode>([
+        ['1', createNode('1', 'Parent 1', null, '1')],
+        ['1.1', createNode('1.1', 'Parent 2', '1', '1.1')],
+        ['1.1.1', createNode('1.1.1', 'Parent 3', '1.1', '1.1.1')],
+      ]);
+
+      const leaves = getAllLeafIndicators(nodes);
+
+      expect(leaves).toHaveLength(1);
+      expect(leaves[0].code).toBe('1.1.1');
+    });
+
+    it('should return all nodes when all are leaves', () => {
+      const nodes = new Map<string, IndicatorNode>([
+        ['1', createNode('1', 'Leaf 1', null, '1')],
+        ['2', createNode('2', 'Leaf 2', null, '2')],
+        ['3', createNode('3', 'Leaf 3', null, '3')],
+      ]);
+
+      const leaves = getAllLeafIndicators(nodes);
+
+      expect(leaves).toHaveLength(3);
+    });
+  });
+
+  describe('getAllDescendantLeaves', () => {
+    it('should return all leaf descendants of a parent', () => {
+      const parent = createNode('1', 'Parent', null, '1');
+      const child1 = createNode('1.1', 'Child 1', '1', '1.1');
+      const grandchild1 = createNode('1.1.1', 'Grandchild 1', '1.1', '1.1.1');
+      const grandchild2 = createNode('1.1.2', 'Grandchild 2', '1.1', '1.1.2');
+      const child2 = createNode('1.2', 'Child 2', '1', '1.2');
+      const allIndicators = [parent, child1, grandchild1, grandchild2, child2];
+
+      const leaves = getAllDescendantLeaves(parent, allIndicators);
+
+      expect(leaves).toHaveLength(3);
+      expect(leaves.map(l => l.code)).toEqual(['1.1.1', '1.1.2', '1.2']);
+    });
+
+    it('should return the node itself if it is a leaf', () => {
+      const leaf = createNode('1.1.1', 'Leaf', '1.1', '1.1.1');
+      const allIndicators = [leaf];
+
+      const leaves = getAllDescendantLeaves(leaf, allIndicators);
+
+      expect(leaves).toHaveLength(1);
+      expect(leaves[0]).toBe(leaf);
+    });
+
+    it('should handle empty children', () => {
+      const parent = createNode('1', 'Parent', null, '1');
+      const allIndicators = [parent];
+
+      const leaves = getAllDescendantLeaves(parent, allIndicators);
+
+      expect(leaves).toHaveLength(1);
+      expect(leaves[0]).toBe(parent);
+    });
+  });
+
+  describe('getParentStatus', () => {
+    it('should return correct status for parent with all complete leaves', () => {
+      const parent = createNode('1', 'Parent', null, '1');
+      const leaf1 = createNode('1.1', 'Leaf 1', '1', '1.1');
+      const leaf2 = createNode('1.2', 'Leaf 2', '1', '1.2');
+      const allIndicators = [parent, leaf1, leaf2];
+
+      const schemaStatus = new Map<string, SchemaStatus>([
+        ['1.1', { formComplete: true, calculationComplete: true, remarkComplete: true, isComplete: true, errors: [], lastEdited: Date.now() }],
+        ['1.2', { formComplete: true, calculationComplete: true, remarkComplete: true, isComplete: true, errors: [], lastEdited: Date.now() }],
+      ]);
+
+      const status = getParentStatus(parent, allIndicators, schemaStatus);
+
+      expect(status.status).toBe('complete');
+      expect(status.totalLeaves).toBe(2);
+      expect(status.completeLeaves).toBe(2);
+      expect(status.percentage).toBe(100);
+      expect(status.firstIncompleteLeaf).toBeNull();
+    });
+
+    it('should return correct status for parent with no complete leaves', () => {
+      const parent = createNode('1', 'Parent', null, '1');
+      const leaf1 = createNode('1.1', 'Leaf 1', '1', '1.1');
+      const leaf2 = createNode('1.2', 'Leaf 2', '1', '1.2');
+      const allIndicators = [parent, leaf1, leaf2];
+
+      const schemaStatus = new Map<string, SchemaStatus>([
+        ['1.1', { formComplete: false, calculationComplete: false, remarkComplete: false, isComplete: false, errors: [], lastEdited: null }],
+        ['1.2', { formComplete: false, calculationComplete: false, remarkComplete: false, isComplete: false, errors: [], lastEdited: null }],
+      ]);
+
+      const status = getParentStatus(parent, allIndicators, schemaStatus);
+
+      expect(status.status).toBe('incomplete');
+      expect(status.totalLeaves).toBe(2);
+      expect(status.completeLeaves).toBe(0);
+      expect(status.percentage).toBe(0);
+      expect(status.firstIncompleteLeaf).toBe(leaf1);
+    });
+
+    it('should return correct status for parent with partial completion', () => {
+      const parent = createNode('1', 'Parent', null, '1');
+      const leaf1 = createNode('1.1', 'Leaf 1', '1', '1.1');
+      const leaf2 = createNode('1.2', 'Leaf 2', '1', '1.2');
+      const leaf3 = createNode('1.3', 'Leaf 3', '1', '1.3');
+      const allIndicators = [parent, leaf1, leaf2, leaf3];
+
+      const schemaStatus = new Map<string, SchemaStatus>([
+        ['1.1', { formComplete: true, calculationComplete: true, remarkComplete: true, isComplete: true, errors: [], lastEdited: Date.now() }],
+        ['1.2', { formComplete: false, calculationComplete: false, remarkComplete: false, isComplete: false, errors: [], lastEdited: null }],
+        ['1.3', { formComplete: true, calculationComplete: true, remarkComplete: true, isComplete: true, errors: [], lastEdited: Date.now() }],
+      ]);
+
+      const status = getParentStatus(parent, allIndicators, schemaStatus);
+
+      expect(status.status).toBe('partial');
+      expect(status.totalLeaves).toBe(3);
+      expect(status.completeLeaves).toBe(2);
+      expect(status.percentage).toBe(67); // Math.round(2/3 * 100)
+      expect(status.firstIncompleteLeaf).toBe(leaf2);
+    });
+
+    it('should return empty status for leaf node', () => {
+      const leaf = createNode('1.1', 'Leaf', '1', '1.1');
+      const allIndicators = [leaf];
+
+      const schemaStatus = new Map<string, SchemaStatus>();
+
+      const status = getParentStatus(leaf, allIndicators, schemaStatus);
+
+      expect(status.status).toBe('empty');
+      expect(status.totalLeaves).toBe(0);
+      expect(status.completeLeaves).toBe(0);
+      expect(status.percentage).toBe(0);
+      expect(status.firstIncompleteLeaf).toBeNull();
+    });
+  });
+
+  describe('getFirstIncompleteLeaf', () => {
+    it('should return first incomplete leaf in depth-first order', () => {
+      const nodes = new Map<string, IndicatorNode>([
+        ['1', createNode('1', 'Root 1', null, '1', 1)],
+        ['1.1', createNode('1.1', 'Parent', '1', '1.1', 1)],
+        ['1.1.1', createNode('1.1.1', 'Leaf 1', '1.1', '1.1.1', 1)],
+        ['1.1.2', createNode('1.1.2', 'Leaf 2', '1.1', '1.1.2', 2)],
+        ['1.2', createNode('1.2', 'Leaf 3', '1', '1.2', 2)],
+      ]);
+
+      const schemaStatus = new Map<string, SchemaStatus>([
+        ['1.1.1', { formComplete: true, calculationComplete: true, remarkComplete: true, isComplete: true, errors: [], lastEdited: Date.now() }],
+        ['1.1.2', { formComplete: false, calculationComplete: false, remarkComplete: false, isComplete: false, errors: [], lastEdited: null }],
+        ['1.2', { formComplete: false, calculationComplete: false, remarkComplete: false, isComplete: false, errors: [], lastEdited: null }],
+      ]);
+
+      const firstIncomplete = getFirstIncompleteLeaf(nodes, ['1'], schemaStatus);
+
+      expect(firstIncomplete).not.toBeNull();
+      expect(firstIncomplete?.code).toBe('1.1.2');
+    });
+
+    it('should return null when all leaves are complete', () => {
+      const nodes = new Map<string, IndicatorNode>([
+        ['1', createNode('1', 'Root', null, '1', 1)],
+        ['1.1', createNode('1.1', 'Leaf 1', '1', '1.1', 1)],
+        ['1.2', createNode('1.2', 'Leaf 2', '1', '1.2', 2)],
+      ]);
+
+      const schemaStatus = new Map<string, SchemaStatus>([
+        ['1.1', { formComplete: true, calculationComplete: true, remarkComplete: true, isComplete: true, errors: [], lastEdited: Date.now() }],
+        ['1.2', { formComplete: true, calculationComplete: true, remarkComplete: true, isComplete: true, errors: [], lastEdited: Date.now() }],
+      ]);
+
+      const firstIncomplete = getFirstIncompleteLeaf(nodes, ['1'], schemaStatus);
+
+      expect(firstIncomplete).toBeNull();
+    });
+
+    it('should handle multiple root nodes', () => {
+      const nodes = new Map<string, IndicatorNode>([
+        ['1', createNode('1', 'Root 1', null, '1', 1)],
+        ['1.1', createNode('1.1', 'Leaf 1', '1', '1.1', 1)],
+        ['2', createNode('2', 'Root 2', null, '2', 2)],
+        ['2.1', createNode('2.1', 'Leaf 2', '2', '2.1', 1)],
+      ]);
+
+      const schemaStatus = new Map<string, SchemaStatus>([
+        ['1.1', { formComplete: true, calculationComplete: true, remarkComplete: true, isComplete: true, errors: [], lastEdited: Date.now() }],
+        ['2.1', { formComplete: false, calculationComplete: false, remarkComplete: false, isComplete: false, errors: [], lastEdited: null }],
+      ]);
+
+      const firstIncomplete = getFirstIncompleteLeaf(nodes, ['1', '2'], schemaStatus);
+
+      expect(firstIncomplete).not.toBeNull();
+      expect(firstIncomplete?.code).toBe('2.1');
+    });
+  });
+
+  describe('canConfigureSchemas', () => {
+    it('should return true for leaf indicators', () => {
+      const leaf = createNode('1.1', 'Leaf', '1', '1.1');
+      const allIndicators = [leaf];
+
+      expect(canConfigureSchemas(leaf, allIndicators)).toBe(true);
+    });
+
+    it('should return false for parent indicators', () => {
+      const parent = createNode('1', 'Parent', null, '1');
+      const child = createNode('1.1', 'Child', '1', '1.1');
+      const allIndicators = [parent, child];
+
+      expect(canConfigureSchemas(parent, allIndicators)).toBe(false);
+    });
+  });
+
+  describe('getLeafSchemaProgress', () => {
+    it('should count only leaf indicators', () => {
+      const nodes = new Map<string, IndicatorNode>([
+        ['1', createNode('1', 'Parent', null, '1')],
+        ['1.1', createNode('1.1', 'Leaf 1', '1', '1.1')],
+        ['1.2', createNode('1.2', 'Leaf 2', '1', '1.2')],
+        ['1.3', createNode('1.3', 'Leaf 3', '1', '1.3')],
+      ]);
+
+      const schemaStatus = new Map<string, SchemaStatus>([
+        ['1.1', { formComplete: true, calculationComplete: true, remarkComplete: true, isComplete: true, errors: [], lastEdited: Date.now() }],
+        ['1.2', { formComplete: true, calculationComplete: true, remarkComplete: true, isComplete: true, errors: [], lastEdited: Date.now() }],
+        ['1.3', { formComplete: false, calculationComplete: false, remarkComplete: false, isComplete: false, errors: [], lastEdited: null }],
+      ]);
+
+      const progress = getLeafSchemaProgress(nodes, schemaStatus);
+
+      expect(progress.total).toBe(3); // Only 3 leaves, not the parent
+      expect(progress.complete).toBe(2);
+      expect(progress.percentage).toBe(67);
+      expect(progress.incompleteLeaves).toHaveLength(1);
+      expect(progress.incompleteLeaves[0].code).toBe('1.3');
+    });
+
+    it('should return 100% when all leaves complete', () => {
+      const nodes = new Map<string, IndicatorNode>([
+        ['1', createNode('1', 'Parent', null, '1')],
+        ['1.1', createNode('1.1', 'Leaf 1', '1', '1.1')],
+        ['1.2', createNode('1.2', 'Leaf 2', '1', '1.2')],
+      ]);
+
+      const schemaStatus = new Map<string, SchemaStatus>([
+        ['1.1', { formComplete: true, calculationComplete: true, remarkComplete: true, isComplete: true, errors: [], lastEdited: Date.now() }],
+        ['1.2', { formComplete: true, calculationComplete: true, remarkComplete: true, isComplete: true, errors: [], lastEdited: Date.now() }],
+      ]);
+
+      const progress = getLeafSchemaProgress(nodes, schemaStatus);
+
+      expect(progress.total).toBe(2);
+      expect(progress.complete).toBe(2);
+      expect(progress.percentage).toBe(100);
+      expect(progress.incompleteLeaves).toHaveLength(0);
+    });
+
+    it('should return 0% when no leaves complete', () => {
+      const nodes = new Map<string, IndicatorNode>([
+        ['1.1', createNode('1.1', 'Leaf 1', '1', '1.1')],
+        ['1.2', createNode('1.2', 'Leaf 2', '1', '1.2')],
+      ]);
+
+      const schemaStatus = new Map<string, SchemaStatus>([
+        ['1.1', { formComplete: false, calculationComplete: false, remarkComplete: false, isComplete: false, errors: [], lastEdited: null }],
+        ['1.2', { formComplete: false, calculationComplete: false, remarkComplete: false, isComplete: false, errors: [], lastEdited: null }],
+      ]);
+
+      const progress = getLeafSchemaProgress(nodes, schemaStatus);
+
+      expect(progress.total).toBe(2);
+      expect(progress.complete).toBe(0);
+      expect(progress.percentage).toBe(0);
+      expect(progress.incompleteLeaves).toHaveLength(2);
+    });
+
+    it('should handle empty tree', () => {
+      const nodes = new Map<string, IndicatorNode>();
+      const schemaStatus = new Map<string, SchemaStatus>();
+
+      const progress = getLeafSchemaProgress(nodes, schemaStatus);
+
+      expect(progress.total).toBe(0);
+      expect(progress.complete).toBe(0);
+      expect(progress.percentage).toBe(0);
+      expect(progress.incompleteLeaves).toHaveLength(0);
     });
   });
 });

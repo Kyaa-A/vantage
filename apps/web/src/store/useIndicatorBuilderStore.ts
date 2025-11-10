@@ -1,6 +1,16 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import { calculateSchemaStatus } from '@/lib/indicator-tree-utils';
+import {
+  calculateSchemaStatus,
+  isLeafIndicator as isLeafIndicatorUtil,
+  getAllLeafIndicators,
+  getAllDescendantLeaves,
+  getParentStatus as getParentStatusUtil,
+  getFirstIncompleteLeaf,
+  getLeafSchemaProgress,
+  canConfigureSchemas as canConfigureSchemasUtil,
+  type ParentStatusInfo,
+} from '@/lib/indicator-tree-utils';
 import { validateIndicatorSchemas, getCompletionStatus } from '@/lib/indicator-validation';
 
 /**
@@ -46,6 +56,18 @@ export interface IndicatorNode {
 
   /** Technical notes (plain text) */
   technical_notes_text?: string;
+
+  /** Metadata for additional information (e.g., archived schemas) */
+  metadata?: {
+    /** Archived schemas when leaf transitions to parent */
+    archived_schemas?: {
+      form_schema?: Record<string, any>;
+      calculation_schema?: Record<string, any>;
+      remark_schema?: Record<string, any>;
+      archived_at?: number;
+    };
+    [key: string]: any;
+  };
 
   /** Real ID (set after server creation) */
   id?: number;
@@ -294,8 +316,8 @@ interface IndicatorBuilderState {
   // NEW: Schema Configuration Actions (Phase 1)
   // ============================================================================
 
-  /** Navigate to indicator in schema editor */
-  navigateToIndicator: (indicatorId: string) => void;
+  /** Navigate to indicator in schema editor (with smart parent navigation) */
+  navigateToIndicator: (indicatorId: string, options?: { force?: boolean }) => void;
 
   /** Update schema status for an indicator */
   updateSchemaStatus: (indicatorId: string, status: Partial<SchemaStatus>) => void;
@@ -317,6 +339,37 @@ interface IndicatorBuilderState {
 
   /** Get currently editing schema indicator */
   getCurrentSchemaIndicator: () => IndicatorNode | undefined;
+
+  // ============================================================================
+  // NEW: Leaf Indicator Selectors & Navigation (Phase 6)
+  // ============================================================================
+
+  /** Check if an indicator is a leaf (has no children) */
+  isLeafIndicator: (indicatorId: string) => boolean;
+
+  /** Check if schemas can be configured for an indicator (leaf-only) */
+  canConfigureSchemas: (indicatorId: string) => boolean;
+
+  /** Get all leaf indicators in the tree */
+  getLeafIndicators: () => IndicatorNode[];
+
+  /** Get all descendant leaves of a parent indicator */
+  getDescendantLeavesOf: (indicatorId: string) => IndicatorNode[];
+
+  /** Get parent status info (aggregate from descendant leaves) */
+  getParentStatusInfo: (indicatorId: string) => ParentStatusInfo;
+
+  /** Navigate to next incomplete leaf indicator */
+  navigateToNextIncomplete: () => void;
+
+  /** Archive schemas for an indicator (when leaf becomes parent) */
+  archiveSchemasForIndicator: (indicatorId: string) => void;
+
+  /** Restore archived schemas for an indicator (when parent becomes leaf) */
+  restoreArchivedSchemas: (indicatorId: string) => void;
+
+  /** Check if indicator has archived schemas */
+  hasArchivedSchemas: (indicatorId: string) => boolean;
 
   // ============================================================================
   // NEW: Validation Actions (Phase 2)
@@ -350,12 +403,20 @@ interface IndicatorBuilderState {
 
 /**
  * Helper: Calculate indicator code based on position in tree
- * Examples: "1", "1.1", "1.1.1", "1.2", "2"
+ *
+ * Root nodes are prefixed with governance area ID:
+ * - Governance Area 1: "1.1", "1.2", "1.3"
+ * - Governance Area 2: "2.1", "2.2", "2.3"
+ * - Governance Area 3: "3.1", "3.2", "3.3"
+ *
+ * Child nodes follow hierarchy:
+ * - "1.1.1", "1.1.2", "1.2.1", "3.1.1.1"
  */
 function calculateNodeCode(
   nodes: Map<string, IndicatorNode>,
   node: IndicatorNode,
-  parentCode?: string
+  parentCode?: string,
+  governanceAreaId?: number | null
 ): string {
   const siblings = Array.from(nodes.values())
     .filter(n => n.parent_temp_id === node.parent_temp_id)
@@ -364,8 +425,16 @@ function calculateNodeCode(
   const position = siblings.findIndex(n => n.temp_id === node.temp_id) + 1;
 
   if (parentCode) {
+    // Child node: append to parent code
     return `${parentCode}.${position}`;
   }
+
+  // Root node: prefix with governance area ID (check for null/undefined, not falsy)
+  if (governanceAreaId !== null && governanceAreaId !== undefined && governanceAreaId > 0) {
+    return `${governanceAreaId}.${position}`;
+  }
+
+  // Fallback for no governance area (wizard mode or pre-selection)
   return `${position}`;
 }
 
@@ -375,16 +444,17 @@ function calculateNodeCode(
 function recalculateNodeCodes(
   nodes: Map<string, IndicatorNode>,
   nodeId: string,
-  parentCode?: string
+  parentCode?: string,
+  governanceAreaId?: number | null
 ): void {
   const node = nodes.get(nodeId);
   if (!node) return;
 
-  // Calculate this node's code
-  const code = calculateNodeCode(nodes, node, parentCode);
+  // Calculate this node's code (pass governanceAreaId for root nodes)
+  const code = calculateNodeCode(nodes, node, parentCode, governanceAreaId);
   node.code = code;
 
-  // Recalculate children codes
+  // Recalculate children codes (no need to pass governanceAreaId after root)
   const children = Array.from(nodes.values())
     .filter(n => n.parent_temp_id === nodeId)
     .sort((a, b) => a.order - b.order);
@@ -801,9 +871,9 @@ export const useIndicatorBuilderStore = create<IndicatorBuilderState>((set, get)
     const { tree } = get();
     const newNodes = new Map(tree.nodes);
 
-    // Recalculate codes for all root nodes
+    // Recalculate codes for all root nodes with governance area prefix
     tree.rootIds.forEach(rootId => {
-      recalculateNodeCodes(newNodes, rootId);
+      recalculateNodeCodes(newNodes, rootId, undefined, tree.governanceAreaId);
     });
 
     set({
@@ -919,8 +989,8 @@ export const useIndicatorBuilderStore = create<IndicatorBuilderState>((set, get)
   // NEW: Schema Configuration Actions Implementation (Phase 1)
   // ============================================================================
 
-  navigateToIndicator: (indicatorId) => {
-    const { currentSchemaIndicatorId, autoSave } = get();
+  navigateToIndicator: (indicatorId, options?: { force?: boolean }) => {
+    const { currentSchemaIndicatorId, autoSave, tree, schemaStatus, isLeafIndicator, getParentStatusInfo } = get();
 
     // Auto-save current indicator if dirty (handled by useAutoSave hook)
     if (currentSchemaIndicatorId && autoSave.dirtySchemas.has(currentSchemaIndicatorId)) {
@@ -932,7 +1002,36 @@ export const useIndicatorBuilderStore = create<IndicatorBuilderState>((set, get)
       }));
     }
 
-    // Update current indicator
+    // Smart navigation: if clicking a parent (not forced), navigate to first incomplete leaf
+    const isLeaf = isLeafIndicator(indicatorId);
+    if (!isLeaf && !options?.force) {
+      const parentStatus = getParentStatusInfo(indicatorId);
+
+      // If parent has incomplete leaves, navigate to first incomplete
+      if (parentStatus.firstIncompleteLeaf) {
+        console.log(
+          `[Navigation] Parent clicked: auto-navigating to first incomplete leaf ${parentStatus.firstIncompleteLeaf.code}`
+        );
+        set({ currentSchemaIndicatorId: parentStatus.firstIncompleteLeaf.temp_id });
+        return;
+      }
+
+      // If all complete, navigate to first leaf for review
+      const allIndicators = Array.from(tree.nodes.values());
+      const leaves = getAllDescendantLeaves(
+        tree.nodes.get(indicatorId)!,
+        allIndicators
+      );
+      if (leaves.length > 0) {
+        console.log(
+          `[Navigation] Parent clicked (all complete): navigating to first leaf ${leaves[0].code}`
+        );
+        set({ currentSchemaIndicatorId: leaves[0].temp_id });
+        return;
+      }
+    }
+
+    // Update current indicator (leaf or forced parent selection)
     set({ currentSchemaIndicatorId: indicatorId });
   },
 
@@ -1001,13 +1100,14 @@ export const useIndicatorBuilderStore = create<IndicatorBuilderState>((set, get)
 
   getSchemaProgress: () => {
     const { tree, schemaStatus } = get();
-    const total = tree.nodes.size;
-    const complete = Array.from(schemaStatus.values()).filter(s => s.isComplete).length;
+
+    // Use leaf-only progress counting (Phase 6: only leaves need schemas)
+    const progress = getLeafSchemaProgress(tree.nodes, schemaStatus);
 
     return {
-      complete,
-      total,
-      percentage: total > 0 ? Math.round((complete / total) * 100) : 0,
+      complete: progress.complete,
+      total: progress.total,
+      percentage: progress.percentage,
     };
   },
 
@@ -1220,5 +1320,150 @@ export const useIndicatorBuilderStore = create<IndicatorBuilderState>((set, get)
   hasCopiedSchema: (type) => {
     const { copiedSchema } = get();
     return copiedSchema !== null && copiedSchema.type === type;
+  },
+
+  // ============================================================================
+  // Leaf Indicator Selectors & Navigation (Phase 6)
+  // ============================================================================
+
+  isLeafIndicator: (indicatorId) => {
+    const { tree } = get();
+    const indicator = tree.nodes.get(indicatorId);
+    if (!indicator) return false;
+
+    const allIndicators = Array.from(tree.nodes.values());
+    return isLeafIndicatorUtil(indicator, allIndicators);
+  },
+
+  canConfigureSchemas: (indicatorId) => {
+    const { tree } = get();
+    const indicator = tree.nodes.get(indicatorId);
+    if (!indicator) return false;
+
+    const allIndicators = Array.from(tree.nodes.values());
+    return canConfigureSchemasUtil(indicator, allIndicators);
+  },
+
+  getLeafIndicators: () => {
+    const { tree } = get();
+    return getAllLeafIndicators(tree.nodes);
+  },
+
+  getDescendantLeavesOf: (indicatorId) => {
+    const { tree } = get();
+    const indicator = tree.nodes.get(indicatorId);
+    if (!indicator) return [];
+
+    const allIndicators = Array.from(tree.nodes.values());
+    return getAllDescendantLeaves(indicator, allIndicators);
+  },
+
+  getParentStatusInfo: (indicatorId) => {
+    const { tree, schemaStatus } = get();
+    const indicator = tree.nodes.get(indicatorId);
+
+    if (!indicator) {
+      return {
+        status: 'empty' as const,
+        totalLeaves: 0,
+        completeLeaves: 0,
+        percentage: 0,
+        firstIncompleteLeaf: null,
+      };
+    }
+
+    const allIndicators = Array.from(tree.nodes.values());
+    return getParentStatusUtil(indicator, allIndicators, schemaStatus);
+  },
+
+  navigateToNextIncomplete: () => {
+    const { tree, schemaStatus, navigateToIndicator } = get();
+    const nextIncomplete = getFirstIncompleteLeaf(
+      tree.nodes,
+      tree.rootIds,
+      schemaStatus
+    );
+
+    if (nextIncomplete) {
+      navigateToIndicator(nextIncomplete.temp_id);
+      console.log(
+        `[Navigation] Navigated to next incomplete: ${nextIncomplete.code || nextIncomplete.temp_id}`
+      );
+    } else {
+      console.log('[Navigation] All indicators complete!');
+    }
+  },
+
+  archiveSchemasForIndicator: (indicatorId) => {
+    const { tree, updateNode } = get();
+    const indicator = tree.nodes.get(indicatorId);
+
+    if (!indicator) {
+      console.warn(`[Schema Archive] Indicator ${indicatorId} not found`);
+      return;
+    }
+
+    // Archive current schemas if they exist
+    if (indicator.form_schema || indicator.calculation_schema || indicator.remark_schema) {
+      const archivedSchemas = {
+        form_schema: indicator.form_schema,
+        calculation_schema: indicator.calculation_schema,
+        remark_schema: indicator.remark_schema,
+        archived_at: Date.now(),
+      };
+
+      console.log(
+        `[Schema Archive] Archiving schemas for ${indicator.code || indicatorId}`
+      );
+
+      // Update indicator: clear schemas and save to metadata
+      updateNode(indicatorId, {
+        form_schema: undefined,
+        calculation_schema: undefined,
+        remark_schema: undefined,
+        metadata: {
+          ...indicator.metadata,
+          archived_schemas: archivedSchemas,
+        },
+      });
+    }
+  },
+
+  restoreArchivedSchemas: (indicatorId) => {
+    const { tree, updateNode } = get();
+    const indicator = tree.nodes.get(indicatorId);
+
+    if (!indicator) {
+      console.warn(`[Schema Restore] Indicator ${indicatorId} not found`);
+      return;
+    }
+
+    const archivedSchemas = indicator.metadata?.archived_schemas;
+
+    if (!archivedSchemas) {
+      console.warn(`[Schema Restore] No archived schemas found for ${indicatorId}`);
+      return;
+    }
+
+    console.log(
+      `[Schema Restore] Restoring schemas for ${indicator.code || indicatorId}`
+    );
+
+    // Restore schemas and clear archived metadata
+    updateNode(indicatorId, {
+      form_schema: archivedSchemas.form_schema,
+      calculation_schema: archivedSchemas.calculation_schema,
+      remark_schema: archivedSchemas.remark_schema,
+      metadata: {
+        ...indicator.metadata,
+        archived_schemas: undefined,
+      },
+    });
+  },
+
+  hasArchivedSchemas: (indicatorId) => {
+    const { tree } = get();
+    const indicator = tree.nodes.get(indicatorId);
+    return !!(indicator?.metadata?.archived_schemas);
   },
 }));

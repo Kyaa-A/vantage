@@ -52,6 +52,12 @@ export type GetUsersStatsDashboard200 = { [key: string]: unknown };
 
 
 /**
+ * IndicatorDraftResponseLockedByUserId
+ */
+export type IndicatorDraftResponseLockedByUserId = number | null;
+
+
+/**
  * IndicatorHistoryResponseArchivedByUser
  */
 export type IndicatorHistoryResponseArchivedByUser = UserNested | null;

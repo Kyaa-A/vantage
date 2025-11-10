@@ -4,6 +4,17 @@
 // 🏷️  Based on FastAPI tag: "error"
 
 /**
+ * BulkCreateError
+ */
+export interface BulkCreateError {
+  /** Temporary ID of the failed indicator */
+  temp_id: string;
+  /** Error message */
+  error: string;
+}
+
+
+/**
  * HTTPValidationError
  */
 export interface HTTPValidationError {

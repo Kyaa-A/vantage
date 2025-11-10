@@ -9,6 +9,7 @@ import type { PercentageThresholdRule } from '../percentagethresholdrule';
 import type { CountThresholdRule } from '../countthresholdrule';
 import type { MatchValueRule } from '../matchvaluerule';
 import type { BBIFunctionalityCheckRule } from '../bbis';
+import type { ReorderRequestIndicatorsItem } from '../indicators';
 import type { AssessmentRow } from '../assessments';
 
 /**
@@ -701,6 +702,15 @@ export interface RadioButtonField {
  * RadioButtonFieldHelpText
  */
 export type RadioButtonFieldHelpText = string | null;
+
+
+/**
+ * ReorderRequest
+ */
+export interface ReorderRequest {
+  /** List of indicator updates with id, code, parent_id */
+  indicators: ReorderRequestIndicatorsItem[];
+}
 
 
 /**

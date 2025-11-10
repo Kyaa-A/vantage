@@ -14,6 +14,7 @@ import { useSchemaCopyPaste } from '@/hooks/useSchemaCopyPaste';
 import { FormSchemaBuilder } from '../FormSchemaBuilder';
 import { CalculationSchemaBuilder } from '../CalculationSchemaBuilder';
 import { RichTextEditor } from '../RichTextEditor';
+import { ParentAggregateDashboard } from './ParentAggregateDashboard';
 
 /**
  * SchemaEditorPanel Component
@@ -42,10 +43,22 @@ export function SchemaEditorPanel({ indicatorId }: SchemaEditorPanelProps) {
   const autoSave = useIndicatorBuilderStore(state => state.autoSave);
   const markSchemaDirty = useIndicatorBuilderStore(state => state.markSchemaDirty);
 
+  // NEW: Leaf detection and parent status (Phase 6)
+  const isLeafIndicator = useIndicatorBuilderStore(state => state.isLeafIndicator);
+  const getParentStatusInfo = useIndicatorBuilderStore(state => state.getParentStatusInfo);
+  const getDescendantLeavesOf = useIndicatorBuilderStore(state => state.getDescendantLeavesOf);
+  const navigateToIndicator = useIndicatorBuilderStore(state => state.navigateToIndicator);
+  const navigateToNextIncomplete = useIndicatorBuilderStore(state => state.navigateToNextIncomplete);
+
   const indicator = indicatorId ? getNodeById(indicatorId) : null;
   const status = indicatorId ? schemaStatus.get(indicatorId) : null;
   const isSaving = indicatorId ? autoSave.savingSchemas.has(indicatorId) : false;
   const lastSaved = indicatorId ? autoSave.lastSaved.get(indicatorId) : null;
+
+  // NEW: Check if indicator is a leaf (Phase 6)
+  const isLeaf = indicatorId ? isLeafIndicator(indicatorId) : false;
+  const parentStatus = indicatorId && !isLeaf ? getParentStatusInfo(indicatorId) : null;
+  const leafIndicators = indicatorId && !isLeaf ? getDescendantLeavesOf(indicatorId) : [];
 
   // Navigation hook for keyboard shortcuts and prev/next
   const {
@@ -85,6 +98,19 @@ export function SchemaEditorPanel({ indicatorId }: SchemaEditorPanelProps) {
           </div>
         </div>
       </div>
+    );
+  }
+
+  // NEW: Show parent aggregate dashboard for parent indicators (Phase 6)
+  if (!isLeaf && parentStatus) {
+    return (
+      <ParentAggregateDashboard
+        indicator={indicator}
+        parentStatus={parentStatus}
+        leafIndicators={leafIndicators}
+        onNavigateToIndicator={navigateToIndicator}
+        onNavigateToNextIncomplete={navigateToNextIncomplete}
+      />
     );
   }
 

@@ -896,3 +896,330 @@ export function getBreadcrumbs(
 
   return breadcrumbs;
 }
+
+// ============================================================================
+// Leaf Indicator Detection (Phase 6: Hierarchical Indicators)
+// ============================================================================
+
+/**
+ * Check if an indicator is a leaf node (has no children)
+ *
+ * Leaf indicators are terminal nodes in the hierarchy that:
+ * - Have no children
+ * - Should have form schemas (data collection points)
+ * - Are the only indicators that need schema configuration
+ *
+ * Parent indicators are organizational containers that:
+ * - Have children
+ * - Should NOT have form schemas
+ * - Aggregate scores from their children
+ *
+ * @param indicator - The indicator to check
+ * @param allIndicators - All indicators in the tree
+ * @returns True if the indicator has no children (is a leaf)
+ *
+ * @example
+ * ```typescript
+ * const isLeaf = isLeafIndicator(indicator, allNodes);
+ * if (isLeaf) {
+ *   // Show schema configuration UI
+ * } else {
+ *   // Show aggregate dashboard
+ * }
+ * ```
+ */
+export function isLeafIndicator(
+  indicator: IndicatorNode,
+  allIndicators: IndicatorNode[]
+): boolean {
+  return !allIndicators.some(node => node.parent_temp_id === indicator.temp_id);
+}
+
+/**
+ * Get all leaf indicators from the tree
+ *
+ * Returns only the terminal nodes that should have schemas configured.
+ * Use this for progress tracking and "Next Incomplete" navigation.
+ *
+ * @param nodes - Map of all nodes
+ * @returns Array of leaf indicators
+ *
+ * @example
+ * ```typescript
+ * const leaves = getAllLeafIndicators(nodes);
+ * const totalLeaves = leaves.length;
+ * const completeLeaves = leaves.filter(leaf => hasSchemasComplete(leaf)).length;
+ * console.log(`Progress: ${completeLeaves}/${totalLeaves} indicators complete`);
+ * ```
+ */
+export function getAllLeafIndicators(
+  nodes: Map<string, IndicatorNode>
+): IndicatorNode[] {
+  const allNodes = Array.from(nodes.values());
+  return allNodes.filter(node => isLeafIndicator(node, allNodes));
+}
+
+/**
+ * Get all descendant leaves of a parent indicator
+ *
+ * Recursively finds all leaf nodes underneath a parent.
+ * Used for calculating parent aggregate status and smart navigation.
+ *
+ * @param parent - The parent indicator
+ * @param allIndicators - All indicators in the tree
+ * @returns Array of leaf indicators that are descendants of the parent
+ *
+ * @example
+ * ```typescript
+ * const leaves = getAllDescendantLeaves(parentIndicator, allNodes);
+ * const completeCount = leaves.filter(leaf => hasSchemasComplete(leaf)).length;
+ * console.log(`${completeCount}/${leaves.length} child indicators complete`);
+ * ```
+ */
+export function getAllDescendantLeaves(
+  parent: IndicatorNode,
+  allIndicators: IndicatorNode[]
+): IndicatorNode[] {
+  const children = allIndicators
+    .filter(node => node.parent_temp_id === parent.temp_id)
+    .sort((a, b) => a.order - b.order);
+
+  // If no children, this is a leaf
+  if (children.length === 0) {
+    return [parent];
+  }
+
+  // Recursively collect leaves from all children
+  return children.flatMap(child => getAllDescendantLeaves(child, allIndicators));
+}
+
+/**
+ * Parent indicator status information
+ *
+ * Aggregates completion status from all descendant leaves.
+ */
+export interface ParentStatusInfo {
+  /** Overall status: 'complete' (all done), 'incomplete' (none done), 'partial' (some done), 'empty' (no leaves) */
+  status: 'complete' | 'incomplete' | 'partial' | 'empty';
+
+  /** Total number of descendant leaves */
+  totalLeaves: number;
+
+  /** Number of complete descendant leaves */
+  completeLeaves: number;
+
+  /** Completion percentage (0-100) */
+  percentage: number;
+
+  /** First incomplete leaf for navigation */
+  firstIncompleteLeaf: IndicatorNode | null;
+}
+
+/**
+ * Get aggregate status for a parent indicator
+ *
+ * Calculates completion status based on all descendant leaves.
+ * Used for:
+ * - Displaying parent progress in tree navigator
+ * - Smart auto-navigation (clicking parent → first incomplete leaf)
+ * - Progress tracking in aggregate dashboard
+ *
+ * @param parent - The parent indicator
+ * @param allIndicators - All indicators in the tree
+ * @param schemaStatus - Map of schema completion status
+ * @returns Parent status information
+ *
+ * @example
+ * ```typescript
+ * const status = getParentStatus(parentIndicator, allNodes, schemaStatusMap);
+ * console.log(`${status.completeLeaves}/${status.totalLeaves} complete (${status.percentage}%)`);
+ *
+ * // Navigate to first incomplete
+ * if (status.firstIncompleteLeaf) {
+ *   navigateToIndicator(status.firstIncompleteLeaf.temp_id);
+ * }
+ * ```
+ */
+export function getParentStatus(
+  parent: IndicatorNode,
+  allIndicators: IndicatorNode[],
+  schemaStatus: Map<string, SchemaStatus>
+): ParentStatusInfo {
+  const leaves = getAllDescendantLeaves(parent, allIndicators);
+
+  // If parent is actually a leaf (no children), return empty status
+  if (leaves.length === 1 && leaves[0].temp_id === parent.temp_id) {
+    return {
+      status: 'empty',
+      totalLeaves: 0,
+      completeLeaves: 0,
+      percentage: 0,
+      firstIncompleteLeaf: null,
+    };
+  }
+
+  const totalLeaves = leaves.length;
+  const completeLeaves = leaves.filter(leaf => {
+    const status = schemaStatus.get(leaf.temp_id);
+    return status?.isComplete ?? false;
+  }).length;
+
+  const percentage = totalLeaves > 0 ? Math.round((completeLeaves / totalLeaves) * 100) : 0;
+
+  // Find first incomplete leaf for navigation
+  const firstIncompleteLeaf = leaves.find(leaf => {
+    const status = schemaStatus.get(leaf.temp_id);
+    return !status?.isComplete;
+  }) || null;
+
+  // Determine overall status
+  let status: ParentStatusInfo['status'];
+  if (completeLeaves === totalLeaves) {
+    status = 'complete';
+  } else if (completeLeaves === 0) {
+    status = 'incomplete';
+  } else {
+    status = 'partial';
+  }
+
+  return {
+    status,
+    totalLeaves,
+    completeLeaves,
+    percentage,
+    firstIncompleteLeaf,
+  };
+}
+
+/**
+ * Get the first incomplete leaf indicator in the tree
+ *
+ * Used for "Next Incomplete" navigation button.
+ * Searches in depth-first order (same as tree display order).
+ *
+ * @param nodes - Map of all nodes
+ * @param rootIds - Array of root node IDs
+ * @param schemaStatus - Map of schema completion status
+ * @returns First incomplete leaf indicator, or null if all complete
+ *
+ * @example
+ * ```typescript
+ * const nextIncomplete = getFirstIncompleteLeaf(nodes, rootIds, schemaStatusMap);
+ * if (nextIncomplete) {
+ *   navigateToIndicator(nextIncomplete.temp_id);
+ * } else {
+ *   toast.success('All indicators complete!');
+ * }
+ * ```
+ */
+export function getFirstIncompleteLeaf(
+  nodes: Map<string, IndicatorNode>,
+  rootIds: string[],
+  schemaStatus: Map<string, SchemaStatus>
+): IndicatorNode | null {
+  // Depth-first search starting from roots
+  const searchNode = (nodeId: string): IndicatorNode | null => {
+    const node = nodes.get(nodeId);
+    if (!node) return null;
+
+    const children = findChildren(nodes, nodeId);
+
+    // If leaf, check completion
+    if (children.length === 0) {
+      const status = schemaStatus.get(nodeId);
+      return !status?.isComplete ? node : null;
+    }
+
+    // Search children in order
+    for (const child of children) {
+      const result = searchNode(child.temp_id);
+      if (result) return result;
+    }
+
+    return null;
+  };
+
+  // Search all roots
+  for (const rootId of rootIds) {
+    const result = searchNode(rootId);
+    if (result) return result;
+  }
+
+  return null;
+}
+
+/**
+ * Check if an indicator can have schemas configured
+ *
+ * Only leaf indicators should have schemas.
+ * Parent indicators should display aggregate dashboard instead.
+ *
+ * @param indicator - The indicator to check
+ * @param allIndicators - All indicators in the tree
+ * @returns True if schemas can be configured (indicator is a leaf)
+ *
+ * @example
+ * ```typescript
+ * if (canConfigureSchemas(indicator, allNodes)) {
+ *   return <SchemaEditorPanel />;
+ * } else {
+ *   return <ParentAggregateDashboard />;
+ * }
+ * ```
+ */
+export function canConfigureSchemas(
+  indicator: IndicatorNode,
+  allIndicators: IndicatorNode[]
+): boolean {
+  return isLeafIndicator(indicator, allIndicators);
+}
+
+/**
+ * Get schema progress counting only leaf indicators
+ *
+ * Returns progress based on leaf nodes only, since parent nodes
+ * should not have schemas configured.
+ *
+ * @param nodes - Map of all nodes
+ * @param schemaStatus - Map of schema completion status
+ * @returns Progress object with leaf-only counts
+ *
+ * @example
+ * ```typescript
+ * const progress = getLeafSchemaProgress(nodes, schemaStatusMap);
+ * console.log(`${progress.complete}/${progress.total} data collection indicators (${progress.percentage}%)`);
+ * ```
+ */
+export function getLeafSchemaProgress(
+  nodes: Map<string, IndicatorNode>,
+  schemaStatus: Map<string, SchemaStatus>
+): {
+  complete: number;
+  total: number;
+  percentage: number;
+  incompleteLeaves: IndicatorNode[];
+} {
+  const leaves = getAllLeafIndicators(nodes);
+  const total = leaves.length;
+
+  const incompleteLeaves: IndicatorNode[] = [];
+  let complete = 0;
+
+  leaves.forEach(leaf => {
+    const status = schemaStatus.get(leaf.temp_id);
+    if (status?.isComplete) {
+      complete++;
+    } else {
+      incompleteLeaves.push(leaf);
+    }
+  });
+
+  const percentage = total > 0 ? Math.round((complete / total) * 100) : 0;
+
+  return {
+    complete,
+    total,
+    percentage,
+    incompleteLeaves,
+  };
+}

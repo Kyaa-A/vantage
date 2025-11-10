@@ -46,9 +46,12 @@ export function IndicatorNavigator({
   const getAllNodes = useIndicatorBuilderStore(state => state.getAllNodes);
   const schemaStatus = useIndicatorBuilderStore(state => state.schemaStatus);
   const getSchemaProgress = useIndicatorBuilderStore(state => state.getSchemaProgress);
+  const isLeafIndicator = useIndicatorBuilderStore(state => state.isLeafIndicator);
+  const getParentStatusInfo = useIndicatorBuilderStore(state => state.getParentStatusInfo);
+  const navigateToNextIncomplete = useIndicatorBuilderStore(state => state.navigateToNextIncomplete);
 
   const allNodes = getAllNodes();
-  const progress = getSchemaProgress();
+  const progress = getSchemaProgress(); // Now counts leaves only (Phase 6)
 
   // Build tree structure
   const treeData = useMemo(() => {
@@ -100,20 +103,36 @@ export function IndicatorNavigator({
     return treeData.map(filterNode).filter(node => node !== null);
   }, [treeData, searchQuery, filterMode, schemaStatus]);
 
-  // Render tree recursively
+  // Render tree recursively with leaf detection and parent status (Phase 6)
   const renderTree = (nodes: any[], depth: number = 0) => {
-    return nodes.map(node => (
-      <NavigatorTreeNode
-        key={node.temp_id}
-        indicator={node}
-        depth={depth}
-        isSelected={currentIndicatorId === node.temp_id}
-        status={schemaStatus.get(node.temp_id)}
-        onClick={() => onNavigate(node.temp_id)}
-      >
-        {node.children && node.children.length > 0 && renderTree(node.children, depth + 1)}
-      </NavigatorTreeNode>
-    ));
+    return nodes.map(node => {
+      const isLeaf = isLeafIndicator(node.temp_id);
+      const parentStatus = !isLeaf ? getParentStatusInfo(node.temp_id) : undefined;
+
+      return (
+        <NavigatorTreeNode
+          key={node.temp_id}
+          indicator={node}
+          depth={depth}
+          isSelected={currentIndicatorId === node.temp_id}
+          isLeaf={isLeaf}
+          status={schemaStatus.get(node.temp_id)}
+          parentStatus={parentStatus}
+          onClick={(e: React.MouseEvent) => {
+            // Smart navigation: Shift+Click to force parent selection
+            if (!isLeaf && e.shiftKey) {
+              // Force parent selection (will show aggregate dashboard)
+              onNavigate(node.temp_id);
+            } else {
+              // Normal click: smart navigation handled by store
+              onNavigate(node.temp_id);
+            }
+          }}
+        >
+          {node.children && node.children.length > 0 && renderTree(node.children, depth + 1)}
+        </NavigatorTreeNode>
+      );
+    });
   };
 
   return (
@@ -154,10 +173,10 @@ export function IndicatorNavigator({
           </DropdownMenu>
         </div>
 
-        {/* Progress badge */}
+        {/* Progress badge (counts leaf indicators only - Phase 6) */}
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="font-normal">
-            {progress.complete} / {progress.total} complete
+            {progress.complete} / {progress.total} data collection indicators
           </Badge>
           {filterMode !== 'all' && (
             <Badge variant="outline" className="text-xs">
@@ -197,14 +216,17 @@ export function IndicatorNavigator({
         </div>
       </ScrollArea>
 
-      {/* Footer: Progress & Actions */}
+      {/* Footer: Progress & Actions (counts leaf indicators only - Phase 6) */}
       <div className="p-4 border-t space-y-3 shrink-0">
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>Overall Progress</span>
+            <span>Schema Configuration Progress</span>
             <span className="font-medium">{progress.percentage}%</span>
           </div>
           <Progress value={progress.percentage} className="h-2" />
+          <p className="text-xs text-muted-foreground">
+            {progress.complete} of {progress.total} data collection indicators configured
+          </p>
         </div>
 
         {progress.complete < progress.total && (
@@ -212,16 +234,7 @@ export function IndicatorNavigator({
             variant="outline"
             size="sm"
             className="w-full"
-            onClick={() => {
-              // Find next incomplete indicator
-              const incomplete = allNodes.find(node => {
-                const status = schemaStatus.get(node.temp_id);
-                return !status?.isComplete;
-              });
-              if (incomplete) {
-                onNavigate(incomplete.temp_id);
-              }
-            }}
+            onClick={navigateToNextIncomplete}
           >
             Next Incomplete
             <ChevronRight className="h-4 w-4 ml-1" />
