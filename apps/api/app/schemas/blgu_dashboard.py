@@ -23,7 +23,7 @@ class IndicatorItem(BaseModel):
     is_complete: bool = Field(
         ..., description="Completion status: True if all required fields filled, False otherwise"
     )
-    response_id: int = Field(..., description="Assessment response ID for this indicator")
+    response_id: Optional[int] = Field(None, description="Assessment response ID for this indicator (null if no response yet)")
 
 
 class GovernanceAreaGroup(BaseModel):

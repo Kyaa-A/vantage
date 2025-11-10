@@ -688,7 +688,7 @@
     - **Tech:** Vitest, React Testing Library, performance testing
     - **Time Estimate:** 5 hours
 
-- [ ] **6.7 Story: Calculation Engine Testing**
+- [x] **6.7 Story: Calculation Engine Testing**
   - Test calculation_schema execution with all calculation types
   - Test score-based calculations, boolean logic, conditional logic, aggregates
   - Test remark_schema mapping to calculated_status

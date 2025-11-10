@@ -134,18 +134,26 @@ class SubmissionValidationService:
         """
         incomplete_indicators = []
 
+        # Get all active indicators in the system
+        all_indicators = db.query(Indicator).filter_by(is_active=True).all()
+        self.logger.debug(f"Found {len(all_indicators)} active indicators in system")
+
         # Get all assessment responses for this assessment
         responses = db.query(AssessmentResponse).filter_by(
             assessment_id=assessment_id
         ).all()
+        self.logger.debug(f"Found {len(responses)} responses for assessment {assessment_id}")
 
-        for response in responses:
-            # Get the indicator
-            indicator = db.query(Indicator).filter_by(id=response.indicator_id).first()
-            if not indicator:
-                self.logger.warning(
-                    f"Indicator {response.indicator_id} not found for response {response.id}"
-                )
+        # Create a map of indicator_id -> response for quick lookup
+        response_map = {r.indicator_id: r for r in responses}
+
+        # Check each indicator
+        for indicator in all_indicators:
+            response = response_map.get(indicator.id)
+
+            # If no response exists for this indicator, it's incomplete
+            if not response:
+                incomplete_indicators.append(indicator.name)
                 continue
 
             # Validate completeness using CompletenessValidationService

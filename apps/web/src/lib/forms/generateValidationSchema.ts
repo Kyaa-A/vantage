@@ -69,7 +69,7 @@ function createTextInputValidator(field: FormSchemaFieldsItem): z.ZodTypeAny {
   if (field.required) {
     validator = validator.min(1, `${field.label} is required`);
   } else {
-    validator = validator.optional();
+    validator = validator.optional() as any;
   }
 
   // Add max length validation if specified
@@ -92,7 +92,7 @@ function createTextAreaValidator(field: FormSchemaFieldsItem): z.ZodTypeAny {
   if (field.required) {
     validator = validator.min(1, `${field.label} is required`);
   } else {
-    validator = validator.optional();
+    validator = validator.optional() as any;
   }
 
   // Add max length validation if specified
@@ -133,7 +133,7 @@ function createNumberInputValidator(field: FormSchemaFieldsItem): z.ZodTypeAny {
       message: `${field.label} is required`,
     });
   } else {
-    validator = validator.optional();
+    validator = validator.optional() as any;
   }
 
   return validator;
@@ -148,7 +148,7 @@ function createDatePickerValidator(field: FormSchemaFieldsItem): z.ZodTypeAny {
   if (field.required) {
     validator = validator.min(1, `${field.label} is required`);
   } else {
-    validator = validator.optional();
+    validator = validator.optional() as any;
   }
 
   // Validate ISO date format (YYYY-MM-DD)
@@ -172,7 +172,7 @@ function createRadioButtonValidator(field: FormSchemaFieldsItem): z.ZodTypeAny {
   if (field.required) {
     validator = validator.min(1, `${field.label} is required`);
   } else {
-    validator = validator.optional();
+    validator = validator.optional() as any;
   }
 
   // Validate that selected value is one of the options
@@ -199,7 +199,7 @@ function createCheckboxGroupValidator(field: FormSchemaFieldsItem): z.ZodTypeAny
   if (field.required) {
     validator = validator.min(1, `${field.label} requires at least one selection`);
   } else {
-    validator = validator.optional();
+    validator = validator.optional() as any;
   }
 
   // Validate that selected values are valid options

@@ -58,8 +58,8 @@ export function FileFieldComponent({
   const { data: assessmentData } = useGetAssessmentsMyAssessment({
     query: {
       enabled: !!assessmentId,
-    },
-  });
+    } as any,
+  } as any);
 
   // Fetch uploaded files for this indicator
   const {
@@ -72,8 +72,8 @@ export function FileFieldComponent({
     {
       query: {
         enabled: !!assessmentId && !!indicatorId,
-      },
-    }
+      } as any,
+    } as any
   );
 
   // Upload mutation
@@ -181,7 +181,7 @@ export function FileFieldComponent({
   const files = filesResponse?.files || [];
 
   // Permission checks
-  const assessmentStatus = assessmentData?.assessment?.status;
+  const assessmentStatus = (assessmentData as any)?.assessment?.status;
   const isBLGU = user?.role === "BLGU_USER";
   const isAssessorOrValidator =
     user?.role === "ASSESSOR" ||
@@ -192,20 +192,20 @@ export function FileFieldComponent({
   const canUpload =
     !disabled &&
     isBLGU &&
-    (assessmentStatus === AssessmentStatus.Draft ||
-      assessmentStatus === AssessmentStatus.Needs_Rework);
+    (assessmentStatus === AssessmentStatus.DRAFT ||
+      assessmentStatus === AssessmentStatus.NEEDS_REWORK);
 
   // Can delete: Only BLGU users, only for DRAFT or NEEDS_REWORK status, and not disabled
   const canDelete =
     !disabled &&
     isBLGU &&
-    (assessmentStatus === AssessmentStatus.Draft ||
-      assessmentStatus === AssessmentStatus.Needs_Rework);
+    (assessmentStatus === AssessmentStatus.DRAFT ||
+      assessmentStatus === AssessmentStatus.NEEDS_REWORK);
 
   // Reason why upload is disabled
   const uploadDisabledReason = !canUpload
-    ? assessmentStatus === AssessmentStatus.Submitted_for_Review ||
-      assessmentStatus === AssessmentStatus.Validated
+    ? assessmentStatus === AssessmentStatus.SUBMITTED_FOR_REVIEW ||
+      assessmentStatus === AssessmentStatus.VALIDATED
       ? "File uploads are disabled for submitted or validated assessments"
       : !isBLGU
       ? "Only BLGU users can upload files"
@@ -301,8 +301,8 @@ export function FileFieldComponent({
       {files.length > 0 &&
         !canDelete &&
         isBLGU &&
-        (assessmentStatus === AssessmentStatus.Submitted_for_Review ||
-          assessmentStatus === AssessmentStatus.Validated) && (
+        (assessmentStatus === AssessmentStatus.SUBMITTED_FOR_REVIEW ||
+          assessmentStatus === AssessmentStatus.VALIDATED) && (
           <Alert className="border-blue-200 bg-blue-50">
             <Info className="h-4 w-4 text-blue-600" />
             <AlertDescription className="text-blue-900">

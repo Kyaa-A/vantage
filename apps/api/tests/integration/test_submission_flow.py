@@ -263,6 +263,7 @@ class TestCompleteAssessmentSubmissionFlow:
         client: TestClient,
         auth_headers_blgu: Dict[str, str],
         test_draft_assessment: Assessment,
+        test_indicator,  # Need indicator in DB for validation to work
     ):
         """
         Test: Incomplete assessment cannot be submitted.
@@ -287,6 +288,7 @@ class TestCompleteAssessmentSubmissionFlow:
     def test_blgu_cannot_submit_other_users_assessment(
         self,
         client: TestClient,
+        auth_headers_blgu: Dict[str, str],
         db_session: Session,
         test_blgu_user: User,
         test_assessor_user: User,
@@ -329,26 +331,12 @@ class TestCompleteAssessmentSubmissionFlow:
         db_session.commit()
         db_session.refresh(other_assessment)
 
-        # Login as test_blgu_user
-        from fastapi.testclient import TestClient
-        from main import app
-
-        client_local = TestClient(app)
-        login_response = client_local.post(
-            "/api/v1/auth/login",
-            data={
-                "username": test_blgu_user.email,
-                "password": test_blgu_user.plain_password,
-            },
-        )
-        assert login_response.status_code == 200
-        token = login_response.json()["access_token"]
-        headers = {"Authorization": f"Bearer {token}"}
-
-        # Try to submit other user's assessment
-        response = client_local.post(
+        # Try to submit other user's assessment using test_blgu_user's auth
+        # (The test_blgu_user is already authenticated via auth_headers_blgu fixture)
+        # This test uses the same client/session as the rest of the test class
+        response = client.post(
             f"/api/v1/assessments/{other_assessment.id}/submit",
-            headers=headers
+            headers=auth_headers_blgu
         )
 
         # Should be forbidden

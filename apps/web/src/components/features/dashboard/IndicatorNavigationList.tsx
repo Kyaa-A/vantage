@@ -71,11 +71,11 @@ export function IndicatorNavigationList({
 
   return (
     <div className="space-y-2">
-      {Object.entries(groupedIndicators).map(([areaIdStr, areaData]) => {
+      {Object.entries(groupedIndicators).map(([areaIdStr, areaData]: [string, GroupedIndicators[number]]) => {
         const areaId = parseInt(areaIdStr);
         const isExpanded = expandedAreas.has(areaId);
         const completedCount = areaData.indicators.filter(
-          (ind) => ind.completion_status === "complete"
+          (ind: IndicatorNavigationItem) => ind.completion_status === "complete"
         ).length;
         const totalCount = areaData.indicators.length;
 
@@ -114,7 +114,7 @@ export function IndicatorNavigationList({
             {/* Indicator List */}
             {isExpanded && (
               <div className="border-t border-[var(--border)]">
-                {areaData.indicators.map((indicator) => (
+                {areaData.indicators.map((indicator: IndicatorNavigationItem) => (
                   <button
                     key={indicator.indicator_id}
                     onClick={() => handleIndicatorClick(indicator.route_path)}

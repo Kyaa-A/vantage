@@ -4,7 +4,7 @@
 "use client";
 
 import { useMemo, useEffect } from "react";
-import { useForm, FormProvider } from "react-hook-form";
+import { useForm, FormProvider, Control, FieldValues } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -72,8 +72,8 @@ export function DynamicFormRenderer({
       {
         query: {
           enabled: !!assessmentId && !!indicatorId,
-        },
-      }
+        } as any,
+      } as any
     );
 
   // Transform saved responses to default values
@@ -182,7 +182,7 @@ export function DynamicFormRenderer({
             section={section}
             formSchema={formSchema}
             formValues={formValues}
-            control={control}
+            control={control as any}
             errors={formState.errors}
             assessmentId={assessmentId}
             indicatorId={indicatorId}
@@ -216,7 +216,7 @@ interface SectionRendererProps {
   section: Section;
   formSchema: FormSchema | Record<string, unknown>;
   formValues: Record<string, unknown>;
-  control: ReturnType<typeof useForm>["control"];
+  control: Control<FieldValues>;
   errors: ReturnType<typeof useForm>["formState"]["errors"];
   assessmentId: number;
   indicatorId: number;
@@ -256,7 +256,7 @@ function SectionRenderer({
           <FieldRenderer
             key={field.field_id}
             field={field}
-            control={control}
+            control={control as any}
             error={errors[field.field_id]?.message as string | undefined}
             assessmentId={assessmentId}
             indicatorId={indicatorId}
@@ -274,7 +274,7 @@ function SectionRenderer({
 
 interface FieldRendererProps {
   field: FormSchemaFieldsItem;
-  control: ReturnType<typeof useForm>["control"];
+  control: Control<FieldValues>;
   error?: string;
   assessmentId: number;
   indicatorId: number;
@@ -287,66 +287,78 @@ function FieldRenderer({ field, control, error, assessmentId, indicatorId, isLoc
     case "text_input":
       return (
         <TextFieldComponent
-          field={field}
-          control={control}
-          name={field.field_id}
-          error={error}
-          disabled={isLocked}
+          {...({
+            field,
+            control,
+            name: field.field_id,
+            error,
+            disabled: isLocked,
+          } as any)}
         />
       );
 
     case "number_input":
       return (
         <NumberFieldComponent
-          field={field}
-          control={control}
-          name={field.field_id}
-          error={error}
-          disabled={isLocked}
+          {...({
+            field,
+            control,
+            name: field.field_id,
+            error,
+            disabled: isLocked,
+          } as any)}
         />
       );
 
     case "text_area":
       return (
         <TextAreaFieldComponent
-          field={field}
-          control={control}
-          name={field.field_id}
-          error={error}
-          disabled={isLocked}
+          {...({
+            field,
+            control,
+            name: field.field_id,
+            error,
+            disabled: isLocked,
+          } as any)}
         />
       );
 
     case "radio_button":
       return (
         <RadioFieldComponent
-          field={field}
-          control={control}
-          name={field.field_id}
-          error={error}
-          disabled={isLocked}
+          {...({
+            field,
+            control,
+            name: field.field_id,
+            error,
+            disabled: isLocked,
+          } as any)}
         />
       );
 
     case "checkbox_group":
       return (
         <CheckboxFieldComponent
-          field={field}
-          control={control}
-          name={field.field_id}
-          error={error}
-          disabled={isLocked}
+          {...({
+            field,
+            control,
+            name: field.field_id,
+            error,
+            disabled: isLocked,
+          } as any)}
         />
       );
 
     case "date_picker":
       return (
         <DateFieldComponent
-          field={field}
-          control={control}
-          name={field.field_id}
-          error={error}
-          disabled={isLocked}
+          {...({
+            field,
+            control,
+            name: field.field_id,
+            error,
+            disabled: isLocked,
+          } as any)}
         />
       );
 

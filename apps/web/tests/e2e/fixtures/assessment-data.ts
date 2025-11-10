@@ -99,7 +99,7 @@ export function generateFormDataForIndicator(indicatorId: number): Record<string
     [`field_${indicatorId}_number`]: FORM_FIELD_VALUES.NUMBER.budget,
     [`field_${indicatorId}_textarea`]: FORM_FIELD_VALUES.TEXT_AREA.longDescription,
     [`field_${indicatorId}_radio`]: FORM_FIELD_VALUES.RADIO.selection,
-    [`field_${indicatorId}_checkbox`]: FORM_FIELD_VALUES.CHECKBOX.selections,
+    [`field_${indicatorId}_checkbox`]: [...FORM_FIELD_VALUES.CHECKBOX.selections],
     [`field_${indicatorId}_date`]: FORM_FIELD_VALUES.DATE.projectStart,
   };
 }

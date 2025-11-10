@@ -39,8 +39,8 @@ export function CheckboxFieldComponent<TFieldValues extends FieldValues>({
             : false,
         }}
         render={({ field: controllerField }) => {
-          const currentValue = Array.isArray(controllerField.value)
-            ? controllerField.value
+          const currentValue: string[] = Array.isArray(controllerField.value)
+            ? (controllerField.value as string[])
             : [];
 
           return (

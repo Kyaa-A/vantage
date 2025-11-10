@@ -19,7 +19,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.api import deps
 from app.db.enums import AssessmentStatus, UserRole
 from app.db.models.assessment import Assessment, AssessmentResponse
-from app.db.models.governance_area import Indicator
+from app.db.models.governance_area import GovernanceArea, Indicator
 from app.db.models.user import User
 from app.schemas.blgu_dashboard import BLGUDashboardResponse, IndicatorNavigationItem
 from app.services.completeness_validation_service import completeness_validation_service
@@ -81,9 +81,28 @@ def get_blgu_dashboard(
         )
 
     # Calculate completion metrics and group by governance area
-    total_indicators = 0
-    completed_indicators = 0
-    incomplete_indicators = 0
+    # We need to count ALL indicators, not just those with responses
+
+    try:
+        # Get all indicators with eager loading of governance_area (same logic as get_assessment_for_blgu_with_full_data)
+        all_indicators = db.query(Indicator).options(joinedload(Indicator.governance_area)).all()
+
+        # Build response lookup for O(1) access
+        response_lookup = {r.indicator_id: r for r in assessment.responses}
+
+        # Build parent-child relationships
+        children_by_parent: Dict[int | None, list[Indicator]] = {}
+        for ind in all_indicators:
+            parent_id = ind.parent_id
+            children_by_parent.setdefault(parent_id, []).append(ind)
+    except Exception as e:
+        import traceback
+        print(f"Error loading indicators: {e}")
+        print(traceback.format_exc())
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error loading indicators: {str(e)}",
+        )
 
     # Structure to group indicators by governance area
     governance_area_groups: Dict[int, Dict[str, Any]] = defaultdict(
@@ -94,24 +113,48 @@ def get_blgu_dashboard(
         }
     )
 
-    for response in assessment.responses:
-        total_indicators += 1
+    def count_leaf_indicators(indicator: Indicator) -> int:
+        """Recursively count leaf indicators (indicators without children)."""
+        children = children_by_parent.get(indicator.id, [])
+        if not children:
+            return 1  # This is a leaf indicator
+        # If has children, count children instead
+        return sum(count_leaf_indicators(child) for child in children)
 
-        # Use CompletenessValidationService to determine completion status
-        validation_result = completeness_validation_service.validate_completeness(
-            form_schema=response.indicator.form_schema,
-            response_data=response.response_data,
-            uploaded_movs=response.movs
-        )
+    def process_indicator(indicator: Indicator) -> None:
+        """Process an indicator and its children for completion metrics."""
+        nonlocal completed_indicators, incomplete_indicators
 
-        is_complete = validation_result["is_complete"]
+        children = children_by_parent.get(indicator.id, [])
+
+        # If this indicator has children, process children instead
+        if children:
+            for child in children:
+                process_indicator(child)
+            return
+
+        # This is a leaf indicator - check completion status
+        response = response_lookup.get(indicator.id)
+
+        if response:
+            # Use CompletenessValidationService to determine completion status
+            validation_result = completeness_validation_service.validate_completeness(
+                form_schema=indicator.form_schema,
+                response_data=response.response_data,
+                uploaded_movs=response.movs
+            )
+            is_complete = validation_result["is_complete"]
+        else:
+            # No response yet - indicator is incomplete
+            is_complete = False
+
         if is_complete:
             completed_indicators += 1
         else:
             incomplete_indicators += 1
 
         # Group by governance area
-        governance_area = response.indicator.governance_area
+        governance_area = indicator.governance_area
         area_id = governance_area.id
 
         # Initialize governance area data if first time
@@ -121,11 +164,59 @@ def get_blgu_dashboard(
 
         # Add indicator data to the group
         governance_area_groups[area_id]["indicators"].append({
-            "indicator_id": response.indicator.id,
-            "indicator_name": response.indicator.name,
+            "indicator_id": indicator.id,
+            "indicator_name": indicator.name,
             "is_complete": is_complete,
-            "response_id": response.id,
+            "response_id": response.id if response else None,
         })
+
+    # Get all governance areas
+    governance_areas = db.query(GovernanceArea).all()
+
+    # Process all top-level indicators in each governance area
+    completed_indicators = 0
+    incomplete_indicators = 0
+
+    try:
+        for area in governance_areas:
+            # Get top-level indicators for this area (indicators without parents)
+            top_level_indicators = [
+                ind for ind in all_indicators
+                if ind.governance_area_id == area.id and ind.parent_id is None
+            ]
+
+            # Apply the same filtering logic as get_assessment_for_blgu_with_full_data
+            # For areas 1-6, separate Epic 3 format indicators from legacy indicators
+            # Epic 3 indicators have "fields" array in form_schema, legacy use "properties"
+            if area.id in [1, 2, 3, 4, 5, 6]:
+                epic3_indicators = []
+                legacy_indicators = []
+
+                for ind in top_level_indicators:
+                    schema = ind.form_schema or {}
+                    # Epic 3 format has "fields" array
+                    if "fields" in schema and isinstance(schema.get("fields"), list):
+                        epic3_indicators.append(ind)
+                    else:
+                        legacy_indicators.append(ind)
+
+                # Use only the first legacy indicator for mock structure (backward compatibility)
+                # But include ALL Epic 3 indicators
+                top_level_indicators = legacy_indicators[:1] + epic3_indicators
+
+            for indicator in top_level_indicators:
+                process_indicator(indicator)
+    except Exception as e:
+        import traceback
+        print(f"Error processing indicators: {e}")
+        print(traceback.format_exc())
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error processing indicators: {str(e)}",
+        )
+
+    # Calculate total from completed + incomplete
+    total_indicators = completed_indicators + incomplete_indicators
 
     # Calculate completion percentage
     completion_percentage = (

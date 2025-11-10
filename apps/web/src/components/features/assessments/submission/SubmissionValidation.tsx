@@ -69,8 +69,8 @@ export function SubmissionValidation({ assessmentId }: SubmissionValidationProps
 
   const { validation_result } = submissionStatus;
   const isValid = validation_result.is_valid;
-  const incompleteCount = validation_result.incomplete_indicators.length;
-  const missingMovCount = validation_result.missing_movs.length;
+  const incompleteCount = validation_result.incomplete_indicators?.length || 0;
+  const missingMovCount = validation_result.missing_movs?.length || 0;
   const totalIssues = incompleteCount + missingMovCount;
 
   return (
@@ -128,7 +128,7 @@ export function SubmissionValidation({ assessmentId }: SubmissionValidationProps
               <AlertDescription>
                 <p className="mb-2">The following indicators have missing required fields:</p>
                 <ul className="list-disc list-inside space-y-1 text-sm">
-                  {validation_result.incomplete_indicators.map((indicator, index) => (
+                  {validation_result.incomplete_indicators?.map((indicator, index) => (
                     <li key={index} className="text-red-700 dark:text-red-400">
                       {indicator}
                     </li>
@@ -164,7 +164,7 @@ export function SubmissionValidation({ assessmentId }: SubmissionValidationProps
               <AlertDescription>
                 <p className="mb-2">The following indicators are missing required file uploads:</p>
                 <ul className="list-disc list-inside space-y-1 text-sm">
-                  {validation_result.missing_movs.map((indicator, index) => (
+                  {validation_result.missing_movs?.map((indicator, index) => (
                     <li key={index} className="text-red-700 dark:text-red-400">
                       {indicator}
                     </li>
