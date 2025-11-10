@@ -477,6 +477,340 @@ class IndicatorService:
         return False
 
     # ========================================================================
+    # Bulk Operations (Phase 6: Hierarchical Indicator Creation)
+    # ========================================================================
+
+    def bulk_create_indicators(
+        self,
+        db: Session,
+        governance_area_id: int,
+        indicators_data: List[Dict[str, Any]],
+        user_id: int
+    ) -> tuple[List[Indicator], Dict[str, int], List[Dict[str, str]]]:
+        """
+        Create multiple indicators in bulk with proper dependency ordering.
+
+        Uses topological sorting to ensure parents are created before children.
+        All operations are wrapped in a transaction for atomicity.
+
+        Args:
+            db: Database session
+            governance_area_id: Governance area ID for all indicators
+            indicators_data: List of indicator dictionaries with temp_id, parent_temp_id, order
+            user_id: ID of user creating the indicators
+
+        Returns:
+            tuple of (created_indicators, temp_id_mapping, errors)
+            - created_indicators: List of created Indicator instances
+            - temp_id_mapping: Dict mapping temp_id to real database ID
+            - errors: List of error dictionaries with temp_id and error message
+
+        Raises:
+            HTTPException: If governance area doesn't exist or circular dependencies detected
+        """
+        # Validate governance area exists
+        governance_area = (
+            db.query(GovernanceArea)
+            .filter(GovernanceArea.id == governance_area_id)
+            .first()
+        )
+        if not governance_area:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Governance area with ID {governance_area_id} not found",
+            )
+
+        created_indicators: List[Indicator] = []
+        temp_id_mapping: Dict[str, int] = {}
+        errors: List[Dict[str, str]] = []
+
+        try:
+            # Topological sort by dependency
+            sorted_indicators = self._topological_sort_indicators(indicators_data)
+
+            # Create indicators in dependency order
+            for indicator_data in sorted_indicators:
+                temp_id = indicator_data.get("temp_id")
+                parent_temp_id = indicator_data.get("parent_temp_id")
+
+                try:
+                    # Resolve parent_id if parent_temp_id is provided
+                    parent_id = None
+                    if parent_temp_id:
+                        parent_id = temp_id_mapping.get(parent_temp_id)
+                        if parent_id is None:
+                            raise ValueError(
+                                f"Parent temp_id {parent_temp_id} not found in mapping"
+                            )
+
+                    # Prepare indicator data
+                    create_data = {
+                        "name": indicator_data["name"],
+                        "description": indicator_data.get("description"),
+                        "governance_area_id": governance_area_id,
+                        "parent_id": parent_id,
+                        "is_active": indicator_data.get("is_active", True),
+                        "is_auto_calculable": indicator_data.get("is_auto_calculable", False),
+                        "is_profiling_only": indicator_data.get("is_profiling_only", False),
+                        "form_schema": indicator_data.get("form_schema"),
+                        "calculation_schema": indicator_data.get("calculation_schema"),
+                        "remark_schema": indicator_data.get("remark_schema"),
+                        "technical_notes_text": indicator_data.get("technical_notes_text"),
+                    }
+
+                    # Create the indicator (reusing existing validation logic)
+                    indicator = self.create_indicator(db, create_data, user_id)
+
+                    # Store mapping
+                    temp_id_mapping[temp_id] = indicator.id
+                    created_indicators.append(indicator)
+
+                    logger.info(
+                        f"Created indicator '{indicator.name}' (temp_id: {temp_id}, real_id: {indicator.id})"
+                    )
+
+                except Exception as e:
+                    logger.error(f"Error creating indicator with temp_id {temp_id}: {str(e)}")
+                    errors.append({"temp_id": temp_id, "error": str(e)})
+                    # Continue processing other indicators if possible
+                    # Or raise to rollback all if strict atomicity is required
+                    # For now, we'll continue and report errors
+
+            # If any errors occurred, rollback the transaction
+            if errors:
+                db.rollback()
+                logger.warning(f"Bulk creation failed with {len(errors)} errors, transaction rolled back")
+                return [], {}, errors
+
+            # Commit transaction
+            db.commit()
+            logger.info(f"Successfully created {len(created_indicators)} indicators in bulk")
+
+            return created_indicators, temp_id_mapping, errors
+
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Bulk creation failed: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Bulk indicator creation failed: {str(e)}",
+            )
+
+    def _topological_sort_indicators(
+        self, indicators_data: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        """
+        Topologically sort indicators by parent-child dependencies.
+
+        Args:
+            indicators_data: List of indicator dictionaries with temp_id and parent_temp_id
+
+        Returns:
+            Sorted list where parents always appear before children
+
+        Raises:
+            ValueError: If circular dependencies are detected
+        """
+        # Build adjacency list and in-degree count
+        graph: Dict[str, List[str]] = {}
+        in_degree: Dict[str, int] = {}
+        node_data: Dict[str, Dict[str, Any]] = {}
+
+        # Initialize
+        for indicator in indicators_data:
+            temp_id = indicator["temp_id"]
+            parent_temp_id = indicator.get("parent_temp_id")
+
+            node_data[temp_id] = indicator
+            in_degree[temp_id] = 0
+            graph[temp_id] = []
+
+        # Build graph
+        for indicator in indicators_data:
+            temp_id = indicator["temp_id"]
+            parent_temp_id = indicator.get("parent_temp_id")
+
+            if parent_temp_id:
+                if parent_temp_id not in graph:
+                    raise ValueError(
+                        f"Parent temp_id {parent_temp_id} not found for indicator {temp_id}"
+                    )
+                graph[parent_temp_id].append(temp_id)
+                in_degree[temp_id] += 1
+
+        # Kahn's algorithm for topological sort
+        queue = [node for node in in_degree if in_degree[node] == 0]
+        sorted_nodes = []
+
+        while queue:
+            current = queue.pop(0)
+            sorted_nodes.append(current)
+
+            for neighbor in graph[current]:
+                in_degree[neighbor] -= 1
+                if in_degree[neighbor] == 0:
+                    queue.append(neighbor)
+
+        # Check for circular dependencies
+        if len(sorted_nodes) != len(indicators_data):
+            raise ValueError(
+                "Circular dependency detected in indicator hierarchy"
+            )
+
+        # Return sorted indicator data
+        return [node_data[temp_id] for temp_id in sorted_nodes]
+
+    def reorder_indicators(
+        self,
+        db: Session,
+        reorder_data: List[Dict[str, Any]],
+        user_id: int
+    ) -> List[Indicator]:
+        """
+        Reorder indicators by updating codes and parent_ids in batch.
+
+        Args:
+            db: Database session
+            reorder_data: List of dicts with {id, code, parent_id}
+            user_id: ID of user performing the reorder
+
+        Returns:
+            List of updated Indicator instances
+
+        Raises:
+            HTTPException: If circular references are detected
+        """
+        updated_indicators: List[Indicator] = []
+
+        try:
+            # Validate no circular references
+            self._validate_no_circular_references(db, reorder_data)
+
+            # Update each indicator
+            for update in reorder_data:
+                indicator_id = update["id"]
+                indicator = db.query(Indicator).filter(Indicator.id == indicator_id).first()
+
+                if not indicator:
+                    logger.warning(f"Indicator ID {indicator_id} not found, skipping")
+                    continue
+
+                # Update fields
+                if "code" in update:
+                    # Assuming we add a 'code' field to indicators later
+                    # For now, we can update the name to include the code
+                    pass
+
+                if "parent_id" in update:
+                    indicator.parent_id = update["parent_id"]
+
+                updated_indicators.append(indicator)
+
+            db.commit()
+            logger.info(f"Reordered {len(updated_indicators)} indicators")
+
+            return updated_indicators
+
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Reorder failed: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Indicator reorder failed: {str(e)}",
+            )
+
+    def _validate_no_circular_references(
+        self, db: Session, reorder_data: List[Dict[str, Any]]
+    ) -> None:
+        """
+        Validate that the proposed reorder doesn't create circular references.
+
+        Args:
+            db: Database session
+            reorder_data: List of dicts with {id, parent_id}
+
+        Raises:
+            ValueError: If circular references are detected
+        """
+        # Build parent map from reorder data
+        parent_map: Dict[int, Optional[int]] = {}
+        for update in reorder_data:
+            parent_map[update["id"]] = update.get("parent_id")
+
+        # Check each node for cycles
+        for indicator_id in parent_map:
+            visited = set()
+            current = indicator_id
+
+            while current is not None:
+                if current in visited:
+                    raise ValueError(
+                        f"Circular reference detected: indicator {indicator_id}"
+                    )
+
+                visited.add(current)
+                current = parent_map.get(current)
+
+    def validate_tree_structure(
+        self,
+        db: Session,
+        governance_area_id: int,
+        indicators_data: List[Dict[str, Any]]
+    ) -> List[str]:
+        """
+        Validate indicator tree structure before bulk creation.
+
+        Checks for:
+        - Circular references
+        - Valid calculation schema field references
+        - Weight sum validation (if applicable)
+
+        Args:
+            db: Database session
+            governance_area_id: Governance area ID
+            indicators_data: List of indicator dictionaries
+
+        Returns:
+            List of validation error messages (empty if valid)
+        """
+        errors: List[str] = []
+
+        try:
+            # Check circular references via topological sort
+            try:
+                self._topological_sort_indicators(indicators_data)
+            except ValueError as e:
+                errors.append(f"Circular reference detected: {str(e)}")
+
+            # Validate calculation schema field references
+            for indicator_data in indicators_data:
+                form_schema = indicator_data.get("form_schema")
+                calculation_schema = indicator_data.get("calculation_schema")
+
+                if form_schema and calculation_schema:
+                    try:
+                        form_schema_obj = FormSchema(**form_schema)
+                        field_ref_errors = validate_calculation_schema_field_references(
+                            form_schema_obj, calculation_schema
+                        )
+                        if field_ref_errors:
+                            errors.extend([
+                                f"Indicator {indicator_data.get('temp_id')}: {err}"
+                                for err in field_ref_errors
+                            ])
+                    except Exception as e:
+                        errors.append(
+                            f"Indicator {indicator_data.get('temp_id')}: Invalid schema - {str(e)}"
+                        )
+
+            # TODO: Add weight sum validation if needed
+
+        except Exception as e:
+            errors.append(f"Validation failed: {str(e)}")
+
+        return errors
+
+    # ========================================================================
     # Seed & Utility Methods (Legacy - preserved for development/testing)
     # ========================================================================
 

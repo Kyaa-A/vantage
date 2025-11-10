@@ -2,7 +2,8 @@
 # Pydantic models for indicator-related API requests and responses
 
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -126,3 +127,137 @@ class IndicatorHistoryResponse(BaseModel):
 
     # Nested relationships
     archived_by_user: Optional[UserNested] = None
+
+
+# =============================================================================
+# Bulk Creation Schemas (Phase 6: Hierarchical Indicator Creation)
+# =============================================================================
+
+
+class IndicatorCreateWithOrder(IndicatorCreate):
+    """Schema for creating an indicator with ordering information for bulk operations."""
+
+    temp_id: str = Field(..., description="Temporary client-side UUID for this indicator")
+    parent_temp_id: Optional[str] = Field(
+        None, description="Temporary ID of parent indicator (for hierarchy)"
+    )
+    order: int = Field(..., description="Display order within parent")
+
+
+class BulkIndicatorCreate(BaseModel):
+    """Schema for bulk creating multiple indicators in a hierarchy."""
+
+    governance_area_id: int = Field(..., description="Governance area for all indicators")
+    indicators: List[IndicatorCreateWithOrder] = Field(
+        ..., description="List of indicators to create"
+    )
+
+
+class BulkCreateError(BaseModel):
+    """Schema for bulk creation errors."""
+
+    temp_id: str = Field(..., description="Temporary ID of the failed indicator")
+    error: str = Field(..., description="Error message")
+
+
+class BulkIndicatorResponse(BaseModel):
+    """Response schema for bulk indicator creation."""
+
+    created: List[IndicatorResponse] = Field(..., description="Successfully created indicators")
+    temp_id_mapping: Dict[str, int] = Field(
+        ..., description="Map of temp_id to real database ID"
+    )
+    errors: List[BulkCreateError] = Field(
+        default_factory=list, description="List of errors encountered"
+    )
+
+
+class ReorderRequest(BaseModel):
+    """Schema for reordering indicators."""
+
+    indicators: List[Dict[str, Any]] = Field(
+        ..., description="List of indicator updates with id, code, parent_id"
+    )
+
+
+# =============================================================================
+# Indicator Draft Schemas (Phase 6: Draft Auto-Save)
+# =============================================================================
+
+
+class IndicatorDraftCreate(BaseModel):
+    """Schema for creating a new indicator draft."""
+
+    governance_area_id: int = Field(..., description="Governance area ID")
+    creation_mode: str = Field(..., description="Creation mode (e.g., 'incremental', 'bulk_import')")
+    title: Optional[str] = Field(None, max_length=200, description="Optional draft title")
+    data: Optional[List[Dict[str, Any]]] = Field(
+        default_factory=list, description="Draft indicator data"
+    )
+
+
+class IndicatorDraftUpdate(BaseModel):
+    """Schema for updating an existing indicator draft."""
+
+    current_step: Optional[int] = Field(None, description="Current wizard step")
+    status: Optional[str] = Field(None, description="Draft status")
+    data: Optional[List[Dict[str, Any]]] = Field(None, description="Draft indicator data")
+    title: Optional[str] = Field(None, max_length=200, description="Draft title")
+    version: int = Field(..., description="Version number for optimistic locking")
+
+
+class IndicatorDraftResponse(BaseModel):
+    """Response schema for indicator draft endpoints."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    user_id: int
+    governance_area_id: int
+    creation_mode: str
+    current_step: int
+    status: str
+    data: List[Dict[str, Any]]
+    title: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+    last_accessed_at: datetime
+    version: int
+    lock_token: Optional[UUID] = None
+    locked_by_user_id: Optional[int] = None
+    locked_at: Optional[datetime] = None
+
+    # Nested relationships
+    governance_area: Optional[GovernanceAreaNested] = None
+
+
+class IndicatorDraftSummary(BaseModel):
+    """Summary schema for listing indicator drafts."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    governance_area_id: int
+    creation_mode: str
+    current_step: int
+    status: str
+    title: Optional[str] = None
+    updated_at: datetime
+    last_accessed_at: datetime
+
+    # Nested relationships
+    governance_area: Optional[GovernanceAreaNested] = None
+
+
+class IndicatorDraftDeltaUpdate(BaseModel):
+    """Schema for delta-based draft update (only changed indicators)."""
+
+    changed_indicators: List[Dict[str, Any]] = Field(
+        ..., description="List of changed indicator dictionaries"
+    )
+    changed_ids: List[str] = Field(..., description="List of temp_ids for changed indicators")
+    version: int = Field(..., description="Version number for optimistic locking")
+    metadata: Optional[Dict[str, Any]] = Field(
+        None,
+        description="Optional metadata (current_step, status, title, etc.)",
+    )
