@@ -65,7 +65,7 @@ def create_test_data_for_finalize(db_session: Session) -> dict:
     assessor = User(
         email=f"assessor_finalize_{timestamp}@test.com",
         name="Assessor Finalize",
-        role=UserRole.AREA_ASSESSOR,
+        role=UserRole.ASSESSOR,
         governance_area_id=governance_area.id,
         hashed_password="hashed_password",
         is_active=True,  # Required for authentication to work

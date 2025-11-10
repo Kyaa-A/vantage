@@ -27,7 +27,7 @@ class GovernanceArea(Base):
 
     # Area information
     name = Column(String, nullable=False, unique=True)
-    area_type = Column(
+    area_type: AreaType = Column(
         Enum(AreaType, name="area_type_enum", create_constraint=True), nullable=False
     )
 
@@ -112,6 +112,7 @@ class Indicator(Base):
     )
     history = relationship("IndicatorHistory", back_populates="indicator")
     deadline_overrides = relationship("DeadlineOverride", back_populates="indicator")
+    mov_files = relationship("MOVFile", back_populates="indicator")
 
 
 class IndicatorHistory(Base):

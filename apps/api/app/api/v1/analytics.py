@@ -9,7 +9,8 @@ from app.db.enums import UserRole
 from app.db.models.user import User
 from app.schemas.analytics import DashboardKPIResponse, ReportsDataResponse
 from app.services.analytics_service import ReportsFilters, analytics_service
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import status as http_status
 from sqlalchemy.orm import Session
 
 router = APIRouter()
@@ -34,7 +35,7 @@ async def get_current_mlgoo_dilg_user(
     """
     if current_user.role != UserRole.MLGOO_DILG:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
+            status_code=http_status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions. MLGOO-DILG access required.",
         )
     return current_user
@@ -145,7 +146,7 @@ async def get_dashboard(
         return dashboard_kpis
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to retrieve dashboard KPIs: {str(e)}",
         )
 
@@ -344,6 +345,6 @@ async def get_reports(
         return reports_data
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to retrieve reports data: {str(e)}",
         )

@@ -13,7 +13,9 @@ import { useEffect, useState } from "react";
 const mlgooNavigation = [
   { name: "Dashboard", href: "/mlgoo/dashboard", icon: "home" },
   { name: "Submission Queue", href: "/mlgoo/submissions", icon: "clipboard" },
-  { name: "Analytics & Reports", href: "/mlgoo/reports", icon: "chart" },
+  { name: "Analytics Dashboard", href: "/analytics", icon: "chart" },
+  { name: "Reports & Visualizations", href: "/reports", icon: "chart" },
+  { name: "Analytics & Reports (Legacy)", href: "/mlgoo/reports", icon: "chart" },
   { name: "Indicators", href: "/mlgoo/indicators", icon: "list" },
   { name: "BBIs", href: "/mlgoo/bbis", icon: "layers" },
   { name: "Assessment Cycles", href: "/mlgoo/cycles", icon: "calendar" },

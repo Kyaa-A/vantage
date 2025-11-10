@@ -13,6 +13,7 @@ from app.schemas.indicator import (
     BulkCreateError,
     BulkIndicatorCreate,
     BulkIndicatorResponse,
+    FormSchemaResponse,
     IndicatorCreate,
     IndicatorDraftCreate,
     IndicatorDraftDeltaUpdate,
@@ -464,6 +465,64 @@ def get_indicator_history(
         indicator_id=indicator_id,
     )
     return history
+
+
+@router.get(
+    "/{indicator_id}/form-schema",
+    response_model=FormSchemaResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Get form schema for an indicator",
+)
+def get_indicator_form_schema(
+    *,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+    indicator_id: int,
+) -> FormSchemaResponse:
+    """
+    Get form schema for a specific indicator.
+
+    **Permissions**: All authenticated users
+    - BLGU users: Can access all indicators (all barangays complete all governance areas)
+    - Assessors and validators: Can access all indicators
+
+    **Path Parameters**:
+    - indicator_id: ID of the indicator
+
+    **Returns**: Form schema with metadata (title, description, governance area)
+
+    **Raises**:
+    - 404: Indicator not found
+    """
+    from app.db.enums import UserRole
+
+    # Retrieve indicator with form_schema, calculation_schema, remark_schema
+    indicator = indicator_service.get_indicator(db=db, indicator_id=indicator_id)
+
+    if not indicator:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Indicator with ID {indicator_id} not found",
+        )
+
+    # Permission check: BLGU users can access all indicators
+    # (all barangays need to complete assessments for all governance areas)
+    # Assessors/Validators/MLGOO_DILG can access all indicators
+    # Current implementation: All authenticated users can access (verified by get_current_user dependency)
+
+    # Extract form_schema and metadata
+    # Note: Do NOT include calculation_schema or remark_schema (assessor-only fields)
+    from app.schemas.indicator import FormSchemaMetadata
+
+    return FormSchemaResponse(
+        indicator_id=indicator.id,
+        form_schema=indicator.form_schema or {},
+        metadata=FormSchemaMetadata(
+            title=indicator.name,
+            description=indicator.description,
+            governance_area_name=indicator.governance_area.name if indicator.governance_area else None,
+        )
+    )
 
 
 # =============================================================================

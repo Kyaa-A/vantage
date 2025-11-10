@@ -303,6 +303,20 @@ class FormSchemaValidation(BaseModel):
     warnings: List[str] = []
 
 
+class SubmissionValidationResult(BaseModel):
+    """
+    Schema for Epic 5.0 submission validation result.
+
+    Used by SubmissionValidationService to return detailed validation results
+    before allowing assessment submission.
+    """
+
+    is_valid: bool
+    incomplete_indicators: List[str] = []  # List of indicator names/IDs that are incomplete
+    missing_movs: List[str] = []  # List of indicator names/IDs missing required MOV files
+    error_message: Optional[str] = None
+
+
 # ============================================================================
 # Dashboard Schemas
 # ============================================================================
@@ -375,6 +389,232 @@ class AssessmentDashboardResponse(BaseModel):
         Dict[str, Any]
     ] = []  # Enhanced feedback array with assessor comments
     upcoming_deadlines: List[Dict[str, Any]] = []  # Any upcoming deadlines
+
+
+# ============================================================================
+# Dynamic Form Response Schemas (Epic 3.0)
+# ============================================================================
+
+
+class FieldAnswerInput(BaseModel):
+    """Input schema for a single field answer."""
+
+    field_id: str
+    value: Any  # Can be str, int, bool, list, etc.
+
+
+class SaveAnswersRequest(BaseModel):
+    """Request schema for saving form answers."""
+
+    responses: List[FieldAnswerInput]
+
+
+class SaveAnswersResponse(BaseModel):
+    """Response schema for save answers endpoint."""
+
+    message: str
+    assessment_id: int
+    indicator_id: int
+    saved_count: int
+
+
+class AnswerResponse(BaseModel):
+    """Response schema for a single field answer."""
+
+    field_id: str
+    value: Any
+
+
+class GetAnswersResponse(BaseModel):
+    """Response schema for retrieving saved answers."""
+
+    assessment_id: int
+    indicator_id: int
+    responses: List[AnswerResponse]
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+
+
+class IncompleteIndicatorDetail(BaseModel):
+    """Nested schema for incomplete indicator details."""
+
+    indicator_id: int
+    indicator_title: str
+    missing_required_fields: List[str]
+
+
+class CompletenessValidationResponse(BaseModel):
+    """Response schema for completeness validation endpoint."""
+
+    is_complete: bool
+    total_indicators: int
+    complete_indicators: int
+    incomplete_indicators: int
+    incomplete_details: List[IncompleteIndicatorDetail]
+
+
+# ============================================================================
+# MOV File Schemas (Epic 4.0)
+# ============================================================================
+
+
+class MOVFileResponse(BaseModel):
+    """Response schema for MOV file operations."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    assessment_id: int
+    indicator_id: int
+    file_name: str
+    file_url: str
+    file_type: str
+    file_size: int
+    uploaded_by: int
+    uploaded_at: datetime
+    deleted_at: Optional[datetime] = None
+
+
+class MOVFileListResponse(BaseModel):
+    """Response schema for listing MOV files."""
+
+    files: List[MOVFileResponse]
+
+
+# ============================================================================
+# Submission Workflow Schemas (Epic 5.0)
+# ============================================================================
+
+
+class SubmitAssessmentResponse(BaseModel):
+    """
+    Response schema for assessment submission (Story 5.5).
+
+    Returned when a BLGU user successfully submits an assessment for review.
+    The assessment transitions from DRAFT to SUBMITTED and becomes locked.
+
+    Fields:
+        success: Whether the submission was successful
+        message: Human-readable success message
+        assessment_id: ID of the submitted assessment
+        submitted_at: Timestamp when the assessment was submitted
+    """
+
+    success: bool
+    message: str
+    assessment_id: int
+    submitted_at: datetime
+
+
+class RequestReworkRequest(BaseModel):
+    """
+    Request schema for requesting rework on an assessment (Story 5.6).
+
+    Used by assessors/validators to send an assessment back to the BLGU user
+    for corrections. Only one rework cycle is allowed per assessment.
+
+    Fields:
+        comments: Assessor's feedback explaining what needs to be corrected.
+                  Minimum length: 10 characters. This feedback is shown to the
+                  BLGU user when they view the assessment in REWORK status.
+
+    Validation:
+        - comments field is required and must be at least 10 characters
+        - whitespace is automatically trimmed
+    """
+
+    comments: str
+
+    @classmethod
+    def validate_comments(cls, v):
+        """Validate that comments are not empty and have minimum length."""
+        if not v or len(v.strip()) < 10:
+            raise ValueError("Rework comments must be at least 10 characters long")
+        return v.strip()
+
+
+class RequestReworkResponse(BaseModel):
+    """
+    Response schema for rework request (Story 5.6).
+
+    Returned when an assessor successfully requests rework on an assessment.
+    The assessment transitions from SUBMITTED to REWORK and becomes unlocked
+    for the BLGU user to make corrections.
+
+    Fields:
+        success: Whether the rework request was successful
+        message: Human-readable success message
+        assessment_id: ID of the assessment sent back for rework
+        rework_count: Current rework count (will be 1 after first rework request)
+        rework_requested_at: Timestamp when rework was requested
+    """
+
+    success: bool
+    message: str
+    assessment_id: int
+    rework_count: int
+    rework_requested_at: datetime
+
+
+class ResubmitAssessmentResponse(BaseModel):
+    """
+    Response schema for assessment resubmission (Story 5.7).
+
+    Returned when a BLGU user successfully resubmits an assessment after
+    making corrections requested by an assessor. The assessment transitions
+    from REWORK back to SUBMITTED and becomes locked again.
+
+    Fields:
+        success: Whether the resubmission was successful
+        message: Human-readable success message
+        assessment_id: ID of the resubmitted assessment
+        resubmitted_at: Timestamp when the assessment was resubmitted
+        rework_count: Current rework count (remains at 1, not incremented)
+    """
+
+    success: bool
+    message: str
+    assessment_id: int
+    resubmitted_at: datetime
+    rework_count: int
+
+
+class SubmissionStatusResponse(BaseModel):
+    """
+    Response schema for submission status check (Story 5.8).
+
+    Provides comprehensive information about an assessment's submission state,
+    including validation status, rework details, and locked state. This allows
+    BLGU users to check submission readiness and view rework feedback, while
+    allowing assessors to check assessment status before taking action.
+
+    Fields:
+        assessment_id: ID of the assessment being checked
+        status: Current workflow status (DRAFT, SUBMITTED, IN_REVIEW, REWORK, COMPLETED)
+        is_locked: Whether the assessment is locked for editing by BLGU user.
+                   Locked when SUBMITTED, IN_REVIEW, or COMPLETED.
+        rework_count: Number of times rework has been requested (0 or 1)
+        rework_comments: Assessor's feedback if rework was requested (None if no rework)
+        rework_requested_at: Timestamp when rework was requested (None if no rework)
+        rework_requested_by: ID of the assessor who requested rework (None if no rework)
+        validation_result: Current validation status showing incomplete indicators
+                           and missing MOV files
+
+    Usage:
+        - BLGU users call this endpoint to check what needs completion before submit/resubmit
+        - BLGU users view rework feedback from assessors
+        - Assessors check assessment status before requesting rework or validating
+        - Frontend displays submission readiness indicator with validation errors
+    """
+
+    assessment_id: int
+    status: AssessmentStatus
+    is_locked: bool
+    rework_count: int
+    rework_comments: Optional[str] = None
+    rework_requested_at: Optional[datetime] = None
+    rework_requested_by: Optional[int] = None
+    validation_result: SubmissionValidationResult
 
 
 # ============================================================================

@@ -405,7 +405,7 @@ def area_assessor_user(db_session, governance_areas):
         email="assessor@dilg.gov.ph",
         name="Area Assessor",
         hashed_password="hashed",
-        role=UserRole.AREA_ASSESSOR,
+        role=UserRole.ASSESSOR,
         governance_area_id=governance_areas[0].id,  # Assigned to Financial Administration
     )
     db_session.add(user)

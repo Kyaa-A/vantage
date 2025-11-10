@@ -5,6 +5,9 @@
 
 import type { AuditLogResponseUserEmail } from '../users';
 import type { AuditLogResponseUserName } from '../users';
+import type { GovernanceAreaGroup } from '../common';
+import type { ReworkComment } from '../common';
+import type { IncompleteIndicatorDetail } from '../indicators';
 import type { ComplianceRate } from '../common';
 import type { AreaBreakdown } from '../common';
 import type { FailedIndicator } from '../indicators';
@@ -14,6 +17,8 @@ import type { DeadlineOverrideResponse } from '../deadlineoverride';
 import type { ChartData } from '../common';
 import type { MapData } from '../common';
 import type { TableData } from '../common';
+import type { AssessmentStatus } from '../assessments';
+import type { SubmissionValidationResult } from '../error';
 
 /**
  * SystemicWeakness
@@ -37,6 +42,15 @@ export type SystemicWeaknessIndicatorId = number | null;
  * SystemicWeaknessReason
  */
 export type SystemicWeaknessReason = string | null;
+
+
+/**
+ * AnswerResponse
+ */
+export interface AnswerResponse {
+  field_id: string;
+  value: unknown;
+}
 
 
 /**
@@ -104,6 +118,53 @@ export type AuditLogResponseIpAddress = string | null;
 
 
 /**
+ * BLGUDashboardResponse
+ */
+export interface BLGUDashboardResponse {
+  /** Assessment ID */
+  assessment_id: number;
+  /** Assessment status (DRAFT, SUBMITTED, IN_REVIEW, REWORK, COMPLETED) */
+  status: string;
+  /** Number of times rework has been requested (0 or 1) */
+  rework_count: number;
+  /** Timestamp when rework was requested (ISO format) */
+  rework_requested_at?: BLGUDashboardResponseReworkRequestedAt;
+  /** User ID of assessor who requested rework */
+  rework_requested_by?: BLGUDashboardResponseReworkRequestedBy;
+  /** Total number of indicators in the assessment */
+  total_indicators: number;
+  /** Number of indicators with all required fields filled */
+  completed_indicators: number;
+  /** Number of indicators with missing required fields */
+  incomplete_indicators: number;
+  /** Percentage of indicators completed (0.0 to 100.0) */
+  completion_percentage: number;
+  /** Indicators grouped by governance area */
+  governance_areas: GovernanceAreaGroup[];
+  /** Assessor feedback comments if assessment needs rework (null otherwise) */
+  rework_comments?: BLGUDashboardResponseReworkComments;
+}
+
+
+/**
+ * BLGUDashboardResponseReworkComments
+ */
+export type BLGUDashboardResponseReworkComments = ReworkComment[] | null;
+
+
+/**
+ * BLGUDashboardResponseReworkRequestedAt
+ */
+export type BLGUDashboardResponseReworkRequestedAt = string | null;
+
+
+/**
+ * BLGUDashboardResponseReworkRequestedBy
+ */
+export type BLGUDashboardResponseReworkRequestedBy = number | null;
+
+
+/**
  * BarangayDeadlineStatusResponse
  */
 export interface BarangayDeadlineStatusResponse {
@@ -115,6 +176,18 @@ export interface BarangayDeadlineStatusResponse {
   rework: PhaseStatusResponse;
   phase2: PhaseStatusResponse;
   calibration: PhaseStatusResponse;
+}
+
+
+/**
+ * CompletenessValidationResponse
+ */
+export interface CompletenessValidationResponse {
+  is_complete: boolean;
+  total_indicators: number;
+  complete_indicators: number;
+  incomplete_indicators: number;
+  incomplete_details: IncompleteIndicatorDetail[];
 }
 
 
@@ -180,6 +253,42 @@ export interface DeadlineStatusListResponse {
 
 
 /**
+ * FormSchemaMetadataGovernanceAreaName
+ */
+export type FormSchemaMetadataGovernanceAreaName = string | null;
+
+
+/**
+ * FormSchemaResponseFormSchema
+ */
+export type FormSchemaResponseFormSchema = { [key: string]: unknown };
+
+
+/**
+ * GetAnswersResponse
+ */
+export interface GetAnswersResponse {
+  assessment_id: number;
+  indicator_id: number;
+  responses: AnswerResponse[];
+  created_at?: GetAnswersResponseCreatedAt;
+  updated_at?: GetAnswersResponseUpdatedAt;
+}
+
+
+/**
+ * GetAnswersResponseCreatedAt
+ */
+export type GetAnswersResponseCreatedAt = string | null;
+
+
+/**
+ * GetAnswersResponseUpdatedAt
+ */
+export type GetAnswersResponseUpdatedAt = string | null;
+
+
+/**
  * HealthCheck
  */
 export interface HealthCheck {
@@ -207,36 +316,6 @@ export type HealthCheckChecks = { [key: string]: unknown };
  * HealthCheckConnections
  */
 export type HealthCheckConnections = { [key: string]: unknown };
-
-
-/**
- * MOVUploadResponse
- */
-export interface MOVUploadResponse {
-  success: boolean;
-  message: string;
-  mov_id?: MOVUploadResponseMovId;
-  storage_path?: MOVUploadResponseStoragePath;
-  mov?: MOVUploadResponseMov;
-}
-
-
-/**
- * MOVUploadResponseMov
- */
-export type MOVUploadResponseMov = unknown | null;
-
-
-/**
- * MOVUploadResponseMovId
- */
-export type MOVUploadResponseMovId = number | null;
-
-
-/**
- * MOVUploadResponseStoragePath
- */
-export type MOVUploadResponseStoragePath = string | null;
 
 
 /**
@@ -328,3 +407,36 @@ export interface ReportsDataResponse {
   /** Report generation metadata and applied filters */
   metadata: ReportMetadata;
 }
+
+
+/**
+ * SubmissionStatusResponse
+ */
+export interface SubmissionStatusResponse {
+  assessment_id: number;
+  status: AssessmentStatus;
+  is_locked: boolean;
+  rework_count: number;
+  rework_comments?: SubmissionStatusResponseReworkComments;
+  rework_requested_at?: SubmissionStatusResponseReworkRequestedAt;
+  rework_requested_by?: SubmissionStatusResponseReworkRequestedBy;
+  validation_result: SubmissionValidationResult;
+}
+
+
+/**
+ * SubmissionStatusResponseReworkComments
+ */
+export type SubmissionStatusResponseReworkComments = string | null;
+
+
+/**
+ * SubmissionStatusResponseReworkRequestedAt
+ */
+export type SubmissionStatusResponseReworkRequestedAt = string | null;
+
+
+/**
+ * SubmissionStatusResponseReworkRequestedBy
+ */
+export type SubmissionStatusResponseReworkRequestedBy = number | null;

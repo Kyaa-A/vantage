@@ -1,0 +1,147 @@
+"use client";
+
+import { useState } from "react";
+import { useDeleteMovsFilesFileId, MOVFileResponse } from "@vantage/shared";
+import { FileList } from "./FileList";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import toast from "react-hot-toast";
+
+interface FileListWithDeleteProps {
+  files: MOVFileResponse[];
+  onPreview?: (file: MOVFileResponse) => void;
+  onDownload?: (file: MOVFileResponse) => void;
+  canDelete?: boolean;
+  loading?: boolean;
+  emptyMessage?: string;
+  onDeleteSuccess?: (fileId: number) => void;
+}
+
+/**
+ * FileList wrapper that integrates the delete mutation with confirmation dialog
+ * and toast notifications.
+ *
+ * Features:
+ * - Confirmation dialog before deletion
+ * - Optimistic updates for better UX
+ * - Success/error toast notifications
+ * - Automatic refetch after successful deletion
+ */
+export function FileListWithDelete({
+  files,
+  onPreview,
+  onDownload,
+  canDelete = false,
+  loading = false,
+  emptyMessage = "No files uploaded yet",
+  onDeleteSuccess,
+}: FileListWithDeleteProps) {
+  const [fileToDelete, setFileToDelete] = useState<number | null>(null);
+  const [deletingFileId, setDeletingFileId] = useState<number | null>(null);
+
+  // Delete mutation hook
+  const deleteMutation = useDeleteMovsFilesFileId({
+    mutation: {
+      onMutate: (variables) => {
+        // Show loading state
+        setDeletingFileId(variables.fileId);
+      },
+      onSuccess: (data, variables) => {
+        // Show success toast
+        toast.success("File deleted successfully");
+
+        // Close dialog
+        setFileToDelete(null);
+        setDeletingFileId(null);
+
+        // Notify parent component
+        onDeleteSuccess?.(variables.fileId);
+      },
+      onError: (error: any, variables) => {
+        // Show error toast
+        const errorMessage =
+          error?.response?.data?.detail ||
+          error?.message ||
+          "Failed to delete file";
+
+        toast.error(errorMessage);
+
+        // Reset loading state
+        setDeletingFileId(null);
+      },
+    },
+  });
+
+  const handleDeleteClick = (fileId: number) => {
+    setFileToDelete(fileId);
+  };
+
+  const handleConfirmDelete = () => {
+    if (fileToDelete !== null) {
+      deleteMutation.mutate({ fileId: fileToDelete });
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setFileToDelete(null);
+  };
+
+  // Find the file being deleted for dialog display
+  const fileToDeleteData = files.find((f) => f.id === fileToDelete);
+
+  // Filter out the file being deleted for optimistic update
+  const displayFiles =
+    deletingFileId !== null
+      ? files.filter((f) => f.id !== deletingFileId)
+      : files;
+
+  return (
+    <>
+      <FileList
+        files={displayFiles}
+        onDelete={canDelete ? handleDeleteClick : undefined}
+        onPreview={onPreview}
+        onDownload={onDownload}
+        canDelete={canDelete}
+        loading={loading}
+        emptyMessage={emptyMessage}
+      />
+
+      {/* Confirmation Dialog */}
+      <AlertDialog open={fileToDelete !== null} onOpenChange={handleCancelDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete File</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete{" "}
+              <span className="font-medium text-gray-900">
+                {fileToDeleteData?.file_name}
+              </span>
+              ? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancelDelete}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}

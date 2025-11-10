@@ -9,6 +9,9 @@ export * from "./AssessorAnalyticsData";
 
 // Components
 export { BarangayMap } from "./BarangayMap";
+export { SulopBarangayMap } from "./SulopBarangayMap";
+export { SulopBarangayMapLeaflet } from "./SulopBarangayMapLeaflet";
+export { SulopBarangayMapIntegrated } from "./SulopBarangayMapIntegrated";
 export { GlobalFilter } from "./GlobalFilter";
 export { PerformanceOverviewWidget } from "./PerformanceOverviewWidget";
 export { PerformanceHotspotsWidget } from "./PerformanceHotspotsWidget";

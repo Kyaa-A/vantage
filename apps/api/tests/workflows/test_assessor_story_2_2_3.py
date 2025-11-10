@@ -92,7 +92,7 @@ def create_test_assessment_for_details(db_session: Session) -> Assessment:
     assessor_user = User(
         email="assessor_details@test.com",
         name="Test Assessor Details",
-        role=UserRole.AREA_ASSESSOR,
+        role=UserRole.ASSESSOR,
         governance_area_id=area.id,
         hashed_password="hashed_password",
     )
@@ -123,7 +123,7 @@ def test_get_assessment_details_success(client, db_session):
     assessor = User(
         email="assessor_details2@test.com",
         name="Test Assessor Details 2",
-        role=UserRole.AREA_ASSESSOR,
+        role=UserRole.ASSESSOR,
         governance_area_id=assessment.responses[0].indicator.governance_area_id,
         hashed_password="hashed_password",
     )
@@ -206,7 +206,7 @@ def test_get_assessment_details_not_found(client, db_session):
     assessor = User(
         email="assessor_details3@test.com",
         name="Test Assessor Details 3",
-        role=UserRole.AREA_ASSESSOR,
+        role=UserRole.ASSESSOR,
         governance_area_id=1,
         hashed_password="hashed_password",
     )
@@ -307,7 +307,7 @@ def test_get_assessment_details_access_denied(client, db_session):
     assessor = User(
         email="assessor_details4@test.com",
         name="Test Assessor Details 4",
-        role=UserRole.AREA_ASSESSOR,
+        role=UserRole.ASSESSOR,
         governance_area_id=different_area.id,  # Different governance area
         hashed_password="hashed_password",
     )
@@ -382,7 +382,7 @@ def test_get_assessment_details_empty_responses(client, db_session):
     assessor = User(
         email="assessor_empty@test.com",
         name="Test Assessor Empty",
-        role=UserRole.AREA_ASSESSOR,
+        role=UserRole.ASSESSOR,
         governance_area_id=area.id,
         hashed_password="hashed_password",
     )

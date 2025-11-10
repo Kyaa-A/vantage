@@ -25,6 +25,7 @@ import type {
   BulkIndicatorResponse,
   CalculationSchema,
   FormSchema,
+  FormSchemaResponse,
   GetIndicatorsDraftsParams,
   GetIndicatorsParams,
   HTTPValidationError,
@@ -812,6 +813,82 @@ export function useGetIndicatorsIndicatorIdHistory<TData = Awaited<ReturnType<ty
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetIndicatorsIndicatorIdHistoryQueryOptions(indicatorId,options)
+
+  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+/**
+ * Get form schema for a specific indicator.
+
+**Permissions**: All authenticated users
+- BLGU users: Can access all indicators (all barangays complete all governance areas)
+- Assessors and validators: Can access all indicators
+
+**Path Parameters**:
+- indicator_id: ID of the indicator
+
+**Returns**: Form schema with metadata (title, description, governance area)
+
+**Raises**:
+- 404: Indicator not found
+ * @summary Get form schema for an indicator
+ */
+export const getIndicators$IndicatorIdFormSchema = (
+    indicatorId: number,
+ options?: SecondParameter<typeof mutator>,signal?: AbortSignal
+) => {
+      
+      
+      return mutator<FormSchemaResponse>(
+      {url: `http://localhost:8000/api/v1/indicators/${indicatorId}/form-schema`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+export const getGetIndicatorsIndicatorIdFormSchemaQueryKey = (indicatorId: number,) => {
+    return [`http://localhost:8000/api/v1/indicators/${indicatorId}/form-schema`] as const;
+    }
+
+    
+export const getGetIndicatorsIndicatorIdFormSchemaQueryOptions = <TData = Awaited<ReturnType<typeof getIndicators$IndicatorIdFormSchema>>, TError = HTTPValidationError>(indicatorId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getIndicators$IndicatorIdFormSchema>>, TError, TData>, request?: SecondParameter<typeof mutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetIndicatorsIndicatorIdFormSchemaQueryKey(indicatorId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getIndicators$IndicatorIdFormSchema>>> = ({ signal }) => getIndicators$IndicatorIdFormSchema(indicatorId, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(indicatorId),  staleTime: 300000, refetchOnWindowFocus: false,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getIndicators$IndicatorIdFormSchema>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetIndicatorsIndicatorIdFormSchemaQueryResult = NonNullable<Awaited<ReturnType<typeof getIndicators$IndicatorIdFormSchema>>>
+export type GetIndicatorsIndicatorIdFormSchemaQueryError = HTTPValidationError
+
+
+/**
+ * @summary Get form schema for an indicator
+ */
+
+export function useGetIndicatorsIndicatorIdFormSchema<TData = Awaited<ReturnType<typeof getIndicators$IndicatorIdFormSchema>>, TError = HTTPValidationError>(
+ indicatorId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getIndicators$IndicatorIdFormSchema>>, TError, TData>, request?: SecondParameter<typeof mutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetIndicatorsIndicatorIdFormSchemaQueryOptions(indicatorId,options)
 
   const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

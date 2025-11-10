@@ -30,7 +30,7 @@ def create_test_assessor_with_area(db_session: Session) -> User:
     assessor = User(
         email="assessor_analytics@test.com",
         name="Test Assessor Analytics",
-        role=UserRole.AREA_ASSESSOR,
+        role=UserRole.ASSESSOR,
         governance_area_id=area.id,
         hashed_password="hashed_password",
     )

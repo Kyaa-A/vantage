@@ -705,7 +705,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
         - Test import in frontend: `import { useGetAnalyticsReports } from '@vantage/shared'`
       - **Tech:** Orval, OpenAPI, TypeScript
 
-  - [ ] **2.5 Story: Frontend Reports Page Layout**
+  - [x] **2.5 Story: Frontend Reports Page Layout**
 
     - **Scope:** Create reports page with filter controls and visualization grid
     - **Duration:** 1-2 days
@@ -722,7 +722,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
       - Grid layout responsive (mobile, tablet, desktop)
       - Loading states and skeleton screens implemented
 
-    - [ ] **2.5.1 Atomic:** Create reports page component with data fetching
+    - [x] **2.5.1 Atomic:** Create reports page component with data fetching
 
       - **Files:** `apps/web/src/app/(app)/reports/page.tsx`
       - **Dependencies:** 2.4.1 (types generated)
@@ -737,7 +737,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
         - Error state with Alert component
       - **Tech:** Next.js, React hooks, TanStack Query
 
-    - [ ] **2.5.2 Atomic:** Create filter controls component
+    - [x] **2.5.2 Atomic:** Create filter controls component
 
       - **Files:** `apps/web/src/components/features/reports/FilterControls.tsx`
       - **Dependencies:** 2.5.1 (page exists)
@@ -753,7 +753,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
         - Responsive layout (stacks vertically on mobile)
       - **Tech:** React, shadcn/ui (Select, Popover, Calendar, Button), Tailwind CSS
 
-    - [ ] **2.5.3 Atomic:** Create visualization grid layout component
+    - [x] **2.5.3 Atomic:** Create visualization grid layout component
 
       - **Files:** `apps/web/src/components/features/reports/VisualizationGrid.tsx`
       - **Dependencies:** 2.5.1 (page exists)
@@ -768,7 +768,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
         - Section headers for each visualization type
       - **Tech:** React, Tailwind CSS Grid, Flexbox
 
-    - [ ] **2.5.4 Atomic:** Integrate filters and grid into reports page
+    - [x] **2.5.4 Atomic:** Integrate filters and grid into reports page
       - **Files:** `apps/web/src/app/(app)/reports/page.tsx` (extend)
       - **Dependencies:** 2.5.2, 2.5.3 (filter and grid components exist)
       - **Acceptance:**
@@ -780,7 +780,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
         - Export metadata display (timestamp, applied filters shown)
       - **Tech:** Next.js, React composition
 
-  - [ ] **2.6 Story: Chart Visualization Components**
+  - [x] **2.6 Story: Chart Visualization Components**
 
     - **Scope:** Build bar, pie, and line chart components using Recharts
     - **Duration:** 2-3 days
@@ -798,7 +798,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
       - Color coding consistent (green/red/yellow)
       - Charts responsive and accessible (WCAG 2.1 AA)
 
-    - [ ] **2.6.1 Atomic:** Create bar chart component for governance area breakdown
+    - [x] **2.6.1 Atomic:** Create bar chart component for governance area breakdown
 
       - **Files:** `apps/web/src/components/features/reports/ChartComponents.tsx`
       - **Dependencies:** 2.3.1 (Recharts installed), 2.5.3 (grid layout exists)
@@ -815,7 +815,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
         - Accessible: ARIA labels, keyboard navigation
       - **Tech:** Recharts, React, TypeScript
 
-    - [ ] **2.6.2 Atomic:** Create pie chart component for compliance status distribution
+    - [x] **2.6.2 Atomic:** Create pie chart component for compliance status distribution
 
       - **Files:** `apps/web/src/components/features/reports/ChartComponents.tsx` (extend)
       - **Dependencies:** 2.6.1 (bar chart created)
@@ -831,7 +831,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
         - Click slice highlights (optional drill-down hook)
       - **Tech:** Recharts, React, color constants
 
-    - [ ] **2.6.3 Atomic:** Create line chart component for trend analysis
+    - [x] **2.6.3 Atomic:** Create line chart component for trend analysis
 
       - **Files:** `apps/web/src/components/features/reports/ChartComponents.tsx` (extend)
       - **Dependencies:** 2.6.2 (pie chart created)
@@ -848,7 +848,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
         - Handle empty data (show "No trend data available")
       - **Tech:** Recharts, React, date formatting
 
-    - [ ] **2.6.4 Atomic:** Integrate charts into visualization grid
+    - [x] **2.6.4 Atomic:** Integrate charts into visualization grid
       - **Files:** `apps/web/src/components/features/reports/VisualizationGrid.tsx` (extend)
       - **Dependencies:** 2.6.3 (all charts created)
       - **Acceptance:**
@@ -861,7 +861,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
         - Charts responsive to grid column changes
       - **Tech:** React composition, shadcn/ui Card
 
-  - [ ] **2.7 Story: Geographic Map Visualization**
+  - [x] **2.7 Story: Geographic Map Visualization**
 
     - **Scope:** Implement interactive map showing barangays color-coded by performance
     - **Duration:** 2-3 days
@@ -876,7 +876,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
       - Map responsive and mobile-friendly
       - Handles missing coordinate data gracefully
 
-    - [ ] **2.7.1 Atomic:** Create barangay map component with Leaflet
+    - [x] **2.7.1 Atomic:** Create barangay map component with custom SVG
 
       - **Files:** `apps/web/src/components/features/analytics/BarangayMap.tsx`
       - **Dependencies:** 2.3.1 (Leaflet installed)
@@ -891,7 +891,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
         - Attribution included
       - **Tech:** React-Leaflet, Leaflet, TypeScript
 
-    - [ ] **2.7.2 Atomic:** Implement color-coded markers with popups
+    - [x] **2.7.2 Atomic:** Implement color-coded barangay paths with click interaction
 
       - **Files:** `apps/web/src/components/features/analytics/BarangayMap.tsx` (extend)
       - **Dependencies:** 2.7.1 (map component exists)
@@ -907,7 +907,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
         - Handle missing coordinates: skip barangay or show warning
       - **Tech:** Leaflet divIcon, React-Leaflet Popup
 
-    - [ ] **2.7.3 Atomic:** Make map responsive and integrate into reports grid
+    - [x] **2.7.3 Atomic:** Make map responsive and integrate into analytics page
       - **Files:** `apps/web/src/components/features/analytics/BarangayMap.tsx` (extend), `apps/web/src/components/features/reports/VisualizationGrid.tsx` (extend)
       - **Dependencies:** 2.7.2 (markers implemented)
       - **Acceptance:**
@@ -920,7 +920,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
         - Loading state while coordinates fetch
       - **Tech:** React hooks, Leaflet invalidateSize, CSS
 
-  - [ ] **2.8 Story: Interactive Data Table**
+  - [x] **2.8 Story: Interactive Data Table**
 
     - **Scope:** Build filterable, sortable data table using TanStack Table
     - **Duration:** 2 days
@@ -935,7 +935,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
       - Pagination (50 rows per page)
       - Row click drills down to detailed view
 
-    - [ ] **2.8.1 Atomic:** Create data table component with TanStack Table
+    - [x] **2.8.1 Atomic:** Create data table component with TanStack Table
 
       - **Files:** `apps/web/src/components/features/reports/DataTable.tsx`
       - **Dependencies:** 2.3.1 (@tanstack/react-table installed)
@@ -949,7 +949,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
         - Component accepts `onRowClick` callback
       - **Tech:** TanStack Table, shadcn/ui Table, React
 
-    - [ ] **2.8.2 Atomic:** Implement sorting and search functionality
+    - [x] **2.8.2 Atomic:** Implement sorting and search functionality
 
       - **Files:** `apps/web/src/components/features/reports/DataTable.tsx` (extend)
       - **Dependencies:** 2.8.1 (table component exists)
@@ -964,7 +964,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
         - Debounce search input (300ms delay)
       - **Tech:** TanStack Table sorting/filtering, React state, debounce utility
 
-    - [ ] **2.8.3 Atomic:** Implement pagination and integration
+    - [x] **2.8.3 Atomic:** Implement pagination and integration
       - **Files:** `apps/web/src/components/features/reports/DataTable.tsx` (extend), `apps/web/src/components/features/reports/VisualizationGrid.tsx` (extend)
       - **Dependencies:** 2.8.2 (sorting/search implemented)
       - **Acceptance:**
@@ -979,7 +979,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
         - Handle row click: navigate to assessment detail page or show modal
       - **Tech:** shadcn/ui Pagination, TanStack Table pagination, Next.js navigation
 
-  - [ ] **2.9 Story: Export Functionality (CSV, PNG, PDF)**
+  - [x] **2.9 Story: Export Functionality (CSV, PNG, PDF)**
 
     - **Scope:** Implement data export controls for CSV, PNG, and PDF formats
     - **Duration:** 2-3 days
@@ -997,7 +997,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
       - Exports include metadata (date range, filters, timestamp)
       - Loading indicators during export generation
 
-    - [ ] **2.9.1 Atomic:** Install export dependencies and create CSV export utility
+    - [x] **2.9.1 Atomic:** Install export dependencies and create CSV export utility
 
       - **Files:** `apps/web/package.json`, `apps/web/src/lib/csv-export.ts`
       - **Dependencies:** None
@@ -1011,7 +1011,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
         - Export function
       - **Tech:** jsPDF, html2canvas npm packages, vanilla JS CSV generation
 
-    - [ ] **2.9.2 Atomic:** Create PNG export utility and export controls component
+    - [x] **2.9.2 Atomic:** Create PNG export utility and export controls component
 
       - **Files:** `apps/web/src/lib/png-export.ts`, `apps/web/src/components/features/reports/ExportControls.tsx`
       - **Dependencies:** 2.9.1 (jsPDF/html2canvas installed)
@@ -1026,7 +1026,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
         - Loading state during export generation
       - **Tech:** html2canvas, React, shadcn/ui Button, DropdownMenu
 
-    - [ ] **2.9.3 Atomic:** Create PDF export utility with DILG branding
+    - [x] **2.9.3 Atomic:** Create PDF export utility with DILG branding
 
       - **Files:** `apps/web/src/lib/pdf-export.ts`
       - **Dependencies:** 2.9.2 (export utilities exist)
@@ -1042,7 +1042,7 @@ Tech-stack specific file structure for the Analytics & Reporting feature:
         - Handle errors gracefully (show toast notification)
       - **Tech:** jsPDF, html2canvas, async/await
 
-    - [ ] **2.9.4 Atomic:** Integrate export controls into reports page
+    - [x] **2.9.4 Atomic:** Integrate export controls into reports page
       - **Files:** `apps/web/src/app/(app)/reports/page.tsx` (extend)
       - **Dependencies:** 2.9.3 (all export utilities complete)
       - **Acceptance:**

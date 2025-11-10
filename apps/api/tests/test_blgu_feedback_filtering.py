@@ -74,7 +74,7 @@ def create_user_and_assessment(db):
     assessor = User(
         email=f"assessor_{timestamp}@example.com",
         name="Assessor",
-        role=UserRole.AREA_ASSESSOR,
+        role=UserRole.ASSESSOR,
         hashed_password="hashed_password",
         is_active=True,
     )

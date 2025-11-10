@@ -19,6 +19,7 @@ import { postAssessmentsResponses } from "@vantage/shared";
 import { AlertCircle, CheckCircle, Circle } from "lucide-react";
 import { useState } from "react";
 import { DynamicIndicatorForm } from "./DynamicIndicatorForm";
+import { DynamicFormRenderer } from "../forms/DynamicFormRenderer";
 
 interface IndicatorAccordionProps {
   indicator: Indicator;
@@ -93,12 +94,27 @@ export function IndicatorAccordion({
   const getStatusIcon = () => {
     switch (indicator.status) {
       case "completed":
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
+        return (
+          <div className="relative" title="Completed">
+            <CheckCircle className="h-6 w-6 text-green-600 fill-green-100" />
+            <span className="sr-only">Completed</span>
+          </div>
+        );
       case "needs_rework":
-        return <AlertCircle className="h-5 w-5 text-orange-500" />;
+        return (
+          <div className="relative" title="Needs Rework - Action Required">
+            <AlertCircle className="h-6 w-6 text-orange-600 fill-orange-100 animate-pulse" />
+            <span className="sr-only">Needs Rework - Action Required</span>
+          </div>
+        );
       case "not_started":
       default:
-        return <Circle className="h-5 w-5 text-gray-400" />;
+        return (
+          <div className="relative" title="Not Started">
+            <Circle className="h-6 w-6 text-gray-300" />
+            <span className="sr-only">Not Started</span>
+          </div>
+        );
     }
   };
 
@@ -114,6 +130,135 @@ export function IndicatorAccordion({
     }
   };
 
+  // Calculate completion metrics for progress display
+  const calculateCompletionMetrics = () => {
+    const schema = indicator.formSchema as any;
+    const data = indicator.responseData || {};
+
+    if (!schema || typeof schema !== 'object') {
+      return { completedFields: 0, totalFields: 0, percentage: 0 };
+    }
+
+    // For Epic 3/4 format
+    if (isEpic3Format()) {
+      let totalFields = 0;
+      let completedFields = 0;
+
+      // Count fields from sections
+      if ('sections' in schema && Array.isArray(schema.sections)) {
+        schema.sections.forEach((section: any) => {
+          if (Array.isArray(section.fields)) {
+            section.fields.forEach((field: any) => {
+              if (field.required) totalFields++;
+              if (field.required && data[field.field_id]) completedFields++;
+            });
+          }
+        });
+      }
+      // Count fields from root-level fields array
+      else if ('fields' in schema && Array.isArray(schema.fields)) {
+        schema.fields.forEach((field: any) => {
+          if (field.required) totalFields++;
+          if (field.required && data[field.field_id]) completedFields++;
+        });
+      }
+
+      const percentage = totalFields > 0 ? Math.round((completedFields / totalFields) * 100) : 0;
+      return { completedFields, totalFields, percentage };
+    }
+
+    // For legacy format
+    const required = schema.required || [];
+    const totalFields = required.length;
+    const completedFields = required.filter((fieldName: string) => {
+      const value = data[fieldName];
+      return typeof value === 'string' && ['yes', 'no', 'na'].includes(value.toLowerCase());
+    }).length;
+
+    const percentage = totalFields > 0 ? Math.round((completedFields / totalFields) * 100) : 0;
+    return { completedFields, totalFields, percentage };
+  };
+
+  const getCompletionBadge = () => {
+    const { completedFields, totalFields, percentage } = calculateCompletionMetrics();
+
+    if (indicator.status === 'completed') {
+      return (
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-100 text-green-800 border border-green-200">
+          <CheckCircle className="h-4 w-4" />
+          <span className="text-sm font-semibold">Complete</span>
+        </div>
+      );
+    }
+
+    if (indicator.status === 'needs_rework') {
+      return (
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-100 text-orange-800 border border-orange-200">
+          <span className="text-sm font-semibold">Rework Needed</span>
+        </div>
+      );
+    }
+
+    if (percentage > 0) {
+      return (
+        <div className="flex items-center gap-2">
+          {/* Mini Progress Circle */}
+          <div className="relative h-10 w-10">
+            <svg className="transform -rotate-90" viewBox="0 0 36 36">
+              {/* Background circle */}
+              <circle
+                cx="18"
+                cy="18"
+                r="16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                className="text-gray-200"
+              />
+              {/* Progress circle */}
+              <circle
+                cx="18"
+                cy="18"
+                r="16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeDasharray={`${percentage} ${100 - percentage}`}
+                strokeLinecap="round"
+                className="text-blue-500 transition-all duration-500"
+              />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-xs font-bold text-[var(--foreground)]">
+                {percentage}%
+              </span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="text-xs text-[var(--text-secondary)] font-medium">
+        Not Started
+      </div>
+    );
+  };
+
+  // Detect if this indicator uses Epic 3/4 format (has "fields" or "sections" array)
+  const isEpic3Format = () => {
+    const schema = indicator.formSchema;
+    if (!schema || typeof schema !== 'object') return false;
+
+    // Epic 3: root-level fields array
+    if ('fields' in schema && Array.isArray(schema.fields)) return true;
+
+    // Epic 4: sections array with fields inside
+    if ('sections' in schema && Array.isArray(schema.sections)) return true;
+
+    return false;
+  };
+
   return (
     <Accordion
       type="single"
@@ -123,35 +268,98 @@ export function IndicatorAccordion({
     >
       <AccordionItem
         value={indicator.id}
-        className="border border-[var(--border)] rounded-lg bg-[var(--card)] shadow-sm hover:shadow-md transition-all duration-200"
+        className="border-none rounded-lg bg-[var(--card)] shadow-sm hover:shadow-md transition-all duration-200"
       >
-        <AccordionTrigger className="px-6 py-5 hover:no-underline hover:bg-[var(--hover)] rounded-lg transition-colors duration-200">
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
+        <AccordionTrigger className="group px-4 md:px-6 py-4 hover:no-underline hover:bg-gradient-to-r hover:from-[var(--hover)] hover:to-[var(--card)] rounded-t-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cityscape-yellow)]">
+          <div className="flex items-start justify-between w-full gap-3 md:gap-4">
+            {/* Left: Status + Content */}
+            <div className="flex items-start gap-3 md:gap-4 flex-1 min-w-0">
+              {/* Status Icon - Larger, more prominent */}
+              <div className="flex-shrink-0 pt-0.5">
                 {getStatusIcon()}
-                <span className="text-sm font-medium text-[var(--text-secondary)]">
-                  {getStatusText()}
-                </span>
               </div>
-              <div className="text-left">
-                <div className="font-semibold text-[var(--foreground)]">
-                  {indicator.code} - {indicator.name}
+
+              {/* Content Stack */}
+              <div className="flex-1 min-w-0 space-y-1.5 md:space-y-2">
+                {/* Code + Name (Primary Info) */}
+                <div className="flex items-baseline gap-2 flex-wrap">
+                  {/* Code - Monospace, subdued badge */}
+                  {indicator.code && (
+                    <span className="text-xs font-mono text-[var(--text-secondary)] tracking-wider uppercase font-semibold bg-[var(--hover)] px-2 py-0.5 rounded">
+                      {indicator.code}
+                    </span>
+                  )}
+
+                  {/* Name - Bold, prominent */}
+                  <h3 className="text-sm md:text-base font-semibold text-[var(--foreground)] leading-snug flex-1">
+                    {indicator.name}
+                  </h3>
                 </div>
-                <div className="text-sm text-[var(--text-secondary)] mt-1">
-                  {indicator.description.length > 100
-                    ? `${indicator.description.substring(0, 100)}...`
-                    : indicator.description}
-                </div>
+
+                {/* Progress Metadata (Only when collapsed) */}
+                {!isOpen && (() => {
+                  const { completedFields, totalFields } = calculateCompletionMetrics();
+                  return (
+                    <div className="flex items-center gap-2 md:gap-3 text-xs text-[var(--text-secondary)] flex-wrap">
+                      {/* Field Progress */}
+                      {totalFields > 0 && (
+                        <>
+                          <span className="flex items-center gap-1.5">
+                            <span className="font-medium text-[var(--foreground)]">
+                              {completedFields}
+                            </span>
+                            <span>of</span>
+                            <span>{totalFields}</span>
+                            <span>complete</span>
+                          </span>
+                        </>
+                      )}
+
+                      {/* Separator */}
+                      {totalFields > 0 && indicator.movFiles.length > 0 && (
+                        <span className="text-[var(--border)]">•</span>
+                      )}
+
+                      {/* MOV Count */}
+                      {indicator.movFiles.length > 0 && (
+                        <span className="flex items-center gap-1.5">
+                          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          <span>{indicator.movFiles.length} file{indicator.movFiles.length !== 1 ? 's' : ''}</span>
+                        </span>
+                      )}
+
+                      {/* Needs Rework Badge */}
+                      {indicator.status === 'needs_rework' && (
+                        <>
+                          {(totalFields > 0 || indicator.movFiles.length > 0) && (
+                            <span className="text-[var(--border)]">•</span>
+                          )}
+                          <span className="inline-flex items-center gap-1 text-orange-600 font-medium">
+                            <AlertCircle className="h-3 w-3" />
+                            <span className="hidden sm:inline">Action Required</span>
+                            <span className="sm:hidden">Action</span>
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* Description - Show when expanded */}
+                {isOpen && indicator.description && (
+                  <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+                    {indicator.description}
+                  </p>
+                )}
               </div>
             </div>
 
-            {/* MOV Files Count */}
-            {indicator.movFiles.length > 0 && (
-              <div className="flex items-center space-x-2 text-sm text-[var(--text-secondary)]">
-                <span>{indicator.movFiles.length} MOV file(s)</span>
-              </div>
-            )}
+            {/* Right: Completion Badge */}
+            <div className="flex-shrink-0">
+              {getCompletionBadge()}
+            </div>
           </div>
         </AccordionTrigger>
 
@@ -178,18 +386,33 @@ export function IndicatorAccordion({
             (indicator as any).children.length > 0
           ) && (
             <div className="space-y-8">
-              <DynamicIndicatorForm
-                formSchema={indicator.formSchema}
-                initialData={indicator.responseData}
-                isDisabled={isLocked}
-                indicatorId={indicator.id}
-                responseId={indicator.responseId}
-                assessmentId={assessment?.id}
-                responseIndicatorId={(indicator as any).responseIndicatorId}
-                movFiles={indicator.movFiles || []}
-                updateAssessmentData={updateAssessmentData}
-                ensureResponseId={ensureResponseId}
-                onChange={(data: Record<string, any>) => {
+              {/* Epic 3 Dynamic Form Renderer */}
+              {isEpic3Format() && assessment?.id && (
+                <DynamicFormRenderer
+                  formSchema={indicator.formSchema as any}
+                  assessmentId={parseInt(assessment.id)}
+                  indicatorId={parseInt(indicator.id)}
+                  onSaveSuccess={() => {
+                    // Optionally refresh assessment data after save
+                    console.log('Answers saved successfully for indicator', indicator.id);
+                  }}
+                />
+              )}
+
+              {/* Legacy Form (for old format indicators) */}
+              {!isEpic3Format() && (
+                <DynamicIndicatorForm
+                  formSchema={indicator.formSchema}
+                  initialData={indicator.responseData}
+                  isDisabled={isLocked}
+                  indicatorId={indicator.id}
+                  responseId={indicator.responseId}
+                  assessmentId={assessment?.id}
+                  responseIndicatorId={(indicator as any).responseIndicatorId}
+                  movFiles={indicator.movFiles || []}
+                  updateAssessmentData={updateAssessmentData}
+                  ensureResponseId={ensureResponseId}
+                  onChange={(data: Record<string, any>) => {
                   if (!isLocked && indicator.id && updateAssessmentData) {
                     // Determine completion locally based on required answers
                     const required = (indicator.formSchema as any)?.required || [];
@@ -243,9 +466,7 @@ export function IndicatorAccordion({
                     const hasYes = requiredSectionsWithYes.size > 0;
                     const newStatus = allAnswered && (!hasYes || allSectionsSatisfied)
                       ? 'completed'
-                      : (allAnswered && hasYes && !allSectionsSatisfied)
-                        ? 'in_progress'
-                        : 'not_started';
+                      : 'not_started';
 
                     // Areas 2-6 now use the same flat structure as Area 1, no nested wrapping needed
                     const dataToSave = data;
@@ -316,16 +537,26 @@ export function IndicatorAccordion({
                     );
                   }
                 }}
-              />
+                />
+              )}
 
               {/* MOV File Uploader Section (shown only when compliant == yes and no per-section uploads are defined) */}
-              {shouldShowMov && !hasSectionUploads && (
-                <div className="space-y-4 bg-[var(--card)] p-6 rounded-lg border border-[var(--border)] shadow-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-[var(--cityscape-yellow)] rounded-full"></div>
-                    <h4 className="text-sm font-semibold text-[var(--foreground)]">
-                      Means of Verification (MOV)
-                    </h4>
+              {!isEpic3Format() && shouldShowMov && !hasSectionUploads && (
+                <div className="space-y-4 bg-gradient-to-br from-[var(--card)] to-[var(--hover)] p-6 rounded-lg border-l-4 border-[var(--cityscape-yellow)] shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center h-8 w-8 rounded-full bg-[var(--cityscape-yellow)]/10 border-2 border-[var(--cityscape-yellow)]">
+                      <svg className="h-4 w-4 text-[var(--cityscape-yellow)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-semibold text-[var(--foreground)]">
+                        Supporting Documents
+                      </h4>
+                      <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                        Upload Means of Verification (MOV)
+                      </p>
+                    </div>
                   </div>
                   <FileUploader
                     accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
@@ -391,7 +622,7 @@ export function IndicatorAccordion({
                                       status:
                                         (current.complianceAnswer || localCompliance) === "yes" && allSatisfied
                                           ? "completed"
-                                          : "in_progress",
+                                          : "not_started",
                                     };
                                     return true;
                                   }
@@ -458,9 +689,7 @@ export function IndicatorAccordion({
                                     status:
                                       (current.complianceAnswer || localCompliance) === "yes" && allSatisfied
                                         ? "completed"
-                                        : files.length === 0
-                                          ? "not_started"
-                                          : "in_progress",
+                                        : "not_started",
                                   };
                                   return true;
                                 }

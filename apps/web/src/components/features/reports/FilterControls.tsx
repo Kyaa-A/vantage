@@ -16,6 +16,7 @@ interface FilterControlsProps {
     governance_area?: string[];
     barangay_id?: number[];
     status?: string;
+    phase?: 'phase1' | 'phase2' | 'all';
   };
   onFilterChange: (filters: FilterControlsProps["filters"]) => void;
   userRole?: string;
@@ -34,6 +35,14 @@ export function FilterControls({
     });
   };
 
+  // Handle phase filter change
+  const handlePhaseChange = (value: 'phase1' | 'phase2' | 'all') => {
+    onFilterChange({
+      ...filters,
+      phase: value === "all" ? undefined : value,
+    });
+  };
+
   // Clear all filters
   const handleClearFilters = () => {
     onFilterChange({
@@ -43,6 +52,7 @@ export function FilterControls({
       governance_area: undefined,
       barangay_id: undefined,
       status: undefined,
+      phase: undefined,
     });
   };
 
@@ -53,10 +63,11 @@ export function FilterControls({
     filters.end_date ||
     filters.governance_area?.length ||
     filters.barangay_id?.length ||
-    filters.status;
+    filters.status ||
+    filters.phase;
 
   return (
-    <div className="bg-card border border-border rounded-lg p-6 space-y-4">
+    <div className="bg-card rounded shadow-lg border border-gray-200 p-6 space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Filters</h3>
         {hasActiveFilters && (
@@ -72,7 +83,25 @@ export function FilterControls({
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        {/* Phase Filter */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Assessment Phase</label>
+          <Select
+            value={filters.phase || "all"}
+            onValueChange={handlePhaseChange}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="All phases" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Phases</SelectItem>
+              <SelectItem value="phase1">Phase 1: Table Assessment</SelectItem>
+              <SelectItem value="phase2">Phase 2: Table Validation</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         {/* Status Filter */}
         <div className="space-y-2">
           <label className="text-sm font-medium">Status</label>
@@ -162,8 +191,25 @@ export function FilterControls({
 
       {/* Active Filters Summary */}
       {hasActiveFilters && (
-        <div className="pt-2 border-t border-border">
+        <div className="pt-2">
           <div className="flex flex-wrap gap-2">
+            {filters.phase && (
+              <div className={`text-xs px-2 py-1 rounded-md flex items-center gap-1 ${
+                filters.phase === 'phase1'
+                  ? 'bg-blue-100 text-blue-800'
+                  : 'bg-purple-100 text-purple-800'
+              }`}>
+                Phase: {filters.phase === 'phase1' ? 'Table Assessment' : 'Table Validation'}
+                <button
+                  onClick={() =>
+                    onFilterChange({ ...filters, phase: undefined })
+                  }
+                  className="hover:bg-primary/20 rounded-sm"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            )}
             {filters.status && (
               <div className="bg-primary/10 text-primary text-xs px-2 py-1 rounded-md flex items-center gap-1">
                 Status: {filters.status}

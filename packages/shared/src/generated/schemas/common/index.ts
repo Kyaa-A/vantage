@@ -9,6 +9,8 @@ import type { PercentageThresholdRule } from '../percentagethresholdrule';
 import type { CountThresholdRule } from '../countthresholdrule';
 import type { MatchValueRule } from '../matchvaluerule';
 import type { BBIFunctionalityCheckRule } from '../bbis';
+import type { FileUploadFieldConditionalMovRequirement } from '../movs';
+import type { IndicatorItem } from '../indicators';
 import type { ReorderRequestIndicatorsItem } from '../indicators';
 import type { AssessmentRow } from '../assessments';
 
@@ -295,32 +297,6 @@ export type ConditionGroupRulesItem = AndAllRule | OrAnyRule | PercentageThresho
 
 
 /**
- * ConditionalMOVLogic
- */
-export interface ConditionalMOVLogic {
-  /** ID of the field to check */
-  field_id: string;
-  /** Comparison operator */
-  operator: ConditionalMOVLogicOperator;
-  /** Value to compare against */
-  value: string;
-}
-
-
-/**
- * ConditionalMOVLogicOperator
- */
-export type ConditionalMOVLogicOperator = typeof ConditionalMOVLogicOperator[keyof typeof ConditionalMOVLogicOperator];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ConditionalMOVLogicOperator = {
-  equals: 'equals',
-  not_equals: 'not_equals',
-} as const;
-
-
-/**
  * CountThresholdRuleOperator
  */
 export type CountThresholdRuleOperator = typeof CountThresholdRuleOperator[keyof typeof CountThresholdRuleOperator];
@@ -385,6 +361,15 @@ export type DatePickerFieldMinDate = string | null;
 
 
 /**
+ * FieldAnswerInput
+ */
+export interface FieldAnswerInput {
+  field_id: string;
+  value: unknown;
+}
+
+
+/**
  * FieldOption
  */
 export interface FieldOption {
@@ -440,12 +425,6 @@ export type FileUploadFieldAllowedFileTypes = string[] | null;
 
 
 /**
- * FileUploadFieldConditionalMovRequirement
- */
-export type FileUploadFieldConditionalMovRequirement = ConditionalMOVLogic | null;
-
-
-/**
  * FileUploadFieldHelpText
  */
 export type FileUploadFieldHelpText = string | null;
@@ -458,21 +437,22 @@ export type FileUploadFieldMaxFileSizeMb = number | null;
 
 
 /**
- * FormSchema
- */
-export interface FormSchema {
-  /**
-   * List of form fields in the schema
-   * @minItems 1
-   */
-  fields: FormSchemaFieldsItem[];
-}
-
-
-/**
  * FormSchemaFieldsItem
  */
 export type FormSchemaFieldsItem = CheckboxGroupField | RadioButtonField | NumberInputField | TextInputField | TextAreaField | DatePickerField | FileUploadField;
+
+
+/**
+ * GovernanceAreaGroup
+ */
+export interface GovernanceAreaGroup {
+  /** Governance area ID */
+  governance_area_id: number;
+  /** Governance area name */
+  governance_area_name: string;
+  /** List of indicators in this governance area */
+  indicators: IndicatorItem[];
+}
 
 
 /**
@@ -497,20 +477,6 @@ export interface GovernanceAreaProgress {
   completion_percentage: number;
   requires_rework_count: number;
 }
-
-
-/**
- * MOVStatus
- */
-export type MOVStatus = typeof MOVStatus[keyof typeof MOVStatus];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const MOVStatus = {
-  Pending: 'Pending',
-  Uploaded: 'Uploaded',
-  Deleted: 'Deleted',
-} as const;
 
 
 /**
@@ -711,6 +677,29 @@ export interface ReorderRequest {
   /** List of indicator updates with id, code, parent_id */
   indicators: ReorderRequestIndicatorsItem[];
 }
+
+
+/**
+ * ReworkComment
+ */
+export interface ReworkComment {
+  /** Assessor feedback comment */
+  comment: string;
+  /** Type of comment (general, specific issue, etc.) */
+  comment_type: string;
+  /** Indicator this comment applies to */
+  indicator_id: number;
+  /** Name of the indicator */
+  indicator_name: string;
+  /** Timestamp when comment was created (ISO format) */
+  created_at?: ReworkCommentCreatedAt;
+}
+
+
+/**
+ * ReworkCommentCreatedAt
+ */
+export type ReworkCommentCreatedAt = string | null;
 
 
 /**

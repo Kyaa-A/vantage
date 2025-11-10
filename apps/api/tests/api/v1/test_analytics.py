@@ -74,7 +74,7 @@ def assessor_user(db_session: Session):
         email=unique_email,
         name="Area Assessor Test User",
         hashed_password=pwd_context.hash("password123"),
-        role=UserRole.AREA_ASSESSOR,
+        role=UserRole.ASSESSOR,
         is_active=True,
     )
     db_session.add(user)

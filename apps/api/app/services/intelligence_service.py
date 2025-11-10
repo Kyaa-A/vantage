@@ -6,6 +6,8 @@ from datetime import UTC, datetime
 from typing import Any, Dict, List, Optional
 
 import google.generativeai as genai
+from loguru import logger
+
 from app.core.config import settings
 from app.db.enums import ComplianceStatus, ValidationStatus
 from app.db.models.assessment import Assessment, AssessmentResponse

@@ -6,3 +6,9 @@ export { AssessmentTabs } from "./AssessmentTabs";
 export { IndicatorAccordion, RecursiveIndicator } from "./IndicatorAccordion";
 export { IndicatorForm } from "./IndicatorForm";
 export { default as PeaceAndOrderForm } from "./PeaceAndOrderForm";
+
+// Epic 5.0 Components
+export { LockedStateBanner } from "./LockedStateBanner";
+export { ResubmitAssessmentButton } from "./submission/ResubmitAssessmentButton";
+export { ReworkCommentsPanel } from "./rework/ReworkCommentsPanel";
+export { SubmitAssessmentButton } from "./submission/SubmitAssessmentButton";

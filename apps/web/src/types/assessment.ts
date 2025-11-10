@@ -25,7 +25,7 @@ export interface GovernanceArea {
 
 export interface Indicator {
   id: string;
-  code: string; // e.g., "3.1.1"
+  code?: string; // e.g., "3.1.1" - Optional for test indicators
   name: string;
   description: string;
   technicalNotes: string;

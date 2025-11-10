@@ -1,6 +1,7 @@
 # 📋 Assessments API Routes
 # Endpoints for assessment management and assessment data
 
+from datetime import datetime
 from typing import Any, Dict, List
 
 from app.api import deps
@@ -14,9 +15,22 @@ from app.schemas.assessment import (
     AssessmentResponseUpdate,
     AssessmentSubmissionValidation,
     MOVCreate,
+    SaveAnswersRequest,
+    SaveAnswersResponse,
+    GetAnswersResponse,
+    AnswerResponse,
+    CompletenessValidationResponse,
+    IncompleteIndicatorDetail,
+    SubmitAssessmentResponse,
+    RequestReworkRequest,
+    RequestReworkResponse,
+    ResubmitAssessmentResponse,
+    SubmissionValidationResult,
+    SubmissionStatusResponse,
 )
-from app.db.models.assessment import MOV as MOVModel
+from app.db.models.assessment import MOV as MOVModel, Assessment
 from app.services.assessment_service import assessment_service
+from app.services.submission_validation_service import submission_validation_service
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
@@ -322,50 +336,8 @@ async def submit_assessment(
         ) from e
 
 
-@router.post(
-    "/{assessment_id}/submit",
-    response_model=AssessmentSubmissionValidation,
-    tags=["assessments"],
-)
-async def submit_assessment_by_id(
-    assessment_id: int,
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(get_current_blgu_user),
-):
-    """
-    Submit a specific assessment for review by ID.
-
-    Validates that the assessment belongs to the current BLGU user, runs the
-    preliminary compliance check (no "YES" answers without MOVs), and updates
-    the status to "Submitted for Review" if valid.
-    """
-    assessment = assessment_service.get_assessment_for_blgu(
-        db, getattr(current_user, "id")
-    )
-    if not assessment or assessment.id != assessment_id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Assessment not found for current user",
-        )
-
-    try:
-        validation_result = assessment_service.submit_assessment(db, assessment_id)
-        if not getattr(validation_result, "is_valid", False):
-            # Return 400 with a concise detail message for failed indicators per PRD
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=(
-                    "Submission failed: YES answers without MOV detected."
-                ),
-            )
-        return validation_result
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error submitting assessment: {str(e)}",
-        ) from e
+# NOTE: Old duplicate submit endpoint removed (was at line 339-357)
+# Epic 5.0 submit_assessment endpoint is the correct one (now at line ~1070)
 
 @router.post("/responses/{response_id}/movs", response_model=MOV, tags=["assessments"])
 async def upload_mov(
@@ -602,3 +574,867 @@ async def generate_insights(
         "task_id": task.id,
         "status": "processing",
     }
+
+
+@router.post(
+    "/{assessment_id}/answers",
+    response_model=SaveAnswersResponse,
+    status_code=status.HTTP_200_OK,
+    tags=["assessments"],
+)
+async def save_assessment_answers(
+    assessment_id: int,
+    request_body: SaveAnswersRequest,
+    indicator_id: int = Query(..., description="ID of the indicator"),
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+) -> SaveAnswersResponse:
+    """
+    Save form responses for an assessment.
+
+    **Permissions**:
+    - BLGU users can save answers for their own assessments
+    - Assessors can save answers (for table validation)
+
+    **Path Parameters**:
+    - assessment_id: ID of the assessment
+
+    **Query Parameters**:
+    - indicator_id: ID of the indicator
+
+    **Request Body**:
+    ```json
+    {
+      "responses": [
+        {"field_id": "field1", "value": "text response"},
+        {"field_id": "field2", "value": 42},
+        {"field_id": "field3", "value": ["option1", "option2"]}
+      ]
+    }
+    ```
+
+    **Field Type Validation**:
+    - text/textarea: value must be string
+    - number: value must be numeric (int or float)
+    - date: value must be ISO date string
+    - select/radio: value must be string matching one of the field's option IDs
+    - checkbox: value must be array of strings matching the field's option IDs
+
+    **Returns**: Confirmation with count of saved fields
+
+    **Raises**:
+    - 400: Assessment is locked for editing
+    - 403: User not authorized to modify this assessment
+    - 404: Assessment or indicator not found
+    - 422: Field validation errors (field not found, type mismatch, invalid option)
+    """
+    from app.db.models import Assessment
+    from app.db.models.governance_area import Indicator
+
+    # Retrieve assessment
+    assessment = db.query(Assessment).filter(Assessment.id == assessment_id).first()
+
+    if not assessment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Assessment with ID {assessment_id} not found"
+        )
+
+    # Permission check: BLGU users can only save their own assessments
+    # Assessors can save for any assessment (for table validation)
+    if current_user.role == UserRole.BLGU_USER:
+        if assessment.blgu_user_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You are not authorized to modify this assessment"
+            )
+    # Assessors and other roles are allowed
+
+    # Status check: Only DRAFT or NEEDS_REWORK assessments can be edited
+    locked_statuses = [AssessmentStatus.SUBMITTED_FOR_REVIEW, AssessmentStatus.VALIDATED]
+    if assessment.status in locked_statuses:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Assessment is locked for editing. Current status: {assessment.status.value}"
+        )
+
+    # Retrieve indicator and form_schema for validation
+    indicator = db.query(Indicator).filter(Indicator.id == indicator_id).first()
+
+    if not indicator:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Indicator with ID {indicator_id} not found"
+        )
+
+    # Parse form_schema to extract field definitions
+    form_schema = indicator.form_schema or {}
+
+    # Extract field definitions from form_schema
+    fields = form_schema.get("fields", [])
+    field_map = {field.get("field_id", field.get("id")): field for field in fields}
+
+    # Extract field responses from request body
+    field_responses = request_body.responses
+
+    # Validate each field response
+    validation_errors = []
+
+    for response in field_responses:
+        field_id = response.field_id
+        value = response.value
+
+        # Check if field_id exists in form_schema
+        if field_id not in field_map:
+            validation_errors.append({
+                "field_id": field_id,
+                "error": f"Field '{field_id}' not found in form schema"
+            })
+            continue
+
+        field_definition = field_map[field_id]
+        field_type = field_definition.get("type")
+
+        # Validate value type matches field type
+        if field_type == "text" or field_type == "textarea":
+            if not isinstance(value, str):
+                validation_errors.append({
+                    "field_id": field_id,
+                    "error": f"Field '{field_id}' expects string value, got {type(value).__name__}"
+                })
+
+        elif field_type == "number":
+            if not isinstance(value, (int, float)):
+                validation_errors.append({
+                    "field_id": field_id,
+                    "error": f"Field '{field_id}' expects numeric value, got {type(value).__name__}"
+                })
+
+        elif field_type == "date":
+            if not isinstance(value, str):
+                validation_errors.append({
+                    "field_id": field_id,
+                    "error": f"Field '{field_id}' expects date string (ISO format), got {type(value).__name__}"
+                })
+            # Note: Additional date format validation can be added here
+
+        elif field_type == "select" or field_type == "radio":
+            # For select/radio, value should be a string matching one of the options
+            if not isinstance(value, str):
+                validation_errors.append({
+                    "field_id": field_id,
+                    "error": f"Field '{field_id}' expects string value (option ID), got {type(value).__name__}"
+                })
+            else:
+                # Validate that selected option exists
+                options = field_definition.get("options", [])
+                option_ids = [opt.get("id") for opt in options]
+                if value not in option_ids:
+                    validation_errors.append({
+                        "field_id": field_id,
+                        "error": f"Field '{field_id}' has invalid option '{value}'. Valid options: {option_ids}"
+                    })
+
+        elif field_type == "checkbox":
+            # For checkbox, value should be an array of option IDs
+            if not isinstance(value, list):
+                validation_errors.append({
+                    "field_id": field_id,
+                    "error": f"Field '{field_id}' expects array of option IDs, got {type(value).__name__}"
+                })
+            else:
+                # Validate that all selected options exist
+                options = field_definition.get("options", [])
+                option_ids = [opt.get("id") for opt in options]
+                for selected_option in value:
+                    if selected_option not in option_ids:
+                        validation_errors.append({
+                            "field_id": field_id,
+                            "error": f"Field '{field_id}' has invalid option '{selected_option}'. Valid options: {option_ids}"
+                        })
+
+    # If validation errors found, raise 422
+    if validation_errors:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={
+                "message": "Field validation failed",
+                "errors": validation_errors
+            }
+        )
+
+    # Upsert assessment_response record
+    from app.db.models.assessment import AssessmentResponse
+
+    # Check if assessment_response already exists for this assessment + indicator
+    existing_response = db.query(AssessmentResponse).filter(
+        AssessmentResponse.assessment_id == assessment_id,
+        AssessmentResponse.indicator_id == indicator_id
+    ).first()
+
+    # Build response_data dictionary from field responses
+    response_data = {response.field_id: response.value for response in field_responses}
+
+    if existing_response:
+        # Update existing record
+        existing_response.response_data = response_data
+        existing_response.updated_at = datetime.utcnow()
+        db.commit()
+        db.refresh(existing_response)
+    else:
+        # Create new record
+        new_response = AssessmentResponse(
+            assessment_id=assessment_id,
+            indicator_id=indicator_id,
+            response_data=response_data,
+            is_completed=False,  # Will be set to True when all required fields are filled
+            requires_rework=False,
+        )
+        db.add(new_response)
+        db.commit()
+        db.refresh(new_response)
+
+    return SaveAnswersResponse(
+        message="Responses saved successfully",
+        assessment_id=assessment_id,
+        indicator_id=indicator_id,
+        saved_count=len(field_responses)
+    )
+
+
+@router.get(
+    "/{assessment_id}/answers",
+    response_model=GetAnswersResponse,
+    status_code=status.HTTP_200_OK,
+    tags=["assessments"],
+)
+async def get_assessment_answers(
+    assessment_id: int,
+    indicator_id: int = Query(..., description="ID of the indicator"),
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+) -> GetAnswersResponse:
+    """
+    Retrieve saved form responses for a specific indicator in an assessment.
+
+    **Permissions**:
+    - BLGU users can retrieve answers for their own assessments
+    - Assessors can retrieve answers for any assessment
+
+    **Path Parameters**:
+    - assessment_id: ID of the assessment
+
+    **Query Parameters**:
+    - indicator_id: ID of the indicator
+
+    **Returns**:
+    ```json
+    {
+      "assessment_id": 1,
+      "indicator_id": 5,
+      "responses": [
+        {"field_id": "field1", "value": "text response"},
+        {"field_id": "field2", "value": 42}
+      ],
+      "created_at": "2025-01-08T12:00:00",
+      "updated_at": "2025-01-08T12:30:00"
+    }
+    ```
+
+    Returns empty array if no responses saved yet.
+
+    **Raises**:
+    - 403: User not authorized to view this assessment
+    - 404: Assessment not found
+    """
+    from app.db.models import Assessment
+
+    # Retrieve assessment
+    assessment = db.query(Assessment).filter(Assessment.id == assessment_id).first()
+
+    if not assessment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Assessment with ID {assessment_id} not found"
+        )
+
+    # Permission check: BLGU users can only view their own assessments
+    # Assessors can view any assessment
+    if current_user.role == UserRole.BLGU_USER:
+        if assessment.blgu_user_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You are not authorized to view this assessment"
+            )
+    # Assessors and other roles are allowed
+
+    # Query assessment_response for this assessment + indicator
+    from app.db.models.assessment import AssessmentResponse
+
+    assessment_response = db.query(AssessmentResponse).filter(
+        AssessmentResponse.assessment_id == assessment_id,
+        AssessmentResponse.indicator_id == indicator_id
+    ).first()
+
+    # If no response exists yet, return empty array
+    if not assessment_response or not assessment_response.response_data:
+        return GetAnswersResponse(
+            assessment_id=assessment_id,
+            indicator_id=indicator_id,
+            responses=[]
+        )
+
+    # Extract field responses from response_data (stored as dict)
+    # Format: {"field_id": value, ...} -> [{"field_id": ..., "value": ...}, ...]
+    field_responses = [
+        AnswerResponse(
+            field_id=field_id,
+            value=value
+        )
+        for field_id, value in assessment_response.response_data.items()
+    ]
+
+    return GetAnswersResponse(
+        assessment_id=assessment_id,
+        indicator_id=indicator_id,
+        responses=field_responses,
+        created_at=assessment_response.created_at.isoformat(),
+        updated_at=assessment_response.updated_at.isoformat()
+    )
+
+
+@router.post(
+    "/{assessment_id}/validate-completeness",
+    response_model=CompletenessValidationResponse,
+    status_code=status.HTTP_200_OK,
+    tags=["assessments"],
+)
+async def validate_assessment_completeness(
+    assessment_id: int,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+) -> CompletenessValidationResponse:
+    """
+    Validate completeness of all indicators in an assessment.
+
+    Checks if all required fields are filled for all indicators.
+    Does NOT expose compliance status (Pass/Fail) - only completeness.
+
+    **Permissions**: All authenticated users
+
+    **Path Parameters**:
+    - assessment_id: ID of the assessment
+
+    **Returns**:
+    ```json
+    {
+      "is_complete": false,
+      "total_indicators": 10,
+      "complete_indicators": 7,
+      "incomplete_indicators": 3,
+      "incomplete_details": [
+        {
+          "indicator_id": 5,
+          "indicator_title": "Financial Management",
+          "missing_required_fields": ["field1", "field2"]
+        }
+      ]
+    }
+    ```
+
+    **Raises**:
+    - 404: Assessment not found
+    """
+    from app.db.models import Assessment
+    from app.db.models.assessment import AssessmentResponse
+    from app.db.models.governance_area import Indicator
+    from sqlalchemy.orm import joinedload
+
+    # Retrieve assessment
+    assessment = db.query(Assessment).filter(Assessment.id == assessment_id).first()
+
+    if not assessment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Assessment with ID {assessment_id} not found"
+        )
+
+    # Retrieve all active indicators
+    indicators = db.query(Indicator).filter(
+        Indicator.is_active == True
+    ).options(
+        joinedload(Indicator.governance_area)
+    ).all()
+
+    # Retrieve all assessment_responses for this assessment
+    assessment_responses = db.query(AssessmentResponse).filter(
+        AssessmentResponse.assessment_id == assessment_id
+    ).all()
+
+    # Create a map of indicator_id -> assessment_response for easy lookup
+    response_map = {resp.indicator_id: resp for resp in assessment_responses}
+
+    # Validate completeness for each indicator using the service
+    from app.services.completeness_validation_service import CompletenessValidationService
+
+    completeness_service = CompletenessValidationService()
+
+    # Collect validation results for each indicator
+    indicator_results = []
+
+    for indicator in indicators:
+        # Get the assessment response for this indicator (if it exists)
+        assessment_response = response_map.get(indicator.id)
+
+        # Get response_data and movs
+        response_data = assessment_response.response_data if assessment_response else None
+        uploaded_movs = assessment_response.movs if assessment_response else []
+
+        # Validate completeness
+        validation_result = completeness_service.validate_completeness(
+            form_schema=indicator.form_schema,
+            response_data=response_data,
+            uploaded_movs=uploaded_movs
+        )
+
+        indicator_results.append({
+            "indicator": indicator,
+            "is_complete": validation_result["is_complete"],
+            "missing_fields": validation_result["missing_fields"]
+        })
+
+    # Aggregate completeness results across all indicators
+    complete_count = sum(1 for r in indicator_results if r["is_complete"])
+    incomplete_count = sum(1 for r in indicator_results if not r["is_complete"])
+
+    # Build list of incomplete indicators with missing field details
+    incomplete_details = []
+    for result in indicator_results:
+        if not result["is_complete"]:
+            incomplete_details.append(
+                IncompleteIndicatorDetail(
+                    indicator_id=result["indicator"].id,
+                    indicator_title=result["indicator"].name,
+                    missing_required_fields=[
+                        field["field_id"]
+                        for field in result["missing_fields"]
+                    ]
+                )
+            )
+
+    # Determine overall completeness
+    is_complete = incomplete_count == 0
+
+    # Return CompletenessValidationResponse
+    return CompletenessValidationResponse(
+        is_complete=is_complete,
+        total_indicators=len(indicators),
+        complete_indicators=complete_count,
+        incomplete_indicators=incomplete_count,
+        incomplete_details=incomplete_details
+    )
+
+
+# ============================================================================
+# Epic 5.0: Submission & Rework Workflow Endpoints
+# ============================================================================
+
+
+@router.post(
+    "/{assessment_id}/submit",
+    response_model=SubmitAssessmentResponse,
+    tags=["assessments"],
+    status_code=status.HTTP_200_OK
+)
+def submit_assessment(
+    assessment_id: int,
+    current_user: User = Depends(deps.get_current_active_user),
+    db: Session = Depends(deps.get_db),
+) -> SubmitAssessmentResponse:
+    """
+    Submit an assessment for assessor review (Story 5.5).
+
+    This endpoint allows a BLGU user to submit their completed assessment.
+    The assessment must pass validation (all indicators complete, all MOVs uploaded)
+    before submission is allowed.
+
+    Authorization:
+        - BLGU_USER role required
+        - User must own the assessment (assessment.blgu_user_id == user.id)
+
+    Workflow:
+        1. Validate user authorization
+        2. Validate assessment completeness using SubmissionValidationService
+        3. If valid, update status to SUBMITTED and set submitted_at timestamp
+        4. Lock assessment for editing (is_locked property becomes True)
+        5. Return success response
+
+    Args:
+        assessment_id: ID of the assessment to submit
+        current_user: Current authenticated user
+        db: Database session
+
+    Returns:
+        SubmitAssessmentResponse with success status and timestamp
+
+    Raises:
+        HTTPException 403: User not authorized to submit this assessment
+        HTTPException 400: Assessment validation failed (incomplete or missing MOVs)
+        HTTPException 404: Assessment not found
+    """
+    # Authorization check: must be BLGU_USER
+    if current_user.role != UserRole.BLGU_USER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only BLGU users can submit assessments"
+        )
+
+    # Load the assessment
+    assessment = db.query(Assessment).filter_by(id=assessment_id).first()
+    if not assessment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Assessment {assessment_id} not found"
+        )
+
+    # Check ownership: user must own this assessment
+    if assessment.blgu_user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only submit your own assessments"
+        )
+
+    # Validate assessment completeness using SubmissionValidationService
+    validation_result = submission_validation_service.validate_submission(
+        assessment_id=assessment_id,
+        db=db
+    )
+
+    if not validation_result.is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "message": validation_result.error_message,
+                "incomplete_indicators": validation_result.incomplete_indicators,
+                "missing_movs": validation_result.missing_movs
+            }
+        )
+
+    # Update assessment status to SUBMITTED
+    assessment.status = AssessmentStatus.SUBMITTED
+    assessment.submitted_at = datetime.utcnow()
+    db.commit()
+    db.refresh(assessment)
+
+    # TODO (Story 5.19): Send notification to assigned assessor
+
+    return SubmitAssessmentResponse(
+        success=True,
+        message="Assessment submitted successfully",
+        assessment_id=assessment.id,
+        submitted_at=assessment.submitted_at
+    )
+
+
+@router.post(
+    "/{assessment_id}/request-rework",
+    response_model=RequestReworkResponse,
+    tags=["assessments"],
+    status_code=status.HTTP_200_OK
+)
+def request_rework(
+    assessment_id: int,
+    request_data: RequestReworkRequest,
+    current_user: User = Depends(deps.get_current_active_user),
+    db: Session = Depends(deps.get_db),
+) -> RequestReworkResponse:
+    """
+    Request rework on a submitted assessment (Story 5.6).
+
+    This endpoint allows an assessor/validator to request changes to a BLGU submission.
+    Only one rework cycle is allowed per assessment (enforced by rework_count check).
+
+    Authorization:
+        - ASSESSOR, VALIDATOR, or MLGOO_DILG role required
+        - BLGU_USER role is forbidden
+
+    Business Rules:
+        - Assessment must be in SUBMITTED status
+        - rework_count must be less than 1 (only one rework cycle allowed)
+        - Comments are required (min 10 characters)
+
+    Workflow:
+        1. Validate user authorization (role check)
+        2. Load assessment and check status is SUBMITTED
+        3. Check rework_count < 1
+        4. Update status to REWORK
+        5. Increment rework_count
+        6. Record rework_requested_by, rework_requested_at, rework_comments
+        7. Unlock assessment for BLGU editing (is_locked becomes False)
+        8. Return success response
+
+    Args:
+        assessment_id: ID of the assessment to request rework on
+        request_data: Request body containing rework comments
+        current_user: Current authenticated user
+        db: Database session
+
+    Returns:
+        RequestReworkResponse with success status and rework details
+
+    Raises:
+        HTTPException 403: User not authorized (must be assessor/validator)
+        HTTPException 400: Invalid status or rework limit reached
+        HTTPException 404: Assessment not found
+    """
+    # Authorization check: must be ASSESSOR, VALIDATOR, or MLGOO_DILG
+    allowed_roles = [UserRole.ASSESSOR, UserRole.VALIDATOR, UserRole.MLGOO_DILG]
+    if current_user.role not in allowed_roles:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only assessors and validators can request rework"
+        )
+
+    # Load the assessment
+    assessment = db.query(Assessment).filter_by(id=assessment_id).first()
+    if not assessment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Assessment {assessment_id} not found"
+        )
+
+    # Check assessment status is SUBMITTED
+    if assessment.status != AssessmentStatus.SUBMITTED:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Assessment must be in SUBMITTED status to request rework. Current status: {assessment.status.value}"
+        )
+
+    # Check rework limit using model property
+    if not assessment.can_request_rework:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Rework limit reached. Only one rework cycle is allowed per assessment."
+        )
+
+    # Validate comments (already validated by Pydantic, but double-check)
+    comments = request_data.comments.strip()
+    if len(comments) < 10:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Rework comments must be at least 10 characters long"
+        )
+
+    # Update assessment to REWORK status
+    assessment.status = AssessmentStatus.REWORK
+    assessment.rework_count += 1
+    assessment.rework_requested_by = current_user.id
+    assessment.rework_requested_at = datetime.utcnow()
+    assessment.rework_comments = comments
+    db.commit()
+    db.refresh(assessment)
+
+    # TODO (Story 5.19): Send notification to BLGU user with rework comments
+
+    return RequestReworkResponse(
+        success=True,
+        message="Rework requested successfully",
+        assessment_id=assessment.id,
+        rework_count=assessment.rework_count,
+        rework_requested_at=assessment.rework_requested_at
+    )
+
+
+@router.post(
+    "/{assessment_id}/resubmit",
+    response_model=ResubmitAssessmentResponse,
+    tags=["assessments"],
+    status_code=status.HTTP_200_OK
+)
+def resubmit_assessment(
+    assessment_id: int,
+    current_user: User = Depends(deps.get_current_active_user),
+    db: Session = Depends(deps.get_db),
+) -> ResubmitAssessmentResponse:
+    """
+    Resubmit an assessment after completing rework (Story 5.7).
+
+    This endpoint allows a BLGU user to resubmit their assessment after
+    addressing the assessor's rework comments. The assessment must be in
+    REWORK status and pass validation again.
+
+    Authorization:
+        - BLGU_USER role required
+        - User must own the assessment
+
+    Business Rules:
+        - Assessment must be in REWORK status
+        - Assessment must pass validation (completeness + MOVs)
+        - No further rework is allowed after resubmission (rework_count = 1)
+
+    Workflow:
+        1. Validate user authorization
+        2. Check assessment status is REWORK
+        3. Validate completeness using SubmissionValidationService
+        4. Update status back to SUBMITTED
+        5. Update submitted_at timestamp
+        6. Lock assessment again (is_locked becomes True)
+        7. Return success response
+
+    Args:
+        assessment_id: ID of the assessment to resubmit
+        current_user: Current authenticated user
+        db: Database session
+
+    Returns:
+        ResubmitAssessmentResponse with success status and rework count
+
+    Raises:
+        HTTPException 403: User not authorized
+        HTTPException 400: Invalid status or validation failed
+        HTTPException 404: Assessment not found
+    """
+    # Authorization check: must be BLGU_USER
+    if current_user.role != UserRole.BLGU_USER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only BLGU users can resubmit assessments"
+        )
+
+    # Load the assessment
+    assessment = db.query(Assessment).filter_by(id=assessment_id).first()
+    if not assessment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Assessment {assessment_id} not found"
+        )
+
+    # Check ownership
+    if assessment.blgu_user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only resubmit your own assessments"
+        )
+
+    # Check assessment status is REWORK
+    if assessment.status != AssessmentStatus.REWORK:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Assessment must be in REWORK status to resubmit. Current status: {assessment.status.value}"
+        )
+
+    # Validate assessment completeness again
+    validation_result = submission_validation_service.validate_submission(
+        assessment_id=assessment_id,
+        db=db
+    )
+
+    if not validation_result.is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "message": validation_result.error_message,
+                "incomplete_indicators": validation_result.incomplete_indicators,
+                "missing_movs": validation_result.missing_movs
+            }
+        )
+
+    # Update assessment status back to SUBMITTED
+    assessment.status = AssessmentStatus.SUBMITTED
+    assessment.submitted_at = datetime.utcnow()
+    db.commit()
+    db.refresh(assessment)
+
+    # TODO (Story 5.19): Send notification to assessor about resubmission
+
+    return ResubmitAssessmentResponse(
+        success=True,
+        message="Assessment resubmitted successfully",
+        assessment_id=assessment.id,
+        resubmitted_at=assessment.submitted_at,
+        rework_count=assessment.rework_count
+    )
+
+
+@router.get(
+    "/{assessment_id}/submission-status",
+    response_model=SubmissionStatusResponse,
+    tags=["assessments"],
+    status_code=status.HTTP_200_OK
+)
+def get_submission_status(
+    assessment_id: int,
+    current_user: User = Depends(deps.get_current_active_user),
+    db: Session = Depends(deps.get_db),
+) -> SubmissionStatusResponse:
+    """
+    Get the submission status of an assessment (Story 5.8).
+
+    This endpoint provides comprehensive information about an assessment's submission state,
+    including:
+    - Current status (DRAFT, SUBMITTED, IN_REVIEW, REWORK, COMPLETED)
+    - Whether the assessment is locked for editing
+    - Rework information (count, comments, timestamp, requester)
+    - Validation results (completeness check)
+
+    This allows BLGU users to:
+    - Check what needs to be completed before submission
+    - View rework feedback from assessors
+    - Understand current assessment state
+
+    This allows Assessors to:
+    - Check assessment status before taking action
+    - View validation details
+
+    Authorization:
+    - BLGU_USER: Can only check their own assessments
+    - ASSESSOR/VALIDATOR/MLGOO_DILG: Can check any assessment
+
+    Args:
+        assessment_id: The ID of the assessment to check
+        current_user: Current authenticated user
+        db: Database session
+
+    Returns:
+        SubmissionStatusResponse with comprehensive status information
+
+    Raises:
+        HTTPException 404: Assessment not found
+        HTTPException 403: BLGU user trying to access another barangay's assessment
+    """
+    # Load the assessment
+    assessment = db.query(Assessment).filter_by(id=assessment_id).first()
+    if not assessment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Assessment {assessment_id} not found"
+        )
+
+    # Authorization check
+    # BLGU users can only check their own assessments
+    if current_user.role == UserRole.BLGU_USER:
+        if assessment.blgu_user_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can only check the status of your own assessments"
+            )
+
+    # Assessors/Validators can check any assessment (no additional check needed)
+
+    # Run validation check to get current completeness status
+    validation_result = submission_validation_service.validate_submission(
+        assessment_id=assessment_id,
+        db=db
+    )
+
+    # Return comprehensive status response
+    return SubmissionStatusResponse(
+        assessment_id=assessment.id,
+        status=assessment.status,
+        is_locked=assessment.is_locked,
+        rework_count=assessment.rework_count,
+        rework_comments=assessment.rework_comments,
+        rework_requested_at=assessment.rework_requested_at,
+        rework_requested_by=assessment.rework_requested_by,
+        validation_result=validation_result
+    )

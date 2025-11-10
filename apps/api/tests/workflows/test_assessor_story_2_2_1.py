@@ -82,7 +82,7 @@ def test_validate_assessment_response_success(client, db_session):
     assessor = User(
         email="assessor@test.com",
         name="Test Assessor",
-        role=UserRole.AREA_ASSESSOR,
+        role=UserRole.ASSESSOR,
         governance_area_id=1,  # Assuming area with ID 1 exists
         hashed_password="hashed_password",
     )
@@ -166,7 +166,7 @@ def test_validate_assessment_response_not_found(client, db_session):
     assessor = User(
         email="assessor2@test.com",
         name="Test Assessor 2",
-        role=UserRole.AREA_ASSESSOR,
+        role=UserRole.ASSESSOR,
         governance_area_id=1,
         hashed_password="hashed_password",
     )

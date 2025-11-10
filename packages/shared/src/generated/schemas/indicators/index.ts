@@ -6,7 +6,7 @@
 import type { CalculationSchema } from '../common';
 import type { BodyTestCalculationApiV1IndicatorsTestCalculationPostAssessmentData } from '../assessments';
 import type { BulkCreateError } from '../error';
-import type { FormSchema } from '../common';
+import type { FormSchema } from '../formschema';
 import type { IndicatorDraftResponseLockedByUserId } from '../users';
 import type { GovernanceAreaNested } from '../common';
 import type { IndicatorHistoryResponseArchivedByUser } from '../users';
@@ -114,6 +114,16 @@ skip?: number;
  */
 limit?: number;
 };
+
+
+/**
+ * IncompleteIndicatorDetail
+ */
+export interface IncompleteIndicatorDetail {
+  indicator_id: number;
+  indicator_title: string;
+  missing_required_fields: string[];
+}
 
 
 /**
@@ -565,6 +575,59 @@ export type IndicatorHistoryResponseRemarkSchemaAnyOf = { [key: string]: unknown
  * IndicatorHistoryResponseTechnicalNotesText
  */
 export type IndicatorHistoryResponseTechnicalNotesText = string | null;
+
+
+/**
+ * IndicatorItem
+ */
+export interface IndicatorItem {
+  /** Indicator ID */
+  indicator_id: number;
+  /** Indicator name */
+  indicator_name: string;
+  /** Completion status: True if all required fields filled, False otherwise */
+  is_complete: boolean;
+  /** Assessment response ID for this indicator (null if no response yet) */
+  response_id?: IndicatorItemResponseId;
+}
+
+
+/**
+ * IndicatorItemResponseId
+ */
+export type IndicatorItemResponseId = number | null;
+
+
+/**
+ * IndicatorNavigationItem
+ */
+export interface IndicatorNavigationItem {
+  /** Indicator ID */
+  indicator_id: number;
+  /** Indicator title/name */
+  title: string;
+  /** Completion status: 'complete' or 'incomplete' */
+  completion_status: IndicatorNavigationItemCompletionStatus;
+  /** Frontend route path for navigation (e.g., /blgu/assessment/123/indicator/456) */
+  route_path: string;
+  /** Name of the governance area */
+  governance_area_name: string;
+  /** ID of the governance area */
+  governance_area_id: number;
+}
+
+
+/**
+ * IndicatorNavigationItemCompletionStatus
+ */
+export type IndicatorNavigationItemCompletionStatus = typeof IndicatorNavigationItemCompletionStatus[keyof typeof IndicatorNavigationItemCompletionStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const IndicatorNavigationItemCompletionStatus = {
+  complete: 'complete',
+  incomplete: 'incomplete',
+} as const;
 
 
 /**
