@@ -1,0 +1,464 @@
+{
+  "governance_area_id": 1,
+  "governance_area_name": "Financial Administration and Sustainability",
+  "indicators": [
+    {
+      "code": "1.1",
+      "name": "COMPLIANCE WITH THE BARANGAY FULL DISCLOSURE POLICY (BFDP) BOARD",
+      "description": "Barangay compliance with transparency and disclosure requirements",
+      "level": 1,
+      "parent_code": null,
+      "is_active": true,
+      "is_profiling_only": false,
+      "is_auto_calculable": false,
+      "weight": 20,
+      "minimum_requirement_html": "<p>Posted the following CY 2023 financial documents in the BFDP board, pursuant to DILG MC No. 2014-81 and DILG MC No. 2022-027:</p><ul><li>a) Barangay Financial Report</li><li>b) Barangay Budget</li><li>c) Summary of Income and Expenditures</li><li>d) 20% COUtilization</li><li>e) Annual Procurement Plan or Procurenoment of the NTA merit List</li><li>f) List of Notices of Award (1st - 3rd Quarter of CY 2023)</li><li>g) Itemized Monthly Collections and Disbursements (January to September 2023)</li></ul>",
+      "technical_notes_text": "Verify physical posting of all required documents. Documents must be visible and accessible to the public.",
+      "children": ["1.1.1", "1.1.2"]
+    },
+    {
+      "code": "1.1.1",
+      "name": "Posted financial documents in BFDP board",
+      "description": "All required CY 2023 financial documents are posted in the BFDP board",
+      "level": 2,
+      "parent_code": "1.1",
+      "is_active": true,
+      "is_profiling_only": false,
+      "is_auto_calculable": true,
+      "weight": 60,
+      "minimum_requirement_html": "<p>Posted the following CY 2023 financial documents in the BFDP board, pursuant to DILG MC No. 2014-81 and DILG MC No. 2022-027:</p><ul><li>a) Barangay Financial Report</li><li>b) Barangay Budget</li><li>c) Summary of Income and Expenditures</li><li>d) 20% COUtilization</li><li>e) Annual Procurement Plan or Procurenoment of the NTA merit List</li><li>f) List of Notices of Award (1st - 3rd Quarter of CY 2023)</li><li>g) Itemized Monthly Collections and Disbursements (January to September 2023)</li></ul>",
+      "form_schema": {
+        "fields": [
+          {
+            "name": "documents_posted",
+            "label": "Which documents are posted in the BFDP board?",
+            "type": "checkbox_group",
+            "required": true,
+            "options": [
+              "Barangay Financial Report",
+              "Barangay Budget",
+              "Summary of Income and Expenditures",
+              "20% COUtilization",
+              "Annual Procurement Plan or Procurenoment of the NTA merit List",
+              "List of Notices of Award (1st - 3rd Quarter of CY 2023)",
+              "Itemized Monthly Collections and Disbursements (January to September 2023)"
+            ]
+          },
+          {
+            "name": "mov_photos",
+            "label": "Means of Verification (MOV)",
+            "type": "file",
+            "required": true,
+            "isArray": true,
+            "accept": [".jpg", ".png", ".pdf"],
+            "maxFiles": 10,
+            "description": "Three (3) BFDP Monitoring Form A of the DILG Advisory covering the 1st to 3rd quarter monitoring data signed by the City Director/C/MLGOO, Punong Barangay and Barangay Secretary. Two (2) Photo Documentation of the BFDP board showing the name of the barangay. Photo Requirements: One (1) photo with Distant View; and One (1) photo with Close-up View"
+          }
+        ]
+      },
+      "calculation_schema": {
+        "type": "conditional",
+        "rules": [
+          {
+            "condition": "documents_posted.length == 7",
+            "score": 100
+          },
+          {
+            "condition": "documents_posted.length >= 5",
+            "score": 50
+          }
+        ],
+        "default": 0,
+        "output_status_on_pass": "Pass",
+        "output_status_on_fail": "Fail"
+      },
+      "technical_notes_text": "All 7 documents must be posted for full compliance. Partial compliance (5-6 documents) earns 50% score."
+    },
+    {
+      "code": "1.1.2",
+      "name": "Accomplished and signed BFR with received stamp",
+      "description": "Barangay Financial Report is properly signed and stamped",
+      "level": 2,
+      "parent_code": "1.1",
+      "is_active": true,
+      "is_profiling_only": false,
+      "is_auto_calculable": false,
+      "weight": 40,
+      "minimum_requirement_html": "<p>Accomplished and signed BFR with received stamp from the Office of the C/M Accountant</p>",
+      "form_schema": {
+        "fields": [
+          {
+            "name": "bfr_signed",
+            "label": "Is the BFR accomplished and signed?",
+            "type": "boolean",
+            "required": true
+          },
+          {
+            "name": "bfr_stamped",
+            "label": "Does the BFR have a received stamp from C/M Accountant?",
+            "type": "boolean",
+            "required": true
+          },
+          {
+            "name": "mov_annex_b",
+            "label": "Means of Verification (MOV)",
+            "type": "file",
+            "required": true,
+            "isArray": true,
+            "accept": [".pdf", ".jpg", ".png"],
+            "maxFiles": 5,
+            "description": "Annex B of DBM-DOF-DILG JMC No. 2018-1"
+          }
+        ]
+      },
+      "technical_notes_text": "Verify signatures and stamp authenticity. Annex B must be properly filled out."
+    },
+    {
+      "code": "1.2",
+      "name": "INNOVATIONS ON REVENUE GENERATION OR EXERCISE OF CORPORATE POWERS",
+      "description": "Barangay demonstrates revenue generation innovation",
+      "level": 1,
+      "parent_code": null,
+      "is_active": true,
+      "is_profiling_only": false,
+      "is_auto_calculable": false,
+      "weight": 15,
+      "minimum_requirement_html": "<p>Increase in local resources in CY 2023</p>",
+      "technical_notes_text": "Compare CY 2023 revenue against CY 2022 baseline.",
+      "children": ["1.2.1"]
+    },
+    {
+      "code": "1.2.1",
+      "name": "Increase in local resources in CY 2023",
+      "description": "Local resources increased compared to previous year",
+      "level": 2,
+      "parent_code": "1.2",
+      "is_active": true,
+      "is_profiling_only": false,
+      "is_auto_calculable": true,
+      "weight": 100,
+      "minimum_requirement_html": "<p>Increase in local resources in CY 2023</p>",
+      "form_schema": {
+        "fields": [
+          {
+            "name": "cy2022_revenue",
+            "label": "CY 2022 Local Resources (PHP)",
+            "type": "number",
+            "required": true,
+            "min": 0
+          },
+          {
+            "name": "cy2023_revenue",
+            "label": "CY 2023 Local Resources (PHP)",
+            "type": "number",
+            "required": true,
+            "min": 0
+          },
+          {
+            "name": "mov_sre",
+            "label": "Means of Verification (MOV)",
+            "type": "file",
+            "required": true,
+            "isArray": true,
+            "accept": [".pdf", ".xlsx"],
+            "maxFiles": 5,
+            "description": "SRE for 2022 and 2023, signed by Barangay Treasurer and Punong Barangay; and Certification on Increase in Local Resources signed by the City/Municipal Treasurer/ Budget Officer"
+          }
+        ]
+      },
+      "calculation_schema": {
+        "type": "formula",
+        "expression": "cy2023_revenue > cy2022_revenue ? 100 : 0",
+        "output_status_on_pass": "Pass",
+        "output_status_on_fail": "Fail"
+      },
+      "technical_notes_text": "Any increase qualifies for Pass. Use SRE (Statement of Receipts and Expenditures) as evidence."
+    },
+    {
+      "code": "1.3",
+      "name": "APPROVAL OF THE BARANGAY BUDGET ON THE SPECIFIED TIMEFRAME",
+      "description": "Barangay budget approved within DILG timeframe",
+      "level": 1,
+      "parent_code": null,
+      "is_active": true,
+      "is_profiling_only": false,
+      "is_auto_calculable": false,
+      "weight": 20,
+      "minimum_requirement_html": "<p>Presence of a Barangay Appropriation Ordinance approved on or before December 31, 2022</p><p><em>Consideration: Approval until March 31, 2023.</em></p>",
+      "technical_notes_text": "Deadline is December 31, 2022. Consideration period extends to March 31, 2023.",
+      "children": ["1.3.1"]
+    },
+    {
+      "code": "1.3.1",
+      "name": "Presence of Barangay Appropriation Ordinance",
+      "description": "Barangay Appropriation Ordinance approved on time",
+      "level": 2,
+      "parent_code": "1.3",
+      "is_active": true,
+      "is_profiling_only": false,
+      "is_auto_calculable": true,
+      "weight": 100,
+      "minimum_requirement_html": "<p>Presence of a Barangay Appropriation Ordinance approved on or before December 31, 2022</p><p><em>Consideration: Approval until March 31, 2023.</em></p>",
+      "form_schema": {
+        "fields": [
+          {
+            "name": "ordinance_date",
+            "label": "Date of Barangay Appropriation Ordinance Approval",
+            "type": "date",
+            "required": true
+          },
+          {
+            "name": "mov_ordinance",
+            "label": "Means of Verification (MOV)",
+            "type": "file",
+            "required": true,
+            "isArray": true,
+            "accept": [".pdf"],
+            "maxFiles": 3,
+            "description": "Approved Barangay Appropriation Ordinance signed by the Sangguniang Barangay Members (SBMs), SK Chairperson, Barangay Secretary, and Punong Barangay"
+          }
+        ]
+      },
+      "calculation_schema": {
+        "type": "conditional",
+        "rules": [
+          {
+            "condition": "ordinance_date <= '2022-12-31'",
+            "score": 100
+          },
+          {
+            "condition": "ordinance_date <= '2023-03-31'",
+            "score": 75
+          }
+        ],
+        "default": 0,
+        "output_status_on_pass": "Pass",
+        "output_status_on_fail": "Fail"
+      },
+      "technical_notes_text": "Full compliance if approved by Dec 31, 2022. Consideration period (75% score) if approved by Mar 31, 2023."
+    },
+    {
+      "code": "1.4",
+      "name": "ALLOCATION FOR STATUTORY PROGRAMS AND PROJECTS AS MANDATED BY LAWS AND/OR OTHER ISSUANCES",
+      "description": "Barangay allocates funds for mandated programs",
+      "level": 1,
+      "parent_code": null,
+      "is_active": true,
+      "is_profiling_only": false,
+      "is_auto_calculable": false,
+      "weight": 20,
+      "minimum_requirement_html": "<p>With allocated funds for the following statutory programs and projects:</p><ul><li>a) At least 20% of the NTA is allocated for development programs;</li><li>b) Not less than five percent (5%) shall be set aside as the Local Disaster Risk Reduction and Management Fund;</li><li>c) Gender and Development;</li><li>d) Senior Citizens and Persons with Disabilities;</li><li>e) Implementation of the programs of the Local Councils for the Protection of Children; and</li><li>f) Ten percent (10%) for the Sangguniang Kabataan</li></ul>",
+      "technical_notes_text": "Verify budget allocations meet all statutory requirements.",
+      "children": ["1.4.1"]
+    },
+    {
+      "code": "1.4.1",
+      "name": "Allocations for statutory programs",
+      "description": "All required statutory program allocations are present",
+      "level": 2,
+      "parent_code": "1.4",
+      "is_active": true,
+      "is_profiling_only": false,
+      "is_auto_calculable": true,
+      "weight": 100,
+      "minimum_requirement_html": "<p>With allocated funds for the following statutory programs and projects:</p><ul><li>a) At least 20% of the NTA is allocated for development programs;</li><li>b) Not less than five percent (5%) shall be set aside as the Local Disaster Risk Reduction and Management Fund;</li><li>c) Gender and Development;</li><li>d) Senior Citizens and Persons with Disabilities;</li><li>e) Implementation of the programs of the Local Councils for the Protection of Children; and</li><li>f) Ten percent (10%) for the Sangguniang Kabataan</li></ul>",
+      "form_schema": {
+        "fields": [
+          {
+            "name": "nta_total",
+            "label": "Total NTA (National Tax Allotment) in PHP",
+            "type": "number",
+            "required": true,
+            "min": 0
+          },
+          {
+            "name": "dev_programs_allocation",
+            "label": "Development Programs Allocation (PHP)",
+            "type": "number",
+            "required": true,
+            "min": 0
+          },
+          {
+            "name": "drrm_allocation",
+            "label": "DRRM Fund Allocation (PHP)",
+            "type": "number",
+            "required": true,
+            "min": 0
+          },
+          {
+            "name": "gad_allocation",
+            "label": "Gender and Development Allocation (PHP)",
+            "type": "number",
+            "required": true,
+            "min": 0
+          },
+          {
+            "name": "senior_pwd_allocation",
+            "label": "Senior Citizens and PWD Allocation (PHP)",
+            "type": "number",
+            "required": true,
+            "min": 0
+          },
+          {
+            "name": "children_allocation",
+            "label": "Local Council for Protection of Children Allocation (PHP)",
+            "type": "number",
+            "required": true,
+            "min": 0
+          },
+          {
+            "name": "sk_allocation",
+            "label": "Sangguniang Kabataan Allocation (PHP)",
+            "type": "number",
+            "required": true,
+            "min": 0
+          },
+          {
+            "name": "mov_ordinance",
+            "label": "Means of Verification (MOV)",
+            "type": "file",
+            "required": true,
+            "isArray": true,
+            "accept": [".pdf"],
+            "maxFiles": 5,
+            "description": "Approved Barangay Appropriation Ordinance; Annual Investment Program signed by Barangay Treasurer, Barangay Secretary, and Punong Barangay; and Certification for the Allocation for Statutory Programs and Projects signed by the City/Municipal Budget Officer"
+          }
+        ]
+      },
+      "calculation_schema": {
+        "type": "conditional",
+        "rules": [
+          {
+            "condition": "(dev_programs_allocation / nta_total) >= 0.20 && (drrm_allocation / nta_total) >= 0.05 && (sk_allocation / nta_total) >= 0.10 && gad_allocation > 0 && senior_pwd_allocation > 0 && children_allocation > 0",
+            "score": 100
+          }
+        ],
+        "default": 0,
+        "output_status_on_pass": "Pass",
+        "output_status_on_fail": "Fail"
+      },
+      "technical_notes_text": "All 6 allocations must meet minimum thresholds: 20% dev programs, 5% DRRM, 10% SK, plus allocations for GAD, Senior/PWD, and Children."
+    },
+    {
+      "code": "1.5",
+      "name": "POSTING OF THE BARANGAY CITIZEN'S CHARTER (CitCha)",
+      "description": "Barangay Citizens' Charter is posted in a conspicuous location",
+      "level": 1,
+      "parent_code": null,
+      "is_active": true,
+      "is_profiling_only": false,
+      "is_auto_calculable": false,
+      "weight": 15,
+      "minimum_requirement_html": "<p>Barangay Citizens' Charter posted at a conspicuous place (e.g. barangay hall, market, transport terminal, or multi-purpose hall)</p>",
+      "technical_notes_text": "Charter must be visible and accessible to the public in a high-traffic location.",
+      "children": ["1.5.1"]
+    },
+    {
+      "code": "1.5.1",
+      "name": "CitCha posted at conspicuous place",
+      "description": "Citizens' Charter is posted and visible",
+      "level": 2,
+      "parent_code": "1.5",
+      "is_active": true,
+      "is_profiling_only": false,
+      "is_auto_calculable": false,
+      "weight": 100,
+      "minimum_requirement_html": "<p>Barangay Citizens' Charter posted at a conspicuous place (e.g. barangay hall, market, transport terminal, or multi-purpose hall)</p>",
+      "form_schema": {
+        "fields": [
+          {
+            "name": "citcha_posted",
+            "label": "Is the Citizens' Charter posted in a conspicuous place?",
+            "type": "boolean",
+            "required": true
+          },
+          {
+            "name": "posting_location",
+            "label": "Where is the Citizens' Charter posted?",
+            "type": "select",
+            "required": true,
+            "options": [
+              "Barangay Hall",
+              "Market",
+              "Transport Terminal",
+              "Multi-purpose Hall",
+              "Other"
+            ]
+          },
+          {
+            "name": "mov_photos",
+            "label": "Means of Verification (MOV)",
+            "type": "file",
+            "required": true,
+            "isArray": true,
+            "accept": [".jpg", ".png"],
+            "maxFiles": 5,
+            "description": "Two (2) Photo documentation of the Barangay CitCha (name of the barangay should be visible). Photo Requirements: One (1) photo with Distant View; and One (1) photo with Close-up View"
+          }
+        ]
+      },
+      "technical_notes_text": "Assessor verifies posting location and visibility. Photos must clearly show barangay name."
+    },
+    {
+      "code": "1.6",
+      "name": "RELEASE OF THE SANGGUNIANG KABATAAN (SK) FUNDS OF THE BARANGAY",
+      "description": "Barangay properly releases SK funds according to requirements",
+      "level": 1,
+      "parent_code": null,
+      "is_active": true,
+      "is_profiling_only": false,
+      "is_auto_calculable": false,
+      "weight": 10,
+      "minimum_requirement_html": "<p>Compliance with Section 20 of the SK Reform Act of 2015 and Item 3.2 of DBM-DILG-NYC JMC No. 1, s. 2019 dated January 23, 2019</p>",
+      "technical_notes_text": "Verify compliance with SK Reform Act requirements for fund release.",
+      "children": ["1.6.1", "1.6.2"]
+    },
+    {
+      "code": "1.6.1",
+      "name": "Compliance with SK fund release requirements",
+      "description": "Barangay has proper SK agreement and fund release documentation",
+      "level": 2,
+      "parent_code": "1.6",
+      "is_active": true,
+      "is_profiling_only": false,
+      "is_auto_calculable": false,
+      "weight": 50,
+      "minimum_requirement_html": "<p>Compliance with Section 20 of the SK Reform Act of 2015 and Item 3.2 of DBM-DILG-NYC JMC No. 1, s. 2019 dated January 23, 2019</p>",
+      "technical_notes_text": "Note: Conditional logic - barangay must meet ONE of three scenarios (1.6.1.1, 1.6.1.2, or 1.6.1.3). This will be handled in Phase 2 with advanced conditional logic.",
+      "children": ["1.6.1.1", "1.6.1.2", "1.6.1.3"]
+    },
+    {
+      "code": "1.6.1.1",
+      "name": "Has Barangay-SK Agreement for release/deposit",
+      "description": "Barangay has agreement with SK for fund release",
+      "level": 3,
+      "parent_code": "1.6.1",
+      "is_active": true,
+      "is_profiling_only": false,
+      "is_auto_calculable": false,
+      "weight": 33,
+      "minimum_requirement_html": "<p>The barangay has Barangay-SK Agreement for the release/deposit</p>",
+      "form_schema": {
+        "fields": [
+          {
+            "name": "has_agreement",
+            "label": "Does the barangay have a Barangay-SK Agreement?",
+            "type": "boolean",
+            "required": true
+          },
+          {
+            "name": "mov_documents",
+            "label": "Means of Verification (MOV)",
+            "type": "file",
+            "required": true,
+            "isArray": true,
+            "accept": [".pdf", ".jpg"],
+            "maxFiles": 5,
+            "description": "Copy of the written agreement; and Proof of deposit reflecting the Account No./ Name of Barangay SK and the total allocated amount for the 2023 SK funds. Consideration: In the absence of deposit slips, bank statements will be considered, provided that it shows the transaction date, and that MOV for 1.6.1.2"
+          }
+        ]
+      },
+      "technical_notes_text": "Verify agreement signatures and deposit proof. Bank statements acceptable if deposit slips unavailable."
+    }
+  ]
+}

@@ -45,6 +45,24 @@ Enable the MLGOO-DILG to independently manage all critical aspects of the SGLGB 
 
 ## 3. User Stories
 
+### 3.1 Hierarchical Indicator Creation (NEW - Added Nov 9, 2025)
+
+**US-6.0.1:** As an MLGOO-DILG administrator, I want to create a complete set of hierarchical indicators (e.g., 1.1, 1.1.1, 1.2, 1.2.1) for a governance area in a single workflow session, so that I can efficiently build the full indicator structure without creating indicators one by one.
+
+**US-6.0.2:** As an MLGOO-DILG administrator, I want my indicator creation progress to be automatically saved as a draft every few seconds, so that I don't lose my work if I get interrupted or need to step away.
+
+**US-6.0.3:** As an MLGOO-DILG administrator, I want to resume working on an incomplete indicator draft from the list of my saved drafts, so that I can complete indicator creation over multiple sessions.
+
+**US-6.0.4:** As an MLGOO-DILG administrator, I want to reorder indicators in the hierarchy using drag-and-drop, so that I can easily reorganize the structure without manually renumbering everything.
+
+**US-6.0.5:** As an MLGOO-DILG administrator, I want the system to automatically renumber indicators (1.1 → 1.2) when I reorder them, so that the numbering stays consistent without manual work.
+
+**US-6.0.6:** As an MLGOO-DILG administrator, I want to use a visual form builder to define form schemas for each indicator, so that I can specify data collection fields without writing JSON code.
+
+**US-6.0.7:** As an MLGOO-DILG administrator, I want the system to validate my indicator set before publishing (checking for missing required fields, weight sum errors, invalid calculation references), so that I catch errors before indicators go live.
+
+**US-6.0.8:** As an MLGOO-DILG administrator, I want to publish an entire set of hierarchical indicators as a single transaction, so that all indicators appear together and maintain referential integrity.
+
 ### 3.1 Indicator Management
 
 **US-6.1.1:** As an MLGOO-DILG administrator, I want to create a new SGLGB indicator with custom input fields (checkboxes, number inputs, date pickers, file uploads) using a visual form builder, so that I can adapt the system to updated DILG Technical Notes without developer help.
@@ -100,6 +118,251 @@ Enable the MLGOO-DILG to independently manage all critical aspects of the SGLGB 
 ---
 
 ## 4. Functional Requirements
+
+### 4.0 Hierarchical Indicator Creation Wizard (NEW - Added Nov 9, 2025)
+
+#### 4.0.1 Multi-Step Wizard Interface
+
+**FR-6.0.1.1:** The system MUST provide a multi-step "Indicator Builder" wizard accessible only to MLGOO_DILG users at `/mlgoo/indicators/builder`.
+
+**FR-6.0.1.2:** The wizard MUST consist of 4 steps:
+- Step 1: Select Governance Area & Creation Mode
+- Step 2: Build Hierarchical Structure
+- Step 3: Configure Schemas (Form, Calculation, Remark)
+- Step 4: Review & Publish
+
+**FR-6.0.1.3:** The wizard MUST display progress indicators showing which step the user is on (e.g., "Step 2/4").
+
+**FR-6.0.1.4:** The wizard MUST allow users to navigate backward to previous steps without losing data.
+
+**FR-6.0.1.5:** The wizard MUST prevent users from advancing to the next step if required fields in the current step are incomplete or invalid.
+
+#### 4.0.2 Draft System with Auto-Save
+
+**FR-6.0.2.1:** The system MUST automatically save the user's progress to a draft every 3 seconds (debounced) while the user is actively editing.
+
+**FR-6.0.2.2:** Drafts MUST be persisted using a **hybrid storage strategy**:
+- Primary storage: **localStorage** for fast, offline-capable saves
+- Secondary storage: **Backend database** (indicator_drafts table) for cross-device access and reliability
+
+**FR-6.0.2.3:** The system MUST sync localStorage drafts to the backend database when:
+- User clicks "Save Draft" manually
+- User navigates away from the wizard
+- User closes the browser tab (via `beforeunload` event with `navigator.sendBeacon`)
+
+**FR-6.0.2.4:** Each draft MUST store:
+- Governance area ID
+- Current wizard step (1-4)
+- Indicator tree structure (flat array of indicator nodes with parent references)
+- Draft status: `in_progress`, `validating`, `ready_to_publish`
+- Creation mode: `incremental`, `bulk_import`
+- Timestamp: `created_at`, `updated_at`, `last_accessed_at`
+
+**FR-6.0.2.5:** The system MUST provide a "Drafts List" view showing all saved drafts for the current user with:
+- Draft title (e.g., "Financial Accountability Indicators")
+- Governance area name
+- Progress percentage (e.g., "8/12 indicators completed")
+- Last updated timestamp
+- "Resume" and "Delete" actions
+
+**FR-6.0.2.6:** The system MUST display a notification toast when auto-save succeeds (e.g., "Draft saved 2 seconds ago").
+
+**FR-6.0.2.7:** If auto-save fails, the system MUST show an error notification and retry with exponential backoff (2s, 4s, 8s).
+
+#### 4.0.3 Hierarchical Tree Editor
+
+**FR-6.0.3.1:** The system MUST provide a tree editor component using **react-arborist** library for displaying and manipulating the hierarchical indicator structure.
+
+**FR-6.0.3.2:** The tree editor MUST support the following operations:
+- **Add Root Indicator**: Create a new top-level indicator (1.1, 1.2, etc.)
+- **Add Child Indicator**: Create a sub-indicator under a selected parent (1.1.1, 1.1.2, etc.)
+- **Add Sibling Indicator**: Create an indicator at the same level as the selected one
+- **Delete Indicator**: Remove an indicator (with confirmation if it has children)
+- **Drag-and-Drop Reorder**: Move indicators to different positions or parents
+
+**FR-6.0.3.3:** When an indicator is dragged to a new position, the system MUST:
+- Update the `parent_id` if moved to a different parent
+- Recalculate indicator codes (e.g., 1.1 → 1.2) for all affected indicators
+- Update the tree display immediately (optimistic update)
+- Auto-save the changes to draft
+
+**FR-6.0.3.4:** Each tree node MUST display:
+- Indicator code (e.g., "1.1.1")
+- Indicator title
+- Validation status badge (e.g., "3 errors", "✓ Complete")
+- Context menu icon (⋮) for actions
+
+**FR-6.0.3.5:** The tree editor MUST support **expand/collapse** functionality for parent indicators with children.
+
+**FR-6.0.3.6:** The tree editor MUST visually distinguish between:
+- Draft indicators (not yet published)
+- Indicators with incomplete schemas (yellow warning badge)
+- Indicators with validation errors (red error badge)
+- Complete indicators (green checkmark badge)
+
+#### 4.0.4 Visual Schema Builders (Form, Calculation, Remark)
+
+**FR-6.0.4.1:** For each indicator in the tree, the system MUST provide dedicated schema builder interfaces accessible via tabs:
+- **Form Schema Builder**: Define data collection fields
+- **Calculation Schema Builder**: Define automatic Pass/Fail logic
+- **Remark Schema Builder**: Define human-readable summary templates
+
+**FR-6.0.4.2:** The **Form Schema Builder** MUST provide a visual GUI (no JSON editing required) with the following features:
+- **Field Palette**: Drag-drop or click-to-add field types:
+  - Text Input
+  - Number Input
+  - Date Picker
+  - Checkbox (single)
+  - Checkbox Group (multi-select)
+  - Radio Button Group
+  - Dropdown Select
+  - Text Area (long text)
+  - File Upload
+- **Field Properties Panel**: Configure for each field:
+  - Field Name (auto-generated snake_case, editable)
+  - Field Label (display text)
+  - Required/Optional toggle
+  - Validation rules (min, max, pattern, maxLength)
+  - Help text (optional)
+- **Field Reordering**: Drag-and-drop to reorder fields
+- **Live Preview**: Real-time preview of how the form will appear to BLGU users
+- **Delete Field**: Remove fields (with undo capability)
+
+**FR-6.0.4.3:** The **Calculation Schema Builder** MUST provide a visual interface for defining conditional logic with:
+- **Rule Type Selector**: Choose from:
+  - Conditional (if-then rules)
+  - Formula (mathematical expression)
+  - Lookup Table (value mapping)
+- **Conditional Rules Editor** (most common):
+  - Add multiple condition groups
+  - For each condition:
+    - Select field from form schema (dropdown)
+    - Select operator (>=, <=, ==, >, <)
+    - Enter comparison value
+    - Set score (0-100)
+  - Define default score if no conditions match
+- **Test Calculation**: Input sample data and see resulting score
+- **Validation**: Ensure all referenced fields exist in form schema
+
+**FR-6.0.4.4:** The **Remark Schema Builder** MUST allow users to define conditional text templates with placeholders (simplified version of calculation builder).
+
+#### 4.0.5 Real-Time Validation
+
+**FR-6.0.5.1:** The system MUST perform **real-time field validation** as the user types:
+- Required fields are not empty
+- Number inputs are within min/max range
+- Text inputs don't exceed max length
+- Field names are unique within an indicator
+
+**FR-6.0.5.2:** The system MUST perform **schema structure validation** when the user saves an indicator:
+- Calculation schema only references fields that exist in form schema
+- Weights of sibling indicators sum to 100%
+- No circular parent references
+
+**FR-6.0.5.3:** The system MUST perform **cross-indicator validation** before publishing:
+- All indicators have required schemas (form, calculation if auto-calculable)
+- No duplicate indicator codes
+- Hierarchical numbering is consistent (1.1, 1.1.1, 1.2, 1.2.1, etc.)
+
+**FR-6.0.5.4:** The system MUST display validation errors inline with specific guidance on how to fix them.
+
+**FR-6.0.5.5:** The system MUST show a validation summary in Step 4 (Review) with:
+- Total indicators
+- Complete indicators count
+- Incomplete indicators count (with links to fix)
+- Validation errors list (grouped by indicator)
+
+#### 4.0.6 Bulk Creation & Publishing
+
+**FR-6.0.6.1:** The system MUST provide a **bulk import** option in Step 1 where users can upload a CSV or JSON file containing indicator definitions.
+
+**FR-6.0.6.2:** Upon file upload, the system MUST:
+- Validate file format and structure
+- Preview the indicator tree structure
+- Show any import errors or warnings
+- Allow user to review and edit before proceeding
+
+**FR-6.0.6.3:** When the user clicks "Publish" in Step 4, the system MUST:
+- Perform final validation of the entire indicator set
+- Show a confirmation modal summarizing what will be published (e.g., "You are about to publish 12 indicators for Financial Accountability")
+- Create all indicators in a **single database transaction** via `POST /api/v1/indicators/bulk`
+- Handle parent-child relationships by:
+  - Using temporary IDs (UUID) for draft indicators
+  - Resolving `parent_temp_id` → `parent_id` after parent is created
+  - Using topological sorting to ensure parents are created before children
+
+**FR-6.0.6.4:** If bulk creation fails (e.g., validation error, database constraint violation), the system MUST:
+- Rollback the entire transaction (no partial publishes)
+- Display specific error messages
+- Allow user to fix errors and retry
+
+**FR-6.0.6.5:** Upon successful publish, the system MUST:
+- Delete the draft from localStorage and backend
+- Show success notification
+- Redirect user to the indicator list page showing the newly created indicators
+
+#### 4.0.7 Conflict Resolution & Locking
+
+**FR-6.0.7.1:** The system MUST implement **single-user editing** - only one MLGOO_DILG user can edit a draft at a time.
+
+**FR-6.0.7.2:** When a draft is opened, the system MUST:
+- Acquire a lock by setting `locked_by_user_id` and `locked_at` in the backend
+- Store a `lock_token` (UUID) in localStorage
+
+**FR-6.0.7.3:** If another user (or the same user on a different device) tries to open a locked draft, the system MUST:
+- Display a modal: "This draft is being edited by [user email] since [time]"
+- Provide options:
+  - "Wait and Retry" (check again in 30 seconds)
+  - "Override Lock" (only if same user, requires confirmation)
+  - "Create New Draft" (start from scratch)
+
+**FR-6.0.7.4:** Locks MUST automatically expire after 30 minutes of inactivity (no save operations).
+
+**FR-6.0.7.5:** When a user exits the wizard (closes tab or navigates away), the system MUST release the lock via a `navigator.sendBeacon` call to `POST /api/v1/indicator-drafts/{id}/release-lock`.
+
+#### 4.0.8 API Endpoints (New)
+
+**FR-6.0.8.1:** The following new API endpoints MUST be implemented:
+
+```
+POST   /api/v1/indicators/bulk
+  - Bulk create indicators with parent resolution
+  - Request: { governance_area_id, indicators: [{ temp_id, parent_temp_id, code, name, ... }] }
+  - Response: { created: [...], temp_id_mapping: {}, errors: [] }
+
+POST   /api/v1/indicators/reorder
+  - Batch update indicator codes and parent_ids after drag-drop
+  - Request: { updates: [{ id, code, parent_id, order }] }
+  - Response: List[IndicatorResponse]
+
+POST   /api/v1/indicator-drafts
+  - Save draft to backend
+  - Request: DraftCreate (governance_area_id, data: JSONB, current_step, etc.)
+  - Response: DraftResponse with draft_id
+
+GET    /api/v1/indicator-drafts
+  - List all drafts for current user
+  - Response: List[DraftSummary]
+
+GET    /api/v1/indicator-drafts/{draft_id}
+  - Load specific draft
+  - Response: DraftResponse
+
+PUT    /api/v1/indicator-drafts/{draft_id}
+  - Update draft (with optimistic locking via version field)
+  - Request: DraftUpdate with version number
+  - Response: DraftResponse with new version
+
+DELETE /api/v1/indicator-drafts/{draft_id}
+  - Delete draft
+
+POST   /api/v1/indicator-drafts/{draft_id}/release-lock
+  - Release draft lock when user exits
+```
+
+**FR-6.0.8.2:** All draft endpoints MUST implement **optimistic locking** using a `version` field to detect concurrent edits.
+
+**FR-6.0.8.3:** If a save operation detects a version mismatch, the system MUST return a `409 Conflict` error with details about the conflicting user and timestamp.
 
 ### 4.1 Indicator Management Interface
 
@@ -376,9 +639,9 @@ Enable the MLGOO-DILG to independently manage all critical aspects of the SGLGB 
 
 **NG-6.7:** **Weighted Scoring for BBI Functionality** - BBI functionality is determined by rule-based logic (Pass/Fail of specific indicators), not by weighted scores or percentages.
 
-**NG-6.8:** **Bulk Import of Indicators** - Importing indicators from Excel or CSV files is out of scope. All indicator creation is done through the UI.
+**NG-6.8:** ~~**Bulk Import of Indicators**~~ - **NOW IN SCOPE** (Updated Nov 9, 2025): Basic bulk import from CSV/JSON is supported in the hierarchical indicator creation wizard. However, advanced import features (Excel with complex formatting, automatic schema generation from spreadsheet columns) remain out of scope.
 
-**NG-6.9:** **Collaborative Editing** - Real-time collaborative editing of indicators by multiple MLGOO-DILG users simultaneously is out of scope.
+**NG-6.9:** **Real-Time Collaborative Editing** - Real-time collaborative editing of indicators by multiple MLGOO-DILG users simultaneously (like Google Docs) is out of scope. The system supports single-user editing with draft locking.
 
 ---
 
@@ -440,6 +703,210 @@ Enable the MLGOO-DILG to independently manage all critical aspects of the SGLGB 
 
 ## 7. Technical Considerations
 
+### 7.0 Hierarchical Indicator Creation - Technical Architecture (NEW - Added Nov 9, 2025)
+
+#### 7.0.1 Frontend State Management
+
+**TC-7.0.1.1:** The indicator builder MUST use a **flat state model** for the indicator tree:
+```typescript
+interface IndicatorNode {
+  id?: number;                    // Backend ID (undefined for drafts)
+  tempId: string;                 // UUID for client-side reference
+  code: string;                   // e.g., "1.1.1"
+  name: string;
+  parent_id?: number;
+  depth: number;                  // Computed: 0 for root, 1 for children
+  children: string[];             // Computed: array of child tempIds
+  isDraft: boolean;
+  isModified: boolean;
+  // ... other fields
+}
+
+interface IndicatorTreeState {
+  nodes: Map<string, IndicatorNode>;  // Key: tempId
+  rootIds: string[];                  // Top-level indicator tempIds
+  selectedNodeId?: string;
+  draftId?: string;
+}
+```
+
+**TC-7.0.1.2:** The frontend MUST use **Zustand** for the indicator builder store to manage editing session state.
+
+**TC-7.0.1.3:** The frontend MUST use **React Query** for server synchronization (fetching, mutations, caching).
+
+**TC-7.0.1.4:** The tree editor component MUST use **react-arborist** library for rendering and drag-drop functionality.
+
+#### 7.0.2 Draft Storage Implementation
+
+**TC-7.0.2.1:** Draft auto-save MUST be implemented using a custom React hook:
+```typescript
+useAutoSave({
+  draftId: string,
+  data: IndicatorTreeState,
+  version: number,
+  debounceMs: 3000,  // 3 seconds
+  onVersionUpdate: (newVersion) => void
+})
+```
+
+**TC-7.0.2.2:** The auto-save hook MUST use `useEffect` with debouncing to trigger saves 3 seconds after the last edit.
+
+**TC-7.0.2.3:** The backend draft service MUST store drafts in a new `indicator_drafts` table:
+```sql
+CREATE TABLE indicator_drafts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    governance_area_id INTEGER NOT NULL REFERENCES governance_areas(id),
+
+    -- Wizard state
+    creation_mode VARCHAR(50) NOT NULL,  -- 'incremental', 'bulk_import'
+    current_step INTEGER DEFAULT 1,
+    status VARCHAR(50) DEFAULT 'in_progress',
+
+    -- Draft data (JSONB)
+    data JSONB NOT NULL DEFAULT '[]',
+
+    -- Metadata
+    title VARCHAR(200),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    last_accessed_at TIMESTAMPTZ DEFAULT NOW(),
+
+    -- Optimistic locking
+    version INTEGER DEFAULT 1,
+    lock_token UUID,
+    locked_by_user_id INTEGER REFERENCES users(id),
+    locked_at TIMESTAMPTZ
+);
+```
+
+#### 7.0.3 Bulk Creation Backend Logic
+
+**TC-7.0.3.1:** The bulk create endpoint MUST implement **topological sorting** to create parent indicators before child indicators:
+```python
+def bulk_create_indicators(
+    db: Session,
+    request: BulkIndicatorCreate
+) -> BulkIndicatorResponse:
+    # 1. Topological sort by parent_temp_id
+    sorted_indicators = topological_sort(request.indicators)
+
+    # 2. Create in order, mapping temp_id → real id
+    temp_id_map = {}
+    created = []
+
+    for indicator_data in sorted_indicators:
+        # Resolve parent_id from temp_id
+        parent_id = temp_id_map.get(indicator_data.parent_temp_id)
+
+        # Create indicator
+        indicator = create_indicator(db, indicator_data, parent_id)
+
+        temp_id_map[indicator_data.temp_id] = indicator.id
+        created.append(indicator)
+
+    db.commit()
+    return BulkIndicatorResponse(created=created, temp_id_mapping=temp_id_map)
+```
+
+**TC-7.0.3.2:** The bulk create operation MUST use a database transaction with rollback on any failure to ensure atomicity.
+
+#### 7.0.4 Tree Reordering & Auto-Renumbering
+
+**TC-7.0.4.1:** When indicators are reordered via drag-drop, the frontend MUST implement a `recalculateCodes()` function:
+```typescript
+function recalculateCodes(
+  nodes: Map<string, IndicatorNode>,
+  rootIds: string[]
+): Map<string, IndicatorNode> {
+  const updated = new Map(nodes);
+
+  function traverse(nodeIds: string[], parentCode = '', depth = 0) {
+    nodeIds.forEach((nodeId, index) => {
+      const node = updated.get(nodeId);
+      const newCode = parentCode
+        ? `${parentCode}.${index + 1}`
+        : `${index + 1}`;
+
+      updated.set(nodeId, { ...node, code: newCode, depth });
+
+      // Recurse to children
+      if (node.children.length > 0) {
+        traverse(node.children, newCode, depth + 1);
+      }
+    });
+  }
+
+  traverse(rootIds);
+  return updated;
+}
+```
+
+#### 7.0.5 Validation Strategy
+
+**TC-7.0.5.1:** Real-time validation MUST be implemented client-side using **Zod schemas** for immediate feedback.
+
+**TC-7.0.5.2:** Final validation before publish MUST be performed server-side to ensure data integrity.
+
+**TC-7.0.5.3:** The validation service MUST check:
+- All form_schema fields referenced in calculation_schema exist
+- Weights of sibling indicators sum to 100%
+- No circular parent references
+- All required schemas are present
+
+#### 7.0.6 Component Architecture
+
+**TC-7.0.6.1:** The indicator builder frontend components MUST be located in:
+```
+apps/web/src/components/features/indicators/builder/
+├── IndicatorBuilderLayout.tsx
+├── IndicatorTreeView.tsx          (uses react-arborist)
+├── IndicatorTreeNode.tsx
+├── IndicatorFormView.tsx
+├── FormSchemaBuilder.tsx           (visual builder, no JSON)
+├── CalculationSchemaBuilder.tsx    (visual builder, no JSON)
+├── RemarkSchemaBuilder.tsx
+├── BulkImportView.tsx
+├── DraftList.tsx
+└── ValidationSummary.tsx
+```
+
+**TC-7.0.6.2:** The wizard page MUST be located at:
+```
+apps/web/src/app/(app)/mlgoo/indicators/builder/page.tsx
+```
+
+#### 7.0.7 Performance Optimizations
+
+**TC-7.0.7.1:** For indicator trees with 50+ nodes, the tree view MUST use **virtualization** via `react-window` or react-arborist's built-in virtualization.
+
+**TC-7.0.7.2:** The schema builders MUST use local component state (`useState`) during editing to avoid unnecessary re-renders.
+
+**TC-7.0.7.3:** Expensive computations (tree traversal, validation) MUST be memoized using `useMemo`.
+
+#### 7.0.8 Library Dependencies (New)
+
+**TC-7.0.8.1:** The following new npm packages MUST be installed:
+```json
+{
+  "react-arborist": "^3.x",           // Tree editor with drag-drop
+  "zustand": "^4.x",                  // State management (if not already installed)
+  "@tanstack/react-query": "^5.x",    // Server state (already installed)
+  "zod": "^3.x",                      // Schema validation (already installed)
+  "@tiptap/react": "^2.x",            // Rich text editor core
+  "@tiptap/starter-kit": "^2.x",      // Basic TipTap extensions
+  "@tiptap/extension-placeholder": "^2.x" // Placeholder support
+}
+```
+
+**TC-7.0.8.2:** The rich text editor (TipTap) MUST be used for the "Minimum Requirement" field to support formatted text with:
+- Bullet lists and numbered lists
+- Bold, italic, underline formatting
+- Headings (H3, H4)
+- HTML output stored in `minimum_requirement_html` field
+
+**TC-7.0.8.3:** No AI-related dependencies are required for MVP (Phase 1). AI features will be added in Phase 2.
+
 ### 7.1 Backend Architecture
 
 **TC-7.1.1:** All administrative endpoints should be implemented in a new FastAPI router: `apps/api/app/api/v1/admin.py` with the tag `admin`.
@@ -462,8 +929,16 @@ Enable the MLGOO-DILG to independently manage all critical aspects of the SGLGB 
 - `deadline_overrides` - Stores all deadline override actions for audit
 
 **TC-7.2.2:** Updated tables:
-- `indicators` - Add columns: `is_auto_calculable`, `version`, `remark_schema`
+- `indicators` - Add columns: `is_auto_calculable`, `version`, `remark_schema`, `minimum_requirement_html` (TEXT, stores rich HTML formatting for indicator requirements)
 - `assessment_responses` - Add column: `indicator_version_id`
+
+**TC-7.2.2.1:** The `minimum_requirement_html` field MUST support rich HTML content including:
+- Unordered lists (`<ul><li>`)
+- Ordered lists (`<ol><li>`)
+- Emphasis (`<strong>`, `<em>`, `<u>`)
+- Headings (`<h3>`, `<h4>`)
+- Paragraphs (`<p>`)
+- Line breaks (`<br>`)
 
 **TC-7.2.3:** All new tables should have `created_at`, `updated_at`, and `created_by` audit columns.
 
