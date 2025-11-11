@@ -9,6 +9,7 @@ import {
   TrendLineChart,
 } from "./ChartComponents";
 import { AssessmentDataTable } from "./DataTable";
+import type { BarangayMapPoint } from "@vantage/shared";
 
 interface VisualizationGridProps {
   data?: ReportsDataResponse;
@@ -85,11 +86,29 @@ export function VisualizationGrid({ data, isLoading }: VisualizationGridProps) {
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold">Geographic Distribution</h2>
         <div id="map-container">
+          {(() => {
+            const points = (data.map_data.barangays || []) as BarangayMapPoint[];
+            const toStatus = (s?: string) => {
+              const v = (s || '').toLowerCase();
+              if (v === 'pass' || v === 'passed') return 'pass' as const;
+              if (v === 'fail' || v === 'failed') return 'fail' as const;
+              if (v === 'in_progress' || v === 'in progress') return 'in_progress' as const;
+              return 'not_started' as const;
+            };
+            const barangays = points.map((p) => ({
+              id: String(p.barangay_id),
+              name: p.name,
+              status: toStatus(p.status),
+              compliance_rate: p.score ?? undefined,
+            }));
+            return (
           <SulopBarangayMapIntegrated
-            barangays={data.map_data.barangays || []}
+            barangays={barangays as any}
             title="Sulop Barangay Assessment Status"
             description="Interactive map showing assessment status for each barangay in Sulop"
           />
+            );
+          })()}
         </div>
       </section>
 

@@ -42,8 +42,8 @@ export function ComplianceRateCard({
       <CardContent className="space-y-4">
         {/* Main Percentage Display */}
         <div className="flex items-baseline gap-2">
-          <span className="text-4xl font-bold text-gray-900">{pass_percentage.toFixed(1)}%</span>
-          <span className="text-sm text-gray-500">pass rate</span>
+          <span className="text-4xl font-bold text-[var(--foreground)]">{pass_percentage.toFixed(1)}%</span>
+          <span className="text-sm text-[var(--text-secondary)]">pass rate</span>
         </div>
 
         {/* Progress Bar */}
@@ -52,22 +52,22 @@ export function ComplianceRateCard({
         {/* Statistics Grid */}
         <div className="grid grid-cols-3 gap-3 pt-2">
           <div className="space-y-1">
-            <p className="text-xs text-gray-500">Total</p>
-            <p className="text-lg font-semibold text-gray-900">{total_barangays}</p>
+            <p className="text-xs text-[var(--text-secondary)]">Total</p>
+            <p className="text-lg font-semibold text-[var(--foreground)]">{total_barangays}</p>
           </div>
           <div className="space-y-1">
             <div className="flex items-center gap-1">
-              <CheckCircle2 className="h-3 w-3 text-green-600" />
-              <p className="text-xs text-gray-500">Passed</p>
+              <CheckCircle2 className="h-3 w-3 text-green-600 dark:text-green-400" />
+              <p className="text-xs text-[var(--text-secondary)]">Passed</p>
             </div>
-            <p className="text-lg font-semibold text-green-600">{passed}</p>
+            <p className="text-lg font-semibold text-green-600 dark:text-green-400">{passed}</p>
           </div>
           <div className="space-y-1">
             <div className="flex items-center gap-1">
-              <XCircle className="h-3 w-3 text-red-600" />
-              <p className="text-xs text-gray-500">Failed</p>
+              <XCircle className="h-3 w-3 text-red-600 dark:text-red-400" />
+              <p className="text-xs text-[var(--text-secondary)]">Failed</p>
             </div>
-            <p className="text-lg font-semibold text-red-600">{failed}</p>
+            <p className="text-lg font-semibold text-red-600 dark:text-red-400">{failed}</p>
           </div>
         </div>
       </CardContent>
@@ -94,8 +94,8 @@ export function CompletionStatusCard({ data }: CompletionStatusCardProps) {
       <CardContent className="space-y-4">
         {/* Main Percentage Display */}
         <div className="flex items-baseline gap-2">
-          <span className="text-4xl font-bold text-gray-900">{completionRate.toFixed(1)}%</span>
-          <span className="text-sm text-gray-500">completed</span>
+          <span className="text-4xl font-bold text-[var(--foreground)]">{completionRate.toFixed(1)}%</span>
+          <span className="text-sm text-[var(--text-secondary)]">completed</span>
         </div>
 
         {/* Progress Bar */}
@@ -103,18 +103,18 @@ export function CompletionStatusCard({ data }: CompletionStatusCardProps) {
 
         {/* Status Badges */}
         <div className="flex flex-wrap gap-2 pt-2">
-          <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-100">
+          <Badge variant="default" className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/30">
             <CheckCircle2 className="mr-1 h-3 w-3" />
             {validated} Validated
           </Badge>
-          <Badge variant="default" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
+          <Badge variant="default" className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 hover:bg-yellow-100 dark:hover:bg-yellow-900/30">
             <AlertCircle className="mr-1 h-3 w-3" />
             {inProgress} In Progress
           </Badge>
         </div>
 
         {/* Additional Info */}
-        <p className="text-xs text-gray-600">
+        <p className="text-xs text-[var(--text-secondary)]">
           {validated} of {total_barangays} assessments have been validated
         </p>
       </CardContent>
@@ -138,7 +138,7 @@ export function AreaBreakdownCard({ data }: AreaBreakdownCardProps) {
       </CardHeader>
       <CardContent>
         {data.length === 0 ? (
-          <div className="py-8 text-center text-sm text-gray-500">
+          <div className="py-8 text-center text-sm text-[var(--text-secondary)]">
             No governance area data available
           </div>
         ) : (
@@ -147,23 +147,23 @@ export function AreaBreakdownCard({ data }: AreaBreakdownCardProps) {
               <div key={area.area_code} className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{area.area_name}</p>
-                    <p className="text-xs text-gray-500">{area.area_code}</p>
+                    <p className="text-sm font-medium text-[var(--foreground)]">{area.area_name}</p>
+                    <p className="text-xs text-[var(--text-secondary)]">{area.area_code}</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-right text-xs">
-                      <span className="text-green-600">{area.passed} pass</span>
-                      <span className="mx-1 text-gray-400">•</span>
-                      <span className="text-red-600">{area.failed} fail</span>
+                      <span className="text-green-600 dark:text-green-400">{area.passed} pass</span>
+                      <span className="mx-1 text-[var(--text-secondary)]">•</span>
+                      <span className="text-red-600 dark:text-red-400">{area.failed} fail</span>
                     </div>
                     <Badge
                       variant="outline"
                       className={
                         area.percentage >= 70
-                          ? 'border-green-600 text-green-700'
+                          ? 'border-green-600 dark:border-green-400 text-green-700 dark:text-green-300'
                           : area.percentage >= 50
-                            ? 'border-yellow-600 text-yellow-700'
-                            : 'border-red-600 text-red-700'
+                            ? 'border-yellow-600 dark:border-yellow-400 text-yellow-700 dark:text-yellow-300'
+                            : 'border-red-600 dark:border-red-400 text-red-700 dark:text-red-300'
                       }
                     >
                       {area.percentage.toFixed(1)}%
@@ -174,10 +174,10 @@ export function AreaBreakdownCard({ data }: AreaBreakdownCardProps) {
                   value={area.percentage}
                   className={`h-2 ${
                     area.percentage >= 70
-                      ? '[&>div]:bg-green-600'
+                      ? '[&>div]:bg-green-600 dark:[&>div]:bg-green-400'
                       : area.percentage >= 50
-                        ? '[&>div]:bg-yellow-600'
-                        : '[&>div]:bg-red-600'
+                        ? '[&>div]:bg-yellow-600 dark:[&>div]:bg-yellow-400'
+                        : '[&>div]:bg-red-600 dark:[&>div]:bg-red-400'
                   }`}
                 />
               </div>
@@ -208,7 +208,7 @@ export function TopFailedIndicatorsCard({ data }: TopFailedIndicatorsCardProps) 
       </CardHeader>
       <CardContent>
         {data.length === 0 ? (
-          <div className="py-8 text-center text-sm text-gray-500">
+          <div className="py-8 text-center text-sm text-[var(--text-secondary)]">
             No failed indicators to display
           </div>
         ) : (
@@ -216,21 +216,21 @@ export function TopFailedIndicatorsCard({ data }: TopFailedIndicatorsCardProps) 
             {data.map((indicator, index) => (
               <div
                 key={indicator.indicator_id}
-                className="flex items-start gap-3 rounded p-3 hover:bg-gray-50 transition-colors shadow-sm border border-gray-200"
+                className="flex items-start gap-3 rounded p-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors shadow-sm border border-[var(--border)]"
               >
                 <div
-                  className="flex h-6 w-6 items-center justify-center rounded-full bg-red-100 text-xs font-semibold text-red-700 flex-shrink-0"
+                  className="flex h-6 w-6 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30 text-xs font-semibold text-red-700 dark:text-red-300 flex-shrink-0"
                 >
                   {index + 1}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="text-sm font-medium text-[var(--foreground)] truncate">
                     {indicator.indicator_name}
                   </p>
-                  <div className="mt-1 flex items-center gap-2 text-xs text-gray-600">
+                  <div className="mt-1 flex items-center gap-2 text-xs text-[var(--text-secondary)]">
                     <span>{indicator.failure_count} failures</span>
-                    <span className="text-gray-400">•</span>
-                    <span className="font-semibold text-red-600">
+                    <span>•</span>
+                    <span className="font-semibold text-red-600 dark:text-red-400">
                       {indicator.percentage.toFixed(1)}%
                     </span>
                   </div>
@@ -266,7 +266,7 @@ export function BarangayRankingsCard({ data }: BarangayRankingsCardProps) {
       </CardHeader>
       <CardContent>
         {topRankings.length === 0 ? (
-          <div className="py-8 text-center text-sm text-gray-500">
+          <div className="py-8 text-center text-sm text-[var(--text-secondary)]">
             No ranking data available
           </div>
         ) : (
@@ -274,7 +274,7 @@ export function BarangayRankingsCard({ data }: BarangayRankingsCardProps) {
             {topRankings.map((ranking) => (
               <div
                 key={ranking.barangay_id}
-                className="flex items-center gap-4 rounded p-3 hover:bg-gray-50 transition-colors shadow-sm border border-gray-200"
+                className="flex items-center gap-4 rounded p-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors shadow-sm border border-[var(--border)]"
               >
                 {/* Rank Badge */}
                 <div
@@ -282,10 +282,10 @@ export function BarangayRankingsCard({ data }: BarangayRankingsCardProps) {
                     ranking.rank === 1
                       ? 'bg-yellow-500'
                       : ranking.rank === 2
-                        ? 'bg-gray-400'
+                        ? 'bg-gray-400 dark:bg-gray-500'
                         : ranking.rank === 3
-                          ? 'bg-orange-600'
-                          : 'bg-blue-600'
+                          ? 'bg-orange-600 dark:bg-orange-500'
+                          : 'bg-blue-600 dark:bg-blue-500'
                   }`}
                 >
                   {ranking.rank}
@@ -293,7 +293,7 @@ export function BarangayRankingsCard({ data }: BarangayRankingsCardProps) {
 
                 {/* Barangay Name */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="text-sm font-medium text-[var(--foreground)] truncate">
                     {ranking.barangay_name}
                   </p>
                 </div>
@@ -303,12 +303,12 @@ export function BarangayRankingsCard({ data }: BarangayRankingsCardProps) {
                   variant="outline"
                   className={
                     ranking.score >= 90
-                      ? 'border-green-600 bg-green-50 text-green-700'
+                      ? 'border-green-600 dark:border-green-400 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300'
                       : ranking.score >= 75
-                        ? 'border-blue-600 bg-blue-50 text-blue-700'
+                        ? 'border-blue-600 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
                         : ranking.score >= 60
-                          ? 'border-yellow-600 bg-yellow-50 text-yellow-700'
-                          : 'border-red-600 bg-red-50 text-red-700'
+                          ? 'border-yellow-600 dark:border-yellow-400 bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
+                          : 'border-red-600 dark:border-red-400 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300'
                   }
                 >
                   {ranking.score.toFixed(1)}%

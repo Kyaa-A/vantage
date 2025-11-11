@@ -133,10 +133,10 @@ export default function AnalyticsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="space-y-8">
           {/* Enhanced Header Section */}
-          <div className="relative overflow-hidden bg-[var(--card)] rounded shadow-lg border border-gray-200 p-8">
-            {/* Decorative background elements */}
-            <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-100/40 to-indigo-100/20 rounded-full -translate-y-20 translate-x-20"></div>
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-purple-100/30 to-pink-100/20 rounded-full translate-y-16 -translate-x-16"></div>
+          <div className="relative overflow-hidden bg-[var(--card)] rounded shadow-lg border border-[var(--border)] p-8">
+            {/* Decorative background elements - dark mode compatible */}
+            <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-500/10 to-indigo-500/5 dark:from-blue-400/20 dark:to-indigo-400/10 rounded-full -translate-y-20 translate-x-20"></div>
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-purple-500/10 to-pink-500/5 dark:from-purple-400/20 dark:to-pink-400/10 rounded-full translate-y-16 -translate-x-16"></div>
 
             <div className="relative z-10">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -154,7 +154,7 @@ export default function AnalyticsPage() {
 
                 {/* Last Updated Timestamp */}
                 {data && (
-                  <div className="bg-[var(--card)]/80 backdrop-blur-sm rounded p-4 text-center shadow-sm border border-gray-200">
+                  <div className="bg-[var(--card)]/80 backdrop-blur-sm rounded p-4 text-center shadow-sm border border-[var(--border)]">
                     <div className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide mb-1">
                       Last Updated
                     </div>
@@ -168,7 +168,7 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Global Filters */}
-          <div className="bg-[var(--card)] rounded shadow-lg border border-gray-200 p-6">
+          <div className="bg-[var(--card)] rounded shadow-lg border border-[var(--border)] p-6">
             <div className="flex items-center gap-3 mb-4">
               <Filter className="h-5 w-5" style={{ color: 'var(--cityscape-yellow)' }} />
               <h2 className="text-lg font-semibold text-[var(--foreground)]">Global Filters</h2>
@@ -232,19 +232,19 @@ export default function AnalyticsPage() {
                 <div
                   className={`inline-flex items-center px-3 py-1 rounded text-xs font-medium border ${
                     selectedPhase === 'phase1'
-                      ? 'bg-blue-100 text-blue-800 border-blue-200'
-                      : 'bg-purple-100 text-purple-800 border-purple-200'
+                      ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800'
+                      : 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-800'
                   }`}
                 >
                   {selectedPhase === 'phase1' ? (
                     <>
                       Phase 1: Table Assessment
-                      <span className="ml-2 text-blue-600 font-normal">(Assessor Role)</span>
+                      <span className="ml-2 text-blue-600 dark:text-blue-400 font-normal">(Assessor Role)</span>
                     </>
                   ) : (
                     <>
                       Phase 2: Table Validation
-                      <span className="ml-2 text-purple-600 font-normal">(Validator Role)</span>
+                      <span className="ml-2 text-purple-600 dark:text-purple-400 font-normal">(Validator Role)</span>
                     </>
                   )}
                 </div>
@@ -289,44 +289,169 @@ function DashboardSkeleton() {
   return (
     <div className="space-y-8">
       {/* Header Skeleton */}
-      <div className="bg-[var(--card)] rounded shadow-lg border border-gray-200 p-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <Skeleton className="h-8 w-64 mb-2" />
-            <Skeleton className="h-4 w-96" />
+      <div className="relative overflow-hidden bg-[var(--card)] rounded shadow-lg border border-[var(--border)] p-8">
+        {/* Decorative background elements */}
+        <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-500/10 to-indigo-500/5 dark:from-blue-400/20 dark:to-indigo-400/10 rounded-full -translate-y-20 translate-x-20"></div>
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-purple-500/10 to-pink-500/5 dark:from-purple-400/20 dark:to-pink-400/10 rounded-full translate-y-16 -translate-x-16"></div>
+
+        <div className="relative z-10">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <Skeleton className="h-8 w-64 mb-2" />
+              <Skeleton className="h-4 w-96" />
+            </div>
+            {/* Last Updated Timestamp Skeleton */}
+            <div className="bg-[var(--card)]/80 backdrop-blur-sm rounded p-4 text-center shadow-sm border border-[var(--border)]">
+              <Skeleton className="h-3 w-20 mb-1 mx-auto" />
+              <Skeleton className="h-4 w-32" />
+            </div>
           </div>
-          <Skeleton className="h-16 w-32" />
         </div>
       </div>
 
       {/* Filters Skeleton */}
-      <div className="bg-[var(--card)] rounded shadow-lg border border-gray-200 p-6">
-        <Skeleton className="h-6 w-48 mb-4" />
-        <div className="flex gap-3">
-          <Skeleton className="h-10 w-64" />
-          <Skeleton className="h-10 w-64" />
+      <div className="bg-[var(--card)] rounded shadow-lg border border-[var(--border)] p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="h-5 w-5 rounded bg-gray-200 dark:bg-gray-700"></div>
+          <Skeleton className="h-6 w-32" />
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="w-full sm:w-64">
+            <Skeleton className="h-4 w-32 mb-1" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+          <div className="w-full sm:w-64">
+            <Skeleton className="h-4 w-32 mb-1" />
+            <Skeleton className="h-10 w-full" />
+          </div>
         </div>
       </div>
 
-      {/* KPI Cards Skeleton */}
+      {/* KPI Cards Skeleton - Matches ComplianceRateCard, CompletionStatusCard, TopFailedIndicatorsCard */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className="bg-[var(--card)] p-6 rounded shadow-lg border border-gray-200">
-            <Skeleton className="h-4 w-32 mb-3" />
-            <Skeleton className="h-8 w-24 mb-2" />
-            <Skeleton className="h-3 w-40" />
+        {/* Compliance Rate Card */}
+        <div className="bg-[var(--card)] p-6 rounded shadow-lg border border-[var(--border)] space-y-4">
+          <div className="flex items-center justify-between mb-2">
+            <Skeleton className="h-5 w-40" />
+            <div className="h-5 w-5 rounded-full bg-gray-200 dark:bg-gray-700"></div>
           </div>
-        ))}
+          <Skeleton className="h-4 w-48 mb-4" />
+          <div className="flex items-baseline gap-2">
+            <Skeleton className="h-10 w-20" />
+            <Skeleton className="h-4 w-16" />
+          </div>
+          <Skeleton className="h-2 w-full" />
+          <div className="grid grid-cols-3 gap-3 pt-2">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="space-y-1">
+                <Skeleton className="h-3 w-12" />
+                <Skeleton className="h-5 w-8" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Completion Status Card */}
+        <div className="bg-[var(--card)] p-6 rounded shadow-lg border border-[var(--border)] space-y-4">
+          <Skeleton className="h-5 w-40 mb-2" />
+          <Skeleton className="h-4 w-48 mb-4" />
+          <div className="flex items-baseline gap-2">
+            <Skeleton className="h-10 w-20" />
+            <Skeleton className="h-4 w-16" />
+          </div>
+          <Skeleton className="h-2 w-full" />
+          <div className="flex flex-wrap gap-2 pt-2">
+            <Skeleton className="h-6 w-24" />
+            <Skeleton className="h-6 w-28" />
+          </div>
+          <Skeleton className="h-3 w-full" />
+        </div>
+
+        {/* Top Failed Indicators Card */}
+        <div className="bg-[var(--card)] p-6 rounded shadow-lg border border-[var(--border)]">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="h-5 w-5 rounded bg-gray-200 dark:bg-gray-700"></div>
+            <Skeleton className="h-5 w-40" />
+          </div>
+          <Skeleton className="h-4 w-48 mb-4" />
+          <div className="space-y-3">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="flex items-start gap-3 rounded p-3 border border-[var(--border)]">
+                <Skeleton className="h-6 w-6 rounded-full flex-shrink-0" />
+                <div className="flex-1 space-y-1">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* Detailed Section Skeleton */}
+      {/* Detailed Section Skeleton - Area Breakdown & Barangay Rankings */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {[...Array(2)].map((_, i) => (
-          <div key={i} className="bg-[var(--card)] p-6 rounded shadow-lg border border-gray-200">
-            <Skeleton className="h-6 w-48 mb-4" />
-            <Skeleton className="h-64 w-full" />
+        {/* Area Breakdown Card */}
+        <div className="bg-[var(--card)] p-6 rounded shadow-lg border border-[var(--border)] col-span-full lg:col-span-2">
+          <Skeleton className="h-6 w-48 mb-2" />
+          <Skeleton className="h-4 w-64 mb-6" />
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Skeleton className="h-4 w-48 mb-1" />
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-3 w-32" />
+                    <Skeleton className="h-5 w-12" />
+                  </div>
+                </div>
+                <Skeleton className="h-2 w-full" />
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
+
+        {/* Barangay Rankings Card */}
+        <div className="bg-[var(--card)] p-6 rounded shadow-lg border border-[var(--border)]">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="h-5 w-5 rounded bg-gray-200 dark:bg-gray-700"></div>
+            <Skeleton className="h-6 w-40" />
+          </div>
+          <Skeleton className="h-4 w-56 mb-4" />
+          <div className="space-y-2">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex items-center gap-4 rounded p-3 border border-[var(--border)]">
+                <Skeleton className="h-8 w-8 rounded-full flex-shrink-0" />
+                <Skeleton className="h-4 flex-1" />
+                <Skeleton className="h-5 w-16" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Trend Chart Skeleton */}
+      <div className="bg-[var(--card)] p-6 rounded shadow-lg border border-[var(--border)]">
+        <Skeleton className="h-6 w-48 mb-2" />
+        <Skeleton className="h-4 w-64 mb-6" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+
+      {/* BBI Functionality Widget Skeleton */}
+      <div className="bg-[var(--card)] p-6 rounded shadow-lg border border-[var(--border)]">
+        <Skeleton className="h-6 w-56 mb-2" />
+        <Skeleton className="h-4 w-72 mb-6" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="p-4 border border-[var(--border)] rounded">
+              <Skeleton className="h-5 w-32 mb-2" />
+              <Skeleton className="h-8 w-16 mb-1" />
+              <Skeleton className="h-3 w-24" />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -414,9 +414,14 @@ export function calculateSchemaStatus(indicator: IndicatorNode): SchemaStatus {
   }
 
   // Check remark schema completeness (optional but should have content if present)
-  const hasRemarkSchema = indicator.remark_schema &&
-    typeof indicator.remark_schema === 'string' &&
-    indicator.remark_schema.trim().length > 0;
+  const remarkText = indicator.remark_schema
+    ? (typeof indicator.remark_schema === 'string'
+        ? indicator.remark_schema
+        : (typeof (indicator.remark_schema as any).html === 'string'
+            ? (indicator.remark_schema as any).html
+            : ''))
+    : '';
+  const hasRemarkSchema = remarkText.trim().length > 0;
 
   const remarkComplete = !!hasRemarkSchema;
 
@@ -602,17 +607,9 @@ export function validateIndicatorSchemas(indicator: IndicatorNode): SchemaValida
   // ============================================================================
 
   if (indicator.remark_schema) {
-    const remarkSchema = indicator.remark_schema;
+    const remarkSchema = indicator.remark_schema as any;
 
-    // Must be a string
-    if (typeof remarkSchema !== 'string') {
-      errors.push({
-        field: 'remark',
-        message: 'Remark template must be a string',
-        severity: 'error',
-      });
-    } else {
-      // Must have content
+    if (typeof remarkSchema === 'string') {
       if (remarkSchema.trim().length === 0) {
         errors.push({
           field: 'remark',
@@ -620,8 +617,6 @@ export function validateIndicatorSchemas(indicator: IndicatorNode): SchemaValida
           severity: 'warning',
         });
       }
-
-      // Warn if very short
       if (remarkSchema.trim().length < 10) {
         errors.push({
           field: 'remark',
@@ -629,6 +624,28 @@ export function validateIndicatorSchemas(indicator: IndicatorNode): SchemaValida
           severity: 'warning',
         });
       }
+    } else if (remarkSchema && typeof remarkSchema.html === 'string') {
+      const html = remarkSchema.html.trim();
+      if (html.length === 0) {
+        errors.push({
+          field: 'remark',
+          message: 'Remark template should not be empty',
+          severity: 'warning',
+        });
+      }
+      if (html.length < 10) {
+        errors.push({
+          field: 'remark',
+          message: 'Consider adding more detailed remark guidance',
+          severity: 'warning',
+        });
+      }
+    } else {
+      errors.push({
+        field: 'remark',
+        message: 'Remark template must be a string or an object with html',
+        severity: 'error',
+      });
     }
   } else {
     // Remark schema is optional but recommended

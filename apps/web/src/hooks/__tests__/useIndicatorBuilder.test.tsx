@@ -38,9 +38,12 @@ function createTestQueryClient() {
 // Wrapper component for React Query hooks
 function createWrapper() {
   const queryClient = createTestQueryClient();
-  return ({ children }: { children: ReactNode }) => (
+  const QueryClientTestWrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
+  // Provide an explicit display name to satisfy react/display-name rule
+  (QueryClientTestWrapper as any).displayName = 'QueryClientTestWrapper';
+  return QueryClientTestWrapper;
 }
 
 // Mock draft response factory

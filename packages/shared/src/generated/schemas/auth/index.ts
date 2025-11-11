@@ -19,4 +19,5 @@ export interface AuthToken {
 export interface LoginRequest {
   email: string;
   password: string;
+  remember_me?: boolean;
 }

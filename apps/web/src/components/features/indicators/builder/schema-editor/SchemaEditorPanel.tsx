@@ -143,7 +143,7 @@ export function SchemaEditorPanel({ indicatorId }: SchemaEditorPanelProps) {
 
   const handleRemarkSchemaChange = (html: string) => {
     if (indicatorId) {
-      updateNode(indicatorId, { remark_schema: html });
+      updateNode(indicatorId, { remark_schema: { html } as Record<string, any> });
       markSchemaDirty(indicatorId);
     }
   };
@@ -247,7 +247,7 @@ export function SchemaEditorPanel({ indicatorId }: SchemaEditorPanelProps) {
           <div className="flex-1 overflow-hidden px-4 pb-4">
             <TabsContent value="form" className="h-full mt-4 overflow-auto">
               <FormSchemaBuilder
-                value={indicator.form_schema}
+                value={indicator.form_schema as unknown as any}
                 onChange={handleFormSchemaChange}
                 className="h-full"
               />
@@ -255,7 +255,7 @@ export function SchemaEditorPanel({ indicatorId }: SchemaEditorPanelProps) {
 
             <TabsContent value="calculation" className="h-full mt-4 overflow-auto">
               <CalculationSchemaBuilder
-                value={indicator.calculation_schema}
+                value={indicator.calculation_schema as unknown as any}
                 formFields={formFields}
                 onChange={handleCalculationSchemaChange}
                 className="h-full"
@@ -264,7 +264,7 @@ export function SchemaEditorPanel({ indicatorId }: SchemaEditorPanelProps) {
 
             <TabsContent value="remark" className="h-full mt-4 overflow-auto">
               <RichTextEditor
-                value={indicator.remark_schema}
+                value={(indicator.remark_schema as any)?.html || ''}
                 onChange={handleRemarkSchemaChange}
                 placeholder="Enter remark template for this indicator..."
                 minHeight={400}

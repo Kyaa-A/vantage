@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useGetUsersMe, usePostAuthLogin } from "@vantage/shared";
+import { getGetUsersMeQueryKey } from "@vantage/shared/src/generated/endpoints/users";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -116,6 +117,7 @@ export default function LoginForm({ isDarkMode = false }: LoginFormProps) {
   const userQuery = useGetUsersMe({
     query: {
       enabled: false, // Don't fetch on mount, only when triggered
+      queryKey: getGetUsersMeQueryKey(),
     },
   });
 
@@ -207,21 +209,15 @@ export default function LoginForm({ isDarkMode = false }: LoginFormProps) {
     }
   }, [loginMutation.isSuccess]);
 
-  const handleSubmit = (e: React.MouseEvent | React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     console.log("Submit triggered", e.type);
     e.preventDefault();
     e.stopPropagation();
 
-    // Additional prevention for any potential form submission
-    if (e.type === "submit") {
-      e.preventDefault();
-      e.stopPropagation();
-      return false;
-    }
-
     const credentials = {
       email,
       password,
+      remember_me: rememberMe,
     };
 
     console.log("Submitting credentials:", credentials);
@@ -233,9 +229,6 @@ export default function LoginForm({ isDarkMode = false }: LoginFormProps) {
       console.error("Mutation error caught:", error);
       // Error should be handled by onError callback
     }
-
-    // Return false to prevent any default behavior
-    return false;
   };
 
   // Get error message for display

@@ -41,15 +41,27 @@ async def login(login_data: LoginRequest, db: Session = Depends(get_db)):
             status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user account"
         )
 
+    # Set token expiration based on remember_me flag
+    from datetime import timedelta
+    if login_data.remember_me:
+        expires_delta = timedelta(days=30)  # 30 days for remember me
+        expires_in_seconds = 60 * 60 * 24 * 30  # 30 days in seconds
+    else:
+        expires_delta = None  # Use default from settings (typically 7 days)
+        expires_in_seconds = 60 * 60 * 24 * 7  # 7 days in seconds
+
     # Generate JWT token with user data
     access_token = create_access_token(
-        subject=user.id, role=user.role, must_change_password=user.must_change_password
+        subject=user.id,
+        role=user.role,
+        must_change_password=user.must_change_password,
+        expires_delta=expires_delta
     )
 
     return AuthToken(
         access_token=access_token,
         token_type="bearer",
-        expires_in=60 * 24 * 8 * 60,  # 8 days in seconds
+        expires_in=expires_in_seconds,
     )
 
 

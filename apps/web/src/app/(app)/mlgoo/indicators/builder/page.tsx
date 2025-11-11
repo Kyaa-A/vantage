@@ -259,7 +259,7 @@ export default function IndicatorBuilderPage() {
 
   return (
     <div className="container mx-auto max-w-7xl py-6">
-      {governanceAreasError && (
+      {Boolean(governanceAreasError) && (
         <Alert variant="destructive" className="mb-4">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Error Loading Governance Areas</AlertTitle>

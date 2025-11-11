@@ -125,22 +125,21 @@ export function SulopBarangayMapIntegrated({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Map Container */}
           <div className="lg:col-span-2">
-            <div className="relative w-full aspect-[2.15/1] bg-gray-50 rounded overflow-hidden border-2 border-gray-200 shadow-sm">
+            <div className="relative w-full aspect-[2.15/1] bg-gray-50 dark:bg-gray-900 rounded overflow-hidden border-2 border-gray-200 dark:border-gray-700 shadow-sm">
               <svg
                 viewBox="0 0 1920 892"
                 className="w-full h-full"
                 xmlns="http://www.w3.org/2000/svg"
               >
                 {/* Background */}
-                <rect width="1920" height="892" fill="#f8fafc" />
+                <rect width="1920" height="892" className="fill-gray-50 dark:fill-gray-900" />
 
                 {/* Title */}
                 <text
                   x="960"
                   y="30"
                   textAnchor="middle"
-                  className="text-2xl font-semibold"
-                  fill="#1e293b"
+                  className="text-2xl font-semibold fill-gray-900 dark:fill-gray-100"
                 >
                   Sulop, Davao del Sur
                 </text>
@@ -527,11 +526,11 @@ export function SulopBarangayMapIntegrated({
         </div>
 
         {/* Integration Status */}
-        <div className="mt-4 p-4 bg-green-50 border-2 border-green-300 rounded shadow-sm">
-          <div className="text-sm font-semibold text-green-900 mb-2">
+        <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/30 border-2 border-green-300 dark:border-green-700 rounded shadow-sm">
+          <div className="text-sm font-semibold text-green-900 dark:text-green-100 mb-2">
             ✅ SVG Integrated Successfully!
           </div>
-          <div className="text-xs text-green-800">
+          <div className="text-xs text-green-800 dark:text-green-300">
             Your Sulop barangay boundaries have been integrated. Currently showing 25 barangays.
           </div>
         </div>

@@ -1,8 +1,9 @@
-import { useEffect, useRef, useCallback } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import type { IndicatorTreeState, IndicatorNode } from '@/store/useIndicatorBuilderStore';
 import { draftStorage } from '@/lib/draft-storage';
+import type { IndicatorNode, IndicatorTreeState } from '@/store/useIndicatorBuilderStore';
+import { useMutation } from '@tanstack/react-query';
+import type { IndicatorDraftDeltaUpdateChangedIndicatorsItem } from '@vantage/shared';
 import { postIndicatorsDrafts$DraftIdDelta } from '@vantage/shared';
+import { useCallback, useEffect, useRef } from 'react';
 
 /**
  * Delta-Based Auto-Save Hook
@@ -174,7 +175,8 @@ export function useAutoSaveDelta(
       const response = await postIndicatorsDrafts$DraftIdDelta(
         payload.draftId,
         {
-          changed_indicators: payload.changed,
+          // Cast changed indicators to the generated index-signature type expected by the API
+          changed_indicators: payload.changed as unknown as IndicatorDraftDeltaUpdateChangedIndicatorsItem[],
           changed_ids: payload.changedIds,
           version: payload.version,
           metadata: payload.current_step !== undefined || payload.governance_area_id !== undefined
@@ -271,9 +273,9 @@ export function useAutoSaveDelta(
       changed: changedIndicators,
       changedIds: Array.from(dirtyIds),
       version,
-      governance_area_id: treeData.governanceAreaId,
-      creation_mode: treeData.creationMode,
-      current_step: treeData.currentStep,
+      governance_area_id: treeData.governanceAreaId ?? undefined,
+      creation_mode: treeData.creationMode ?? undefined,
+      current_step: treeData.currentStep ?? undefined,
     };
 
     serverSaveMutation.mutate(payload);
