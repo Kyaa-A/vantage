@@ -239,6 +239,9 @@ interface IndicatorBuilderState {
   /** Reset tree to empty state */
   resetTree: () => void;
 
+  /** Update governance area ID and recalculate codes */
+  setGovernanceAreaId: (governanceAreaId: number) => void;
+
   // Node CRUD Actions
   /** Add a new node to the tree */
   addNode: (node: Partial<IndicatorNode>, parentId?: string) => string;
@@ -569,6 +572,18 @@ export const useIndicatorBuilderStore = create<IndicatorBuilderState>((set, get)
       selectedNodeId: null,
       editingNodeId: null,
     });
+  },
+
+  setGovernanceAreaId: (governanceAreaId) => {
+    const { tree, recalculateCodes } = get();
+    set({
+      tree: {
+        ...tree,
+        governanceAreaId,
+      },
+    });
+    // Recalculate all codes with new governance area prefix
+    recalculateCodes();
   },
 
   // Node CRUD Actions
