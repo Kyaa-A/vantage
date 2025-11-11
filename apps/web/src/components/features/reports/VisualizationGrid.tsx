@@ -1,4 +1,4 @@
-import { BarangayMap } from "@/components/features/analytics";
+import { SulopBarangayMapIntegrated } from "@/components/features/analytics";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -85,7 +85,11 @@ export function VisualizationGrid({ data, isLoading }: VisualizationGridProps) {
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold">Geographic Distribution</h2>
         <div id="map-container">
-          <BarangayMap barangays={data.map_data.barangays || []} />
+          <SulopBarangayMapIntegrated
+            barangays={data.map_data.barangays || []}
+            title="Sulop Barangay Assessment Status"
+            description="Interactive map showing assessment status for each barangay in Sulop"
+          />
         </div>
       </section>
 
