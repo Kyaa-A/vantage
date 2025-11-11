@@ -42,23 +42,6 @@ export default function LoginForm({ isDarkMode = false }: LoginFormProps) {
     return () => clearTimeout(timer);
   }, []);
 
-  // Prevent any form submission on the page
-  useEffect(() => {
-    const preventFormSubmit = (e: Event) => {
-      if (e.type === "submit") {
-        console.log("Global form submit prevented");
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-      }
-    };
-
-    document.addEventListener("submit", preventFormSubmit, true);
-
-    return () => {
-      document.removeEventListener("submit", preventFormSubmit, true);
-    };
-  }, []);
 
   // Get auth store actions
   const { setToken, setUser } = useAuthStore();
@@ -129,8 +112,12 @@ export default function LoginForm({ isDarkMode = false }: LoginFormProps) {
     },
   });
 
-  // Auto-generated hook to fetch current user data
-  const userQuery = useGetUsersMe();
+  // Auto-generated hook to fetch current user data (disabled by default)
+  const userQuery = useGetUsersMe({
+    query: {
+      enabled: false, // Don't fetch on mount, only when triggered
+    },
+  });
 
   // Handle user data fetch success/error
   useEffect(() => {
@@ -291,7 +278,7 @@ export default function LoginForm({ isDarkMode = false }: LoginFormProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       {Boolean(loginMutation.isPending) ? (
         <>
           <div className={`transition-colors duration-200`}>
@@ -502,9 +489,8 @@ export default function LoginForm({ isDarkMode = false }: LoginFormProps) {
             }`}
           >
             <Button
-              type="button"
+              type="submit"
               disabled={loginMutation.isPending}
-              onClick={handleSubmit}
               className={`w-full mt-3 text-base h-12 text-white border-0 shadow-lg transition-all duration-300 font-semibold tracking-wide disabled:opacity-70 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98] ${
                 loginSuccess
                   ? "bg-gradient-to-r from-green-500 to-green-600"
@@ -542,6 +528,6 @@ export default function LoginForm({ isDarkMode = false }: LoginFormProps) {
           </div>
         </>
       )}
-    </div>
+    </form>
   );
 }
