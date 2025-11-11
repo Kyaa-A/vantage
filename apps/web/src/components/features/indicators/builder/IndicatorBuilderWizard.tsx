@@ -460,6 +460,15 @@ export function IndicatorBuilderWizard({
   const selectedNodeId = useIndicatorBuilderStore((state) => state.selectedNodeId);
   const selectNode = useIndicatorBuilderStore((state) => state.selectNode);
   const nodes = useIndicatorBuilderStore((state) => state.tree.nodes);
+  const storeGovernanceAreaId = useIndicatorBuilderStore((state) => state.tree.governanceAreaId);
+  const setGovernanceAreaId = useIndicatorBuilderStore((state) => state.setGovernanceAreaId);
+
+  // Sync selectedAreaId with store on mount (for URL params or loaded drafts)
+  React.useEffect(() => {
+    if (storeGovernanceAreaId && storeGovernanceAreaId > 0 && selectedAreaId === null) {
+      setSelectedAreaId(storeGovernanceAreaId);
+    }
+  }, [storeGovernanceAreaId, selectedAreaId]);
 
   // Wizard steps configuration
   const steps: Array<{ id: WizardStep; label: string; icon: any }> = [
@@ -502,6 +511,11 @@ export function IndicatorBuilderWizard({
   }, [currentStep, selectedAreaId, nodes.size, validationErrors.length]);
 
   const handleNext = () => {
+    // When leaving select-mode step, update the governance area in the store
+    if (currentStep === 'select-mode' && selectedAreaId !== null) {
+      setGovernanceAreaId(selectedAreaId);
+    }
+
     const nextIndex = currentStepIndex + 1;
     if (nextIndex < steps.length) {
       setCurrentStep(steps[nextIndex].id);
