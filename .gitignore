@@ -147,3 +147,4 @@ dmypy.json
 # Database files
 # ===========================
 apps/api/test.db
+docs/temporary/
