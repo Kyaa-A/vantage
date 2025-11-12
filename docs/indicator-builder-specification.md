@@ -2269,6 +2269,69 @@ function ChecklistItemRow({ item, response, onResponseChange, allResponses, warn
 
 ---
 
+## Related Documentation
+
+This Indicator Builder Specification serves as the **source of truth** for indicator structure and validation patterns. The following Product Requirements Documents (PRDs) reference and align with this specification:
+
+### PRDs Aligned with This Specification
+
+1. **[Phase 6: Administrative Features (MLGOO-DILG)](/docs/prds/prd-phase6-administrative-features.md)** (v1.1)
+   - **Primary Use**: Admin tools for creating and managing indicators
+   - **Key References**:
+     - [Section 4.1.2 (Form Schema Builder)](/docs/prds/prd-phase6-administrative-features.md#412-form-schema-builder) - MOV checklist item catalog (9 types)
+     - [Section 4.2.1 (BBI Definition Management)](/docs/prds/prd-phase6-administrative-features.md#421-bbi-definition-management) - Mandatory 9 BBIs
+     - [Section 4.2.2 (Indicator-to-BBI Mapping)](/docs/prds/prd-phase6-administrative-features.md#422-indicator-to-bbi-mapping) - BBI functionality determination rules
+     - [Appendix A](/docs/prds/prd-phase6-administrative-features.md#appendix-a-related-documents) - Specification reference
+   - **What It Defines**: How MLGOO-DILG will configure indicators using the patterns defined in this specification
+
+2. **[BLGU Table Assessment Workflow](/docs/prds/prd-blgu-table-assessment-workflow.md)** (v2.2)
+   - **Primary Use**: BLGU submission and data collection interface
+   - **Key References**:
+     - [Section 4.2 (Assessment Interface)](/docs/prds/prd-blgu-table-assessment-workflow.md#42-assessment-interface-the-my-table-assessment-page) - BBI functionality indicator context
+     - [Section 7.2 (Backend Logic)](/docs/prds/prd-blgu-table-assessment-workflow.md#72-backend-logic) - Technical implementation reference
+     - [Section 9.3 (MOV Checklist Validation System)](/docs/prds/prd-blgu-table-assessment-workflow.md#93-mov-checklist-validation-system) - Comprehensive validation system documentation
+   - **What It Defines**: How BLGUs submit data that will be validated using the MOV checklists defined in this specification
+
+3. **[Assessor Validation & Rework Cycle](/docs/prds/prd-assessor-validation-rework-cycle.md)** (v1.1)
+   - **Primary Use**: Assessor/Validator interfaces and validation workflow
+   - **Key References**:
+     - [Section 4.2 (Validation Module)](/docs/prds/prd-assessor-validation-rework-cycle.md#42-validation-module) - MOV checklist interface and "Considered" status
+     - [Section 7 (Technical Considerations)](/docs/prds/prd-assessor-validation-rework-cycle.md#7-technical-considerations) - Technical specification reference
+   - **What It Defines**: How Assessors/Validators use the MOV checklist validation patterns to review BLGU submissions
+
+### Cross-Reference Summary
+
+| Specification Section | Referenced By PRDs | Purpose |
+|----------------------|-------------------|---------|
+| **MOV Checklist Item Types** (9 types: checkbox, group, currency_input, etc.) | Phase 6 (4.1.2), BLGU Workflow (9.3), Assessor (4.2) | Defines the validation checklist structure |
+| **BBI Functionality System** (9 mandatory BBIs) | Phase 6 (4.2.1, 4.2.2), BLGU Workflow (9.3), Assessor (4.2) | Documents BBI-indicator relationship |
+| **Grace Period Validation** | Phase 6 (4.2.2), BLGU Workflow (9.3), Assessor (4.2.4, 4.2.10) | Defines "Considered" status determination |
+| **OR Logic & Conditional Display** | Phase 6 (4.1.2), BLGU Workflow (9.3), Assessor (4.2.10) | Alternative evidence paths and dynamic validation |
+| **Database Schema** | All PRDs (Technical sections) | Data model for indicators, MOV checklists, BBIs |
+| **Validation Algorithms** | BLGU Workflow (7.2), Assessor (7) | Backend calculation logic |
+
+### Key Concepts Defined in This Specification
+
+- **form_schema**: BLGU input fields (what BLGUs see during submission)
+- **MOV checklist items**: Assessor/Validator validation checklists (what Assessors use during review)
+- **calculation_schema**: Backend logic for automatic status determination
+- **BBI functionality determination**: One-way relationship (Indicator → BBI status)
+- **Grace period validation**: Produces "Considered" status (equivalent to "Passed" with notation)
+- **Selection mode**: 'all' (default) vs 'one_of' (mutually exclusive scenarios)
+- **Validation statuses**: Passed, Considered, Failed, Not Applicable, Pending
+
+### Validation History
+
+This specification was validated against **29 real SGLGB indicators** (1.1-6.3) across 6 governance areas:
+- Core 1: Financial Administration & Sustainability (1.1-1.7.1)
+- Core 2: Disaster Preparedness (2.1-2.3)
+- Core 3: Safety, Peace and Order (3.1-3.6)
+- Essential 1: Social Protection (4.1-4.9)
+- Essential 2: Business-Friendliness & Competitiveness (5.1-5.3)
+- Essential 3: Environmental Management (6.1-6.3)
+
+---
+
 ## Revision History
 
 | Version | Date | Changes |
