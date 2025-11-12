@@ -592,7 +592,26 @@ See `apps/api/app/api/v1/users.py` for complete documentation.
 
 ## Documentation
 
+### Core Technical Specifications
+
+- **Indicator Builder Specification v1.4**: `docs/indicator-builder-specification.md` - **SOURCE OF TRUTH** for indicator structure, MOV checklist validation, BBI functionality system, and grace period handling
+  - Validated against 29 real SGLGB indicators (1.1-6.3)
+  - Defines 9 MOV checklist item types
+  - Documents 9 mandatory BBIs with governance area mappings
+  - Specifies validation statuses: Passed, Considered, Failed, Not Applicable, Pending
+  - Referenced by all 5 PRDs for consistent implementation
+
+### Product Requirements
+
 - **PRDs**: `docs/prds/` - Product requirements documents
+  - `prd-phase6-administrative-features.md` (v1.1) - Admin tools for indicator management
+  - `prd-blgu-table-assessment-workflow.md` (v2.2) - BLGU submission interface
+  - `prd-assessor-validation-rework-cycle.md` (v1.1) - Assessor/Validator workflows
+  - `prd-core-intelligence-layer.md` (v1.1) - Classification algorithm & AI insights
+  - `prd-analytics-reporting.md` (v1.1) - Analytics & reporting dashboards
+
+### Other Documentation
+
 - **Architecture**: `docs/architecture.md` - System architecture diagrams
 - **Roadmap**: `docs/project-roadmap.md` - Feature roadmap
 - **Tasks**: `tasks/` - Implementation task lists
