@@ -1,10 +1,10 @@
-import { v4 as uuidv4 } from 'uuid';
 import type {
   IndicatorNode,
   IndicatorTreeState,
   SchemaStatus,
   ValidationError as SchemaValidationError
 } from '@/store/useIndicatorBuilderStore';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Tree Utilities for Hierarchical Indicators
