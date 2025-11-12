@@ -1,5 +1,14 @@
 # PRD: The Core Intelligence Layer
 
+## Document Version History
+
+| Version | Date | Author | Changes |
+|---------|------|--------|---------|
+| 1.1 | November 12, 2025 | VANTAGE Development Team | **Phase 4 PRD Alignment**: Aligned with Indicator Builder Specification v1.4<br/>- Enhanced [Section 4.2 (Classification Algorithm)](#42-the-classification-algorithm) to handle "Considered" validation status (equivalent to "Passed" for compliance determination)<br/>- Updated algorithm logic to treat both "Passed" and "Considered" statuses as successful for 3+1 rule<br/>- Added Indicator Builder Specification v1.4 reference to [Section 7 (Technical Considerations)](#7-technical-considerations)<br/>- Clarified validation status types including grace period compliance |
+| 1.0 | Initial | - | Original PRD for Core Intelligence Layer |
+
+---
+
 ### 1. Introduction & Overview
 
 This document outlines the product requirements for **Phase 4: The Core Intelligence Layer**. This phase implements the "smart" features that automate scoring and generate AI-powered insights based on the final, validated assessment data.
@@ -56,13 +65,23 @@ The goal is to transform raw validation data into actionable intelligence that h
 
 **2.1** The algorithm must run automatically and immediately after an Area Assessor clicks "Finalize Validation" on an assessment. This occurs in the background as part of the finalization process.
 
-**2.2** The algorithm must query all `assessment_responses` for the assessment, filtering only those with a `validation_status` value of `Pass` (ignoring `Conditional` or `Fail` statuses).
+**2.2** The algorithm must query all `assessment_responses` for the assessment, filtering those with successful validation statuses.
+
+**Validation Status Handling:**
+- **"Passed"**: Indicator met all compliance criteria
+- **"Considered"**: Indicator met compliance criteria with grace period or alternative evidence acceptance (functionally equivalent to "Passed")
+- **"Conditional"**: Minor issues to resolve (treated as successful for classification)
+- **"Failed"**: Indicator did not meet compliance criteria
+- **"Not Applicable"**: Indicator does not apply to this barangay
+
+For classification purposes, indicators with **"Passed"**, **"Considered"**, or **"Conditional"** statuses are counted as successful. Only **"Failed"** status prevents an area from passing.
 
 **2.3** The algorithm must identify which governance areas have passed based on the following logic:
 
 - For each of the six governance areas, retrieve all indicators within that area.
-- An area is considered **"Passed"** only if **ALL** indicators within that area have a `validation_status` of `Pass` (100% compliance within the area).
+- An area is considered **"Passed"** only if **ALL** indicators within that area have a `validation_status` of `Pass`, `Considered`, or `Conditional` (100% compliance within the area).
 - If even one indicator within an area has a status of `Fail`, that entire area is marked as **"Failed"**.
+- Indicators marked as `Not Applicable` should be excluded from the calculation for that area.
 
 **2.4** The algorithm must apply the "3+1" SGLGB rule:
 
@@ -187,6 +206,22 @@ The goal is to transform raw validation data into actionable intelligence that h
 - **Accessibility:** All status indicators and recommendations must be accessible via screen readers and keyboard navigation.
 
 ### 7. Technical Considerations
+
+**Reference Documentation:**
+
+For complete validation status specifications, MOV checklist validation patterns, and grace period handling that determine "Considered" status, see:
+**📄 [Indicator Builder Specification v1.4](/docs/indicator-builder-specification.md)**
+
+This specification defines:
+- Complete validation status types (Passed, Considered, Failed, Not Applicable, Pending)
+- Grace period validation logic that produces "Considered" status
+- MOV checklist validation patterns used by Assessors/Validators
+- Alternative evidence acceptance that results in "Considered" status
+- Database schema for validation statuses
+
+**Key Alignment Note**: The "Considered" validation status (introduced for grace period compliance and alternative evidence) is functionally equivalent to "Passed" for the purposes of the 3+1 classification algorithm. Both indicate successful indicator compliance.
+
+---
 
 - **Background Processing:** The classification algorithm must run as a synchronous operation during the finalization process. It should not block the user interface for more than 5 seconds.
 - **Celery Task:** Consider implementing the Gemini API call as a Celery background task if API response times exceed 10 seconds to prevent frontend timeouts.
