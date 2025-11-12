@@ -12,3 +12,7 @@ export { LockedStateBanner } from "./LockedStateBanner";
 export { ResubmitAssessmentButton } from "./submission/ResubmitAssessmentButton";
 export { ReworkCommentsPanel } from "./rework/ReworkCommentsPanel";
 export { SubmitAssessmentButton } from "./submission/SubmitAssessmentButton";
+
+// Tree Navigation Components
+export { AssessmentContentPanel } from "./AssessmentContentPanel";
+export * from "./tree-navigation";

@@ -4,13 +4,21 @@ import {
   AssessmentHeader,
   AssessmentLockedBanner,
   AssessmentSkeleton,
-  AssessmentTabs,
 } from "@/components/features/assessments";
+import { AssessmentContentPanel } from "@/components/features/assessments/AssessmentContentPanel";
+import {
+  TreeNavigator,
+  MobileTreeDrawer,
+  MobileNavButton,
+  findIndicatorById,
+} from "@/components/features/assessments/tree-navigation";
 import {
   useAssessmentValidation,
   useCurrentAssessment,
 } from "@/hooks/useAssessment";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function BLGUAssessmentsPage() {
   const { isAuthenticated, user, token } = useAuthStore();
@@ -21,6 +29,45 @@ export default function BLGUAssessmentsPage() {
     error,
   } = useCurrentAssessment();
   const validation = useAssessmentValidation(assessment);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // Selected indicator state
+  const [selectedIndicatorId, setSelectedIndicatorId] = useState<string | null>(
+    null
+  );
+
+  // Mobile drawer state
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
+
+  // Sync selectedIndicatorId with URL params
+  useEffect(() => {
+    const indicatorParam = searchParams.get("indicator");
+    if (indicatorParam && assessment) {
+      // Validate that indicator exists in assessment
+      const result = findIndicatorById(assessment, indicatorParam);
+      if (result) {
+        setSelectedIndicatorId(indicatorParam);
+      } else {
+        // Invalid indicator ID in URL, clear it
+        router.replace("/blgu/assessments");
+      }
+    }
+  }, [searchParams, assessment, router]);
+
+  // Update URL when indicator is selected (without scrolling)
+  const handleIndicatorSelect = (indicatorId: string) => {
+    setSelectedIndicatorId(indicatorId);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("indicator", indicatorId);
+
+    // Use window.history.pushState to update URL without triggering scroll
+    window.history.pushState(
+      null,
+      "",
+      `/blgu/assessments?${params.toString()}`
+    );
+  };
 
   // Show loading if not authenticated or if auth state is still loading
   if (!isAuthenticated || !user || !token) {
@@ -120,25 +167,68 @@ export default function BLGUAssessmentsPage() {
     assessment.status === "Submitted for Review" ||
     assessment.status === "Validated";
 
+  // Get selected indicator
+  const selectedIndicatorData = selectedIndicatorId
+    ? findIndicatorById(assessment, selectedIndicatorId)
+    : null;
+  const selectedIndicator = selectedIndicatorData?.indicator || null;
+
+  // Calculate progress percentage for mobile button
+  const progressPercentage =
+    assessment.totalIndicators > 0
+      ? Math.round(
+          (assessment.completedIndicators / assessment.totalIndicators) * 100
+        )
+      : 0;
+
   return (
-    <div className="min-h-screen bg-[var(--background)]">
+    <div className="min-h-screen bg-[var(--background)] flex flex-col">
       {/* Enhanced Locked Banner */}
       {isLocked && <AssessmentLockedBanner status={assessment.status} />}
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="space-y-8">
-          {/* Enhanced Header */}
+      {/* Header (Full Width) */}
+      <div className="border-b border-[var(--border)] bg-[var(--card)]">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <AssessmentHeader assessment={assessment} validation={validation} />
+        </div>
+      </div>
 
-          {/* Enhanced Assessment Tabs */}
-          <AssessmentTabs
+      {/* Split Panel Layout */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Desktop: Left Sidebar Tree Navigation */}
+        <aside className="hidden lg:block w-80 xl:w-96 flex-shrink-0">
+          <TreeNavigator
             assessment={assessment}
+            selectedIndicatorId={selectedIndicatorId}
+            onIndicatorSelect={handleIndicatorSelect}
+          />
+        </aside>
+
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-hidden">
+          <AssessmentContentPanel
+            assessment={assessment}
+            selectedIndicator={selectedIndicator}
             isLocked={isLocked}
             updateAssessmentData={updateAssessmentData}
           />
-        </div>
+        </main>
       </div>
+
+      {/* Mobile: Bottom Sheet Drawer */}
+      <MobileTreeDrawer
+        isOpen={isMobileDrawerOpen}
+        onClose={() => setIsMobileDrawerOpen(false)}
+        assessment={assessment}
+        selectedIndicatorId={selectedIndicatorId}
+        onIndicatorSelect={handleIndicatorSelect}
+      />
+
+      {/* Mobile: Floating Action Button */}
+      <MobileNavButton
+        progress={progressPercentage}
+        onClick={() => setIsMobileDrawerOpen(true)}
+      />
     </div>
   );
 }

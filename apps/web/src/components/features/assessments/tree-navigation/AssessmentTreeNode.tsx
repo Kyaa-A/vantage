@@ -1,0 +1,187 @@
+"use client";
+
+import { Indicator, GovernanceArea } from "@/types/assessment";
+import {
+  ChevronRight,
+  ChevronDown,
+  Circle,
+  CheckCircle,
+  AlertCircle,
+} from "lucide-react";
+
+interface AssessmentTreeNodeProps {
+  type: "area" | "indicator";
+  item: GovernanceArea | Indicator;
+  isExpanded?: boolean;
+  isSelected?: boolean;
+  isActive?: boolean;
+  onToggle?: () => void;
+  onClick?: () => void;
+  level?: number;
+  progress?: {
+    completed: number;
+    total: number;
+    percentage: number;
+  };
+}
+
+export function AssessmentTreeNode({
+  type,
+  item,
+  isExpanded = false,
+  isSelected = false,
+  isActive = false,
+  onToggle,
+  onClick,
+  level = 0,
+  progress,
+}: AssessmentTreeNodeProps) {
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (type === "area" && onToggle) {
+      onToggle();
+    } else if (type === "indicator" && onClick) {
+      onClick();
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      if (type === "area" && onToggle) {
+        onToggle();
+      } else if (type === "indicator" && onClick) {
+        onClick();
+      }
+    }
+  };
+
+  const getStatusIcon = () => {
+    if (type === "area") {
+      if (!progress) return null;
+      if (progress.percentage === 100) {
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      }
+      return (
+        <div className="relative h-4 w-4">
+          <svg className="transform -rotate-90" viewBox="0 0 16 16">
+            <circle
+              cx="8"
+              cy="8"
+              r="6"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="text-[var(--border)]"
+            />
+            <circle
+              cx="8"
+              cy="8"
+              r="6"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeDasharray={`${progress.percentage * 0.377} ${(100 - progress.percentage) * 0.377}`}
+              strokeLinecap="round"
+              className="text-[var(--cityscape-yellow)]"
+            />
+          </svg>
+        </div>
+      );
+    }
+
+    // Indicator status icons
+    const indicator = item as Indicator;
+    switch (indicator.status) {
+      case "completed":
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case "needs_rework":
+        return <AlertCircle className="h-4 w-4 text-orange-500" />;
+      default:
+        return <Circle className="h-4 w-4 text-gray-400" />;
+    }
+  };
+
+  const height = type === "area" ? 48 : 40;
+  const indent = level * 16 + (type === "area" ? 0 : 24);
+
+  return (
+    <div
+      role="treeitem"
+      aria-expanded={type === "area" ? isExpanded : undefined}
+      aria-selected={isSelected}
+      aria-level={level + 1}
+      tabIndex={0}
+      className={`
+        group relative flex items-center gap-2 cursor-pointer transition-all duration-150
+        ${isActive ? "bg-[var(--cityscape-yellow)]/10 border-l-[3px] border-l-[var(--cityscape-yellow)]" : "border-l-[3px] border-l-transparent"}
+        ${!isActive ? "hover:bg-[var(--hover)]" : ""}
+        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--cityscape-yellow)]
+      `}
+      style={{
+        height: `${height}px`,
+        paddingLeft: `${indent}px`,
+        minHeight: `44px`, // Accessibility: minimum touch target
+      }}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+    >
+      {/* Expand/Collapse Chevron (Areas only) */}
+      {type === "area" && (
+        <div className="flex-shrink-0 w-4 h-4">
+          {isExpanded ? (
+            <ChevronDown className="h-4 w-4 text-[var(--text-secondary)]" />
+          ) : (
+            <ChevronRight className="h-4 w-4 text-[var(--text-secondary)]" />
+          )}
+        </div>
+      )}
+
+      {/* Status Icon */}
+      <div className="flex-shrink-0">{getStatusIcon()}</div>
+
+      {/* Label */}
+      <div className="flex-1 min-w-0 flex items-baseline gap-2">
+        {type === "area" ? (
+          <>
+            <span
+              className={`
+              font-semibold text-sm truncate
+              ${isActive ? "text-[var(--foreground)]" : "text-[var(--foreground)]"}
+            `}
+            >
+              {(item as GovernanceArea).code}
+            </span>
+            {progress && (
+              <span className="text-xs text-[var(--text-secondary)] flex-shrink-0">
+                {progress.completed}/{progress.total}
+              </span>
+            )}
+          </>
+        ) : (
+          <>
+            {(item as Indicator).code && (
+              <span className="text-xs font-mono text-[var(--text-secondary)] flex-shrink-0">
+                {(item as Indicator).code}
+              </span>
+            )}
+            <span
+              className={`
+              text-sm truncate
+              ${isActive ? "font-medium text-[var(--foreground)]" : "text-[var(--text-secondary)]"}
+            `}
+              title={item.name}
+            >
+              {item.name}
+            </span>
+          </>
+        )}
+      </div>
+
+      {/* Hover indicator */}
+      {!isActive && (
+        <div className="absolute right-0 top-0 bottom-0 w-1 bg-[var(--cityscape-yellow)] opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
+      )}
+    </div>
+  );
+}
