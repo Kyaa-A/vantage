@@ -535,17 +535,57 @@ For complete MOV checklist item specifications, validation patterns, and 29+ rea
 
 #### 4.2.2 Indicator-to-BBI Mapping
 
-**FR-6.2.2.1:** For each BBI, the system MUST provide an interface to define the calculation rule for determining "Functional" vs. "Non-Functional" status.
+**FR-6.2.2.1:** For each BBI, the system MUST provide an interface to link the BBI to its **one dedicated functionality indicator**.
 
-**FR-6.2.2.2:** The BBI rule builder MUST support the same rule types as the indicator calculation schema (AND_ALL, OR_ANY, etc.).
+> **IMPORTANT CLARIFICATION:**
+> - Each BBI has **exactly ONE** functionality indicator
+> - The BBI's functionality status is **DETERMINED BY** the indicator's validation result (NOT the other way around)
+> - **Direction of Relationship**: Indicator pass/fail → BBI functional/non-functional
+> - **No Cross-References**: Indicators do NOT check other BBI statuses as validation criteria
+> - BBIs are standalone - their status is purely derived from their associated indicator
 
-**FR-6.2.2.3:** The system MUST allow the MLGOO-DILG to select which indicators contribute to the BBI functionality determination.
+**FR-6.2.2.2:** The BBI mapping interface MUST display:
+- BBI Name and Code
+- Associated Governance Area
+- Dropdown to select the **one functionality indicator** from the same governance area
+- Read-only display showing the current mapping if one exists
 
-**FR-6.2.2.4:** The system MUST allow the MLGOO-DILG to define the logic: "If [these indicator conditions are met], then BBI = Functional, else BBI = Non-Functional."
+**FR-6.2.2.3:** The system MUST enforce the following BBI functionality determination rules:
 
-**FR-6.2.2.5:** The system MUST provide a "Test BBI Calculation" feature where the MLGOO-DILG can input sample indicator statuses and see the resulting BBI functionality status.
+| Indicator Validation Result | BBI Functionality Status | Notes |
+|------------------------------|--------------------------|-------|
+| **Passed** | ✅ Functional | All validation criteria met |
+| **Considered** | ✅ Functional (with notes) | Passed with grace period or alternative evidence |
+| **Failed** | ❌ Non-Functional | Validation criteria not met |
+| **Not Applicable** | ⚠️ N/A | Indicator marked as not applicable |
+| **Pending** | ⏳ Pending Validation | Awaiting assessor validation |
 
-**FR-6.2.2.6:** The system MUST validate that all indicators referenced in a BBI mapping rule actually exist and are active.
+**FR-6.2.2.4:** When an indicator includes grace period validation (e.g., date within grace period), the system MUST:
+- Mark the indicator status as **"Considered"** (not "Passed")
+- Set the BBI functionality status to **"Functional"** with a notation indicating grace period acceptance
+- Store the consideration note (e.g., "Document dated within 30-day grace period")
+
+**FR-6.2.2.5:** The system MUST provide a "View BBI Mapping Summary" interface showing:
+- All 9 mandatory BBIs
+- Their associated functionality indicator codes (e.g., "2.1", "3.1")
+- Current mapping status (Mapped/Unmapped)
+- Validation status for the current assessment cycle
+
+**FR-6.2.2.6:** The system MUST validate that:
+- Each BBI is mapped to exactly ONE indicator
+- The mapped indicator exists and is active
+- The indicator belongs to the correct governance area as specified in the BBI table
+- No circular references exist (though this should be impossible with the one-way relationship)
+
+**FR-6.2.2.7:** The system MUST prevent the MLGOO-DILG from:
+- Mapping multiple indicators to a single BBI
+- Mapping an indicator to multiple BBIs (except for the 9 designated functionality indicators)
+- Creating complex calculation rules for BBI determination (1:1 mapping only)
+
+**Reference Documentation:**
+
+For complete BBI system specifications, relationship diagrams, and database schema, see:
+**📄 [Indicator Builder Specification v1.4 - BBI Functionality Tracking System](/docs/indicator-builder-specification.md#bbi-functionality-tracking-system)**
 
 ### 4.3 Assessment Cycle & Deadline Management
 
@@ -1111,6 +1151,7 @@ apps/web/src/app/(app)/mlgoo/indicators/builder/page.tsx
 
 ## Appendix A: Related Documents
 
+- **`docs/indicator-builder-specification.md`** - **Indicator Builder Specification v1.4** (CRITICAL: Source of truth for indicator structure, MOV checklist items, validation patterns, and BBI functionality system)
 - `docs/project-roadmap.md` - VANTAGE Feature Roadmap
 - `tasks/tasks-prd-blgu-preassessmet-workflow/README.md` - Metadata-Driven Indicator Management Approach
 - `CLAUDE.md` - VANTAGE Architecture & Development Guidelines
