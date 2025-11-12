@@ -1,5 +1,14 @@
 # PRD: The Assessor Validation & Rework Cycle
 
+## Document Version History
+
+| Version | Date | Author | Changes |
+|---------|------|--------|---------|
+| 1.1 | November 12, 2025 | VANTAGE Development Team | **Phase 2 PRD Alignment**: Aligned with Indicator Builder Specification v1.4<br/>- Enhanced Section 4.2.4 (Conditional Status Logic) with grace period validation and "Considered" status reference<br/>- Added Section 4.2.10: Comprehensive MOV Checklist Validation Interface documentation<br/>- Added Indicator Builder Specification v1.4 reference to Section 7 (Technical Considerations) |
+| 1.0 | Initial | - | Original PRD for Assessor Validation & Rework Cycle |
+
+---
+
 ### 1. Introduction & Overview
 
 This document outlines the product requirements for **Epic 3: The Assessor Validation & Rework Cycle**. This feature set builds the complete toolkit for the DILG Area Assessors, who are the primary validators within the VANTAGE ecosystem.
@@ -48,11 +57,83 @@ The goal is to provide assessors with a focused, efficient, and powerful interfa
     *   If an assessor selects `Conditional`, the associated comment field becomes **mandatory**.
     *   The `Conditional` status signifies a minor issue to be resolved during the in-person Table Validation (e.g., "Confirm signature on original document").
     *   A `Conditional` status does **not** trigger the formal rework cycle.
+    *   **"Considered" Status (Metadata-Driven):** The system also supports a **"Considered"** status that is automatically determined by the MOV checklist validation logic (not manually selected by assessors). This status indicates compliance with grace period provisions or alternative evidence acceptance:
+        *   **Grace Period Compliance**: When a document date falls within an allowed grace period (e.g., ordinance dated 25 days after deadline with 30-day grace period), the indicator is automatically marked "Considered" (equivalent to "Passed" but with notation)
+        *   **Alternative Evidence**: When acceptable alternative documents are used instead of primary evidence (e.g., bank statement instead of deposit slip), the system marks the indicator as "Considered" with a consideration note
+        *   **Functional Status**: Both "Passed" and "Considered" statuses result in "Functional" determination for BBI functionality indicators
+        *   See Section 4.2.10 for complete MOV checklist validation patterns and [Indicator Builder Specification v1.4](/docs/indicator-builder-specification.md) for technical implementation details
 2.5. **MOV Previewer:** The interface must provide an in-app modal viewer for PDF and image files. Clicking on these file types should open a preview, not a download dialog. Other file types (e.g., DOCX, XLSX) can default to a download link.
 2.6. A text area must be provided for the assessor to write specific findings and comments for each indicator. This comment is visible to the BLGU user if a rework is issued.
 2.7. **Internal Notes:** A separate, clearly labeled text area for **"Internal Notes (DILG Only)"** must be provided for each indicator. Content in this field must never be visible to BLGU users.
 2.8. **Assessor-Side MOV Uploader:** The validation interface must include a file uploader that allows the assessor to upload a document on behalf of the barangay. This uploaded file must be clearly marked in the system as "Uploaded by Assessor."
 2.9. **Draft Mode:** The assessor must be able to "Save as Draft" to save their progress on validation and comments without finalizing the assessment or sending a rework request.
+
+2.10. **MOV Checklist Validation Interface:**
+
+The validation interface must provide a comprehensive, metadata-driven **MOV checklist system** that guides assessors through systematic evidence validation. This checklist is distinct from the BLGU submission form and represents the professional validation layer.
+
+**Key Characteristics:**
+*   **Metadata-Driven**: Each indicator's MOV checklist is defined by the MLGOO-DILG during indicator configuration (see Phase 6 Admin PRD)
+*   **9 Checklist Item Types Supported**:
+    *   **checkbox**: Binary validation (e.g., "Document posted: Yes/No")
+    *   **group**: Logical grouping with optional OR logic for alternative evidence paths
+    *   **currency_input**: Monetary validation with automatic threshold checks (e.g., "Budget ≥ ₱50,000")
+    *   **number_input**: Numeric validation with min/max ranges
+    *   **text_input**: Free-text evidence recording
+    *   **date_input**: Date validation with automatic grace period calculation
+    *   **assessment**: Sub-indicator evaluation fields (YES/NO radio buttons for validator judgment)
+    *   **radio_group**: Single-selection validation options
+    *   **dropdown**: Dropdown selection validation
+*   **Automatic Validation Logic**: The system automatically determines Pass/Fail/Considered status based on checklist item responses and validation rules
+*   **Grace Period Handling**: Date inputs with grace periods automatically produce "Considered" status when dates fall within the grace period window
+*   **OR Logic Support**: Groups can define alternative evidence paths (e.g., "Physical accomplishment ≥50% OR Financial utilization ≥50%")
+*   **Conditional Display**: Checklist items can show/hide based on barangay data or previous responses
+
+**Validation Status Determination:**
+
+| Checklist Result | Status | BBI Impact (for 9 BBI indicators) |
+|------------------|--------|-----------------------------------|
+| All required items passed | **Passed** | BBI = Functional |
+| Passed with grace period | **Considered** | BBI = Functional (with note) |
+| Alternative evidence used | **Considered** | BBI = Functional (with note) |
+| Required items failed | **Failed** | BBI = Non-Functional |
+| Indicator not applicable | **Not Applicable** | BBI = N/A |
+
+**BBI Functionality Determination:**
+
+Nine specific indicators (2.1, 3.1, 3.2, 3.3, 4.1, 4.3, 4.5, 4.8, 6.1) determine the functionality status of their associated Barangay-Based Institutions (BBIs):
+
+| Indicator | BBI Determined | Relationship |
+|-----------|----------------|--------------|
+| 2.1 | BDRRMC | Indicator validation → BBI status |
+| 3.1 | BADAC | Indicator validation → BBI status |
+| 3.2 | BPOC | Indicator validation → BBI status |
+| 3.3 | Lupong Tagapamayapa | Indicator validation → BBI status |
+| 4.1 | VAW Desk | Indicator validation → BBI status |
+| 4.3 | BDC | Indicator validation → BBI status |
+| 4.5 | BCPC | Indicator validation → BBI status |
+| 4.8 | BNC | Indicator validation → BBI status |
+| 6.1 | BESWMC | Indicator validation → BBI status |
+
+**Critical Note**: The direction of the relationship is **one-way**:
+*   Indicator validation result → Determines BBI functionality status
+*   Indicators do NOT check other BBI statuses as validation criteria
+*   Each BBI has exactly ONE functionality indicator
+
+**UI/UX Requirements for MOV Checklist Interface:**
+*   Display checklist items in order with clear visual hierarchy
+*   Show threshold validation results in real-time (e.g., "✓ Budget exceeds ₱50,000 threshold")
+*   Display grace period calculations for date inputs (e.g., "Document dated 25 days after deadline - within 30-day grace period ✓")
+*   Highlight OR logic groups with visual indicators showing "Any ONE of these must pass"
+*   Show/hide conditional items based on barangay data or assessor responses
+*   Automatically calculate and display overall indicator status based on checklist responses
+*   Provide clear consideration notes for "Considered" status (e.g., "Accepted under grace period provision")
+*   For BBI functionality indicators, display prominent notification: "This indicator determines [BBI Name] functionality status"
+
+**Reference Documentation:**
+
+For complete technical specifications, validation algorithms, database schema, and 29+ real indicator examples, see:
+**📄 [Indicator Builder Specification v1.4](/docs/indicator-builder-specification.md)**
 
 #### 4.3. Rework Workflow Module
 3.1. The assessor's interface must have a "Compile and Send for Rework" button.
@@ -82,6 +163,20 @@ The goal is to provide assessors with a focused, efficient, and powerful interfa
 *   The "Save as Draft" vs. "Finalize Validation" actions must be clearly differentiated to prevent user error.
 
 ### 7. Technical Considerations
+
+**Reference Documentation:**
+
+For complete technical specifications on MOV checklist validation, indicator structure, BBI functionality system, grace period handling, and database schema, see:
+**📄 [Indicator Builder Specification v1.4](/docs/indicator-builder-specification.md)**
+
+This specification defines:
+*   Complete MOV checklist item types and validation algorithms
+*   Database schema for indicators, MOV checklists, and BBI tracking
+*   Grace period validation logic and "Considered" status determination
+*   OR logic implementation and conditional display patterns
+*   BBI functionality tracking system with one-way indicator→BBI relationship
+
+---
 
 *   **API Endpoints:** New, protected endpoints are required:
     *   `GET /api/v1/assessor/queue`: Fetches the assessor's personalized queue, filtered by their `assessor_area` on the backend.
