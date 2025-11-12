@@ -191,30 +191,20 @@ export default function IndicatorList({
             </div>
           </div>
 
-          {/* Create New Button Group */}
-          {onCreateNew && (
-            <div className="lg:mb-0 flex flex-col sm:flex-row gap-2">
-              <Button
-                onClick={onCreateNew}
-                variant="outline"
-                className="w-full sm:w-auto h-11 px-6 font-semibold hover:shadow-lg transition-all duration-200"
-              >
-                <Plus className="h-5 w-5 mr-2" />
-                Single Indicator
-              </Button>
-              <Button
-                onClick={() => router.push('/mlgoo/indicators/builder')}
-                className="w-full sm:w-auto h-11 px-6 font-semibold hover:shadow-lg transition-all duration-200"
-                style={{
-                  background: 'linear-gradient(to bottom right, var(--cityscape-yellow), var(--cityscape-yellow-dark))',
-                  color: 'var(--foreground)',
-                }}
-              >
-                <Plus className="h-5 w-5 mr-2" />
-                Hierarchical Builder
-              </Button>
-            </div>
-          )}
+          {/* Create New Button */}
+          <div className="lg:mb-0">
+            <Button
+              onClick={() => router.push('/mlgoo/indicators/builder')}
+              className="w-full sm:w-auto h-11 px-6 font-semibold hover:shadow-lg transition-all duration-200"
+              style={{
+                background: 'linear-gradient(to bottom right, var(--cityscape-yellow), var(--cityscape-yellow-dark))',
+                color: 'var(--foreground)',
+              }}
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              Hierarchical Builder
+            </Button>
+          </div>
         </div>
 
         {/* Results count */}
