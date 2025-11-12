@@ -1,5 +1,14 @@
 # Product Requirements Document: High-Level Analytics & Reporting
 
+## Document Version History
+
+| Version | Date | Author | Changes |
+|---------|------|--------|---------|
+| 1.1 | November 12, 2025 | VANTAGE Development Team | **Phase 5 PRD Alignment**: Aligned with Indicator Builder Specification v1.4<br/>- Enhanced analytics requirements to include "Considered" validation status reporting<br/>- Updated compliance status filtering to recognize Passed/Considered/Conditional as successful<br/>- Added BBI functionality tracking to [Section 4.1 (MLGOO-DILG Dashboard)](#41-mlgoo-dilg-dashboard) KPIs<br/>- Added Indicator Builder Specification v1.4 reference to [Section 7 (Technical Considerations)](#7-technical-considerations)<br/>- Clarified validation status types for reporting and aggregation purposes |
+| 1.0 | Initial | - | Original PRD for High-Level Analytics & Reporting |
+
+---
+
 ## 1. Introduction/Overview
 
 The High-Level Analytics & Reporting feature transforms VANTAGE from a workflow management tool into a comprehensive strategic decision-support platform for DILG stakeholders. This feature provides the MLGOO-DILG and other authorized users with data visualizations, performance insights, and AI-generated recommendations that enable data-driven governance improvements across the municipality.
@@ -54,6 +63,19 @@ The High-Level Analytics & Reporting feature transforms VANTAGE from a workflow 
 - Breakdown of Compliance Status by each Governance Area (e.g., "Financial Administration: 70% Passed, 30% Failed")
 - Top 5 most commonly failed indicators across all barangays (with count/percentage)
 - Comparative barangay performance (ranked list or categorized tiers)
+- **BBI Functionality Status Summary**: Aggregated count and percentage of functional vs. non-functional BBIs across all barangays (9 mandatory BBIs: BDRRMC, BADAC, BPOC, LT, VAW Desk, BDC, BCPC, BNC, BESWMC)
+- **BBI Functionality Trends**: Identify which BBIs most commonly fail to achieve "Functional" status across barangays
+
+**Validation Status Handling for Analytics:**
+
+For reporting and aggregation purposes, the system must recognize these validation statuses:
+- **"Passed"**: Indicator met all compliance criteria (successful)
+- **"Considered"**: Indicator met compliance with grace period or alternative evidence (successful, equivalent to Passed)
+- **"Conditional"**: Minor issues to resolve (successful for analytics)
+- **"Failed"**: Indicator did not meet compliance criteria (unsuccessful)
+- **"Not Applicable"**: Indicator does not apply (excluded from calculations)
+
+When calculating pass rates and compliance metrics, **Passed, Considered, and Conditional** statuses should be counted as successful indicators.
 
 **FR-3:** The dashboard must support assessment cycle selection via a dropdown filter to view historical data.
 
@@ -216,6 +238,26 @@ The High-Level Analytics & Reporting feature transforms VANTAGE from a workflow 
 - PDFs must include DILG branding, page numbers, and generation metadata
 
 ## 7. Technical Considerations
+
+**Reference Documentation:**
+
+For complete validation status specifications, BBI functionality system, MOV checklist validation patterns, and grace period handling, see:
+**📄 [Indicator Builder Specification v1.4](/docs/indicator-builder-specification.md)**
+
+This specification defines:
+- Complete validation status types (Passed, Considered, Failed, Not Applicable, Pending) used in analytics
+- BBI functionality tracking system and the 9 mandatory BBIs
+- Grace period validation logic that produces "Considered" status
+- MOV checklist validation patterns that determine indicator statuses
+- Database schema for indicators, validation statuses, and BBI tracking
+
+**Key Alignment Notes for Analytics:**
+- **"Considered" status**: Treat as equivalent to "Passed" when calculating pass rates and compliance metrics
+- **BBI Functionality**: Determined by indicator validation results (9 BBI functionality indicators: 2.1, 3.1, 3.2, 3.3, 4.1, 4.3, 4.5, 4.8, 6.1)
+- **Success criteria**: Passed + Considered + Conditional = Successful indicators for analytics aggregation
+- **Failure criteria**: Only "Failed" status prevents area/indicator success
+
+---
 
 ### 7.1 Backend Architecture
 
