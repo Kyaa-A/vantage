@@ -4,9 +4,10 @@
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
-| 1.0 | Initial | - | Original PRD for BLGU Pre-Assessment Workflow |
-| 2.0 | November 2025 | Technical Documentation Specialist | Incorporating November 4, 2025 DILG consultation changes: terminology updates (Pre-Assessment → Table Assessment), dynamic indicator logic support, automated status determination, calculation_schema support |
+| 2.2 | November 12, 2025 | VANTAGE Development Team | **Phase 2 PRD Alignment**: Aligned with Indicator Builder Specification v1.4<br/>- Added Section 9.3 comprehensively documenting MOV Checklist Validation System with 9 checklist item types, advanced validation patterns, and BBI functionality determination<br/>- Enhanced Section 4.2.3 (Dynamic Form Rendering) with BBI functionality indicator context<br/>- Added comprehensive specification reference to Section 7.2 (Backend Logic)<br/>- Added BBI functionality indicators table (9 indicators determining BBI status)<br/>- Clarified direction of BBI relationship: Indicator result → BBI status (no cross-references) |
 | 2.1 | November 2025 | Technical Documentation Specialist | Architectural correction - BLGU should not see P/F/C status during Table Assessment. Removed real-time Pass/Fail/Conditional feedback from BLGU UI. Shifted focus from "compliance status" to "completion status" for BLGU experience. Clarified that calculation_schema runs on backend but results are not displayed to BLGUs. Backend still calculates P/F/C internally for Assessor/Validator use. |
+| 2.0 | November 2025 | Technical Documentation Specialist | Incorporating November 4, 2025 DILG consultation changes: terminology updates (Pre-Assessment → Table Assessment), dynamic indicator logic support, automated status determination, calculation_schema support |
+| 1.0 | Initial | - | Original PRD for BLGU Pre-Assessment Workflow |
 
 ---
 
@@ -64,6 +65,8 @@ The primary goal is to provide BLGU users with a clear, intuitive, and **dynamic
    - **`MULTI_CHECKBOX`:** A list of checkboxes for sub-indicators.
    - **`PERCENTAGE`:** A numeric input specifically for percentage values (0-100%).
    - **`CONDITIONAL`:** Fields that appear/disappear based on other field values (e.g., "If you select 'Yes', provide date").
+
+   **Note on BBI Functionality Indicators:** Nine specific indicators (2.1, 3.1, 3.2, 3.3, 4.1, 4.3, 4.5, 4.8, 6.1) serve a dual purpose: they assess compliance AND determine the functionality status of their associated Barangay-Based Institution (BBI). For example, Indicator 2.1 assesses BDRRMC compliance and its validation result determines whether the BDRRMC is "Functional" or "Non-Functional." This BBI functionality determination happens automatically after Assessor/Validator validation, but BLGUs are not shown this status during their submission phase. See Section 9.3 for complete BBI system details.
 2.4. Each indicator must display its official "Technical Notes" and the MOV Uploader component.
 2.5. **Real-Time Completion Feedback:** As the BLGU user enters data, the system must:
    - Validate that all required fields (based on `form_schema`) are filled
@@ -165,6 +168,21 @@ This epic requires the implementation and interaction of the following models:
 - **`movs` & `feedback_comments`**: As previously defined
 
 #### **7.2. Backend Logic**
+
+**Reference Documentation:**
+
+For complete indicator structure specifications, MOV checklist validation patterns, BBI functionality system, and detailed technical implementation guidance, see:
+**📄 [Indicator Builder Specification v1.4](/docs/indicator-builder-specification.md)**
+
+This specification document defines:
+- Complete `form_schema` structure for all SGLGB indicators
+- MOV checklist item types and validation logic for Assessor/Validator interfaces
+- BBI functionality determination rules
+- Grace period validation and "Considered" status handling
+- OR logic, conditional display, and alternative evidence patterns
+- Database schema for indicators, MOV checklists, and BBI tracking
+
+---
 
 - **API Endpoints:**
   - The main `GET` endpoint for the assessment must return `form_schema` for each indicator (defines input fields and requirements)
@@ -274,6 +292,78 @@ While this PRD focuses on the BLGU experience (Phase 2), it's important to note:
 - **Validators** (Phase 3B) WILL also see the calculated status during the Table Validation phase
 - This calculated status (from `calculation_schema`) helps guide Assessor/Validator review but does not replace their professional judgment
 - The Phase 3 PRDs cover the Assessor/Validator interfaces where compliance status IS displayed
+
+#### **9.3. MOV Checklist Validation System**
+
+The VANTAGE system implements a comprehensive **MOV (Means of Verification) checklist validation system** used by Assessors and Validators during the review process. This system is distinct from the BLGU submission interface and represents the professional validation layer.
+
+**Key Characteristics:**
+
+1. **BLGU Submission Layer (Phase 2 - This PRD)**:
+   - BLGUs upload MOV files (PDF, DOCX, images) as evidence
+   - BLGUs provide data inputs (dates, amounts, text) via `form_schema`-driven forms
+   - Focus: Completeness of submission
+
+2. **Assessor/Validator Validation Layer (Phase 3)**:
+   - Assessors/Validators use **MOV checklist items** to systematically validate evidence
+   - Checklist items are metadata-driven (defined per indicator in indicator configuration)
+   - 9 checklist item types supported: checkbox, group, currency_input, number_input, text_input, date_input, assessment, radio_group, dropdown
+   - Validation includes threshold checks, grace period handling, OR logic, conditional display
+   - Results in Pass/Fail/Considered/Not Applicable status determination
+
+**MOV Checklist Item Types:**
+
+| Type | Purpose | Example Use Case |
+|------|---------|------------------|
+| **checkbox** | Binary validation (Yes/No) | "Document posted: Yes/No" |
+| **group** | Logical grouping with optional OR logic | "Either document A OR document B acceptable" |
+| **currency_input** | Monetary validation with thresholds | "Budget allocation ≥ ₱50,000" |
+| **number_input** | Numeric validation with min/max | "Training attendance ≥ 15 participants" |
+| **text_input** | Free-text evidence recording | "BBI composition details" |
+| **date_input** | Date validation with grace periods | "Ordinance date within 30-day grace period" |
+| **assessment** | Sub-indicator evaluation | "Validator judgment: Compliant?" |
+| **radio_group** | Single-selection validation | "Select document type verified" |
+| **dropdown** | Dropdown selection validation | "Select applicable category" |
+
+**Advanced Validation Patterns:**
+
+- **OR Logic**: Alternative evidence paths (e.g., "Physical accomplishment ≥50% OR Financial utilization ≥50%")
+- **Conditional Display**: Show/hide checklist items based on barangay data or previous responses
+- **Threshold Validation**: Automatic pass/fail with numeric thresholds
+- **Grace Period Handling**: Date validation with grace periods produces "Considered" status (equivalent to "Passed")
+- **Alternative Evidence**: Substitute acceptable documents with consideration notes
+- **Mutually Exclusive Scenarios**: Selection mode for "one_of" logic where validator selects applicable scenario
+
+**BBI Functionality Determination:**
+
+Nine indicators across the SGLGB framework serve a dual purpose:
+1. Standard indicator validation (Pass/Fail/Considered)
+2. **Determine BBI (Barangay-Based Institution) functionality status**
+
+The **direction of relationship** is critical:
+- **Indicator validation result → BBI functionality status**
+- When an indicator passes validation → its associated BBI is marked "Functional"
+- When an indicator fails validation → its associated BBI is marked "Non-Functional"
+- **No cross-references**: Indicators do NOT check other BBI statuses as validation criteria
+
+**9 BBI Functionality Indicators:**
+
+| Indicator | BBI Determined | Governance Area |
+|-----------|----------------|-----------------|
+| 2.1 | BDRRMC | Core 2: Disaster Preparedness |
+| 3.1 | BADAC | Core 3: Safety, Peace and Order |
+| 3.2 | BPOC | Core 3: Safety, Peace and Order |
+| 3.3 | Lupong Tagapamayapa | Core 3: Safety, Peace and Order |
+| 4.1 | VAW Desk | Essential 1: Social Protection |
+| 4.3 | BDC | Essential 1: Social Protection |
+| 4.5 | BCPC | Essential 1: Social Protection |
+| 4.8 | BNC | Essential 1: Social Protection |
+| 6.1 | BESWMC | Essential 3: Environmental Management |
+
+**Reference Documentation:**
+
+For complete MOV checklist specifications, validation patterns, BBI system details, and 29+ real indicator examples, see:
+**📄 [Indicator Builder Specification v1.4](/docs/indicator-builder-specification.md)**
 
 ### **10. Open Questions**
 
