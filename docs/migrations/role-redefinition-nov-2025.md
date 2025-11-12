@@ -339,7 +339,7 @@ alembic downgrade -1
 
 For questions or issues:
 - Check [CLAUDE.md](../../CLAUDE.md) for role documentation
-- Review PRD at [docs/prds/prd-core-user-authentication-and-management.md](../prds/prd-core-user-authentication-and-management.md)
+- Review PRD at [docs/prds/prd-phase1-core-user-authentication-and-management.md](../prds/prd-phase1-core-user-authentication-and-management.md)
 - Contact development team
 
 ## Changelog

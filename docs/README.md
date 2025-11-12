@@ -48,11 +48,13 @@ SGLGB assessment workflow documentation.
 - [Intelligence Layer](./workflows/intelligence-layer.md) - AI-powered insights
 
 ### 📋 Product Requirements (PRDs)
-Detailed product requirement documents for major features.
-- [Core User Authentication](./prds/prd-core-user-authentication-and-management.md)
-- [BLGU Pre-Assessment Workflow](./prds/prd-blgu-pre-assessment-workflow.md)
-- [Assessor Validation & Rework Cycle](./prds/prd-assessor-validation-rework-cycle.md)
-- [Core Intelligence Layer](./prds/prd-core-intelligence-layer.md)
+Detailed product requirement documents for major features (sequential by phase).
+- [Phase 1: Core User Authentication & Management](./prds/prd-phase1-core-user-authentication-and-management.md)
+- [Phase 2: BLGU Table Assessment Workflow](./prds/prd-phase2-blgu-table-assessment-workflow.md)
+- [Phase 3: Assessor Validation & Rework Cycle](./prds/prd-phase3-assessor-validation-rework-cycle.md)
+- [Phase 4: Core Intelligence Layer](./prds/prd-phase4-core-intelligence-layer.md)
+- [Phase 5: Analytics & Reporting](./prds/prd-phase5-analytics-reporting.md)
+- [Phase 6: Administrative Features](./prds/prd-phase6-administrative-features.md)
 
 ### 🔧 Troubleshooting
 Common issues and solutions.

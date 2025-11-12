@@ -603,12 +603,13 @@ See `apps/api/app/api/v1/users.py` for complete documentation.
 
 ### Product Requirements
 
-- **PRDs**: `docs/prds/` - Product requirements documents
+- **PRDs**: `docs/prds/` - Product requirements documents (sequential by phase)
+  - `prd-phase1-core-user-authentication-and-management.md` - User authentication & RBAC
+  - `prd-phase2-blgu-table-assessment-workflow.md` (v2.2) - BLGU submission interface
+  - `prd-phase3-assessor-validation-rework-cycle.md` (v1.1) - Assessor/Validator workflows
+  - `prd-phase4-core-intelligence-layer.md` (v1.1) - Classification algorithm & AI insights
+  - `prd-phase5-analytics-reporting.md` (v1.1) - Analytics & reporting dashboards
   - `prd-phase6-administrative-features.md` (v1.1) - Admin tools for indicator management
-  - `prd-blgu-table-assessment-workflow.md` (v2.2) - BLGU submission interface
-  - `prd-assessor-validation-rework-cycle.md` (v1.1) - Assessor/Validator workflows
-  - `prd-core-intelligence-layer.md` (v1.1) - Classification algorithm & AI insights
-  - `prd-analytics-reporting.md` (v1.1) - Analytics & reporting dashboards
 
 ### Other Documentation
 
