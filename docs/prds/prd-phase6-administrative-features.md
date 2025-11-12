@@ -395,6 +395,8 @@ POST   /api/v1/indicator-drafts/{draft_id}/release-lock
 **FR-6.1.2.1:** The system MUST provide a visual "Form Builder" interface for defining the `form_schema` of an indicator.
 
 **FR-6.1.2.2:** The Form Builder MUST support adding the following input types via drag-and-drop or button clicks:
+
+**For BLGU Data Input (frontend form fields):**
 - Checkbox Group (multi-select)
 - Radio Button Group (single-select)
 - Number Input (with min/max validation)
@@ -402,6 +404,36 @@ POST   /api/v1/indicator-drafts/{draft_id}/release-lock
 - Text Area (long answer)
 - Date Picker
 - File Upload (with conditional requirement logic)
+
+**For Validator/Assessor MOV Checklist Validation:**
+
+The Form Builder MUST also support configuring **MOV checklist items** used by Validators/Assessors during the validation workflow. These checklist items are defined in detail in the **Indicator Builder Specification v1.4** and include:
+
+- **Checkbox**: Binary validation items (e.g., "Document posted: Yes/No")
+- **Group**: Logical grouping of related checklist items with optional OR logic
+- **Currency Input**: Monetary value validation with threshold support (e.g., "Budget allocation ≥ ₱50,000")
+- **Number Input**: Numeric validation with min/max ranges and threshold checks
+- **Text Input**: Free-text evidence recording (e.g., "BBI composition details")
+- **Date Input**: Date validation with grace period support
+- **Assessment**: Sub-indicator evaluation fields (YES/NO radio buttons for validator judgments)
+- **Radio Group**: Single-selection validation options
+- **Dropdown**: Dropdown selection validation
+
+**Advanced Validation Patterns:**
+
+The Form Builder MUST support configuration of:
+- **OR Logic**: Alternative evidence paths (e.g., "Physical accomplishment ≥50% OR Financial utilization ≥50%")
+- **Conditional Display**: Show/hide items based on other item values or external data (e.g., "Show certification field only if barangay type = city")
+- **Threshold Validation**: Automatic pass/fail determination with numeric thresholds (e.g., "Budget ≥ ₱50,000 → Pass")
+- **Mutually Exclusive Scenarios**: Selection mode for "one_of" logic where validator selects which scenario applies to the barangay
+- **Grace Period Handling**: Date validation with configurable grace periods and "considered" status
+- **Alternative Evidence**: Define substitute acceptable documents with consideration notes
+- **Exclusion Rules**: Mark certain evidence as NOT acceptable with warnings
+
+**Reference Documentation:**
+
+For complete MOV checklist item specifications, validation patterns, and 29+ real-world indicator examples, see:
+**📄 [Indicator Builder Specification v1.4](/docs/indicator-builder-specification.md)**
 
 **FR-6.1.2.3:** For each input field added, the system MUST allow the MLGOO-DILG to configure:
 - Field Label (text)
@@ -467,6 +499,29 @@ POST   /api/v1/indicator-drafts/{draft_id}/release-lock
 #### 4.2.1 BBI Definition Management
 
 **FR-6.2.1.1:** The system MUST provide a dedicated "BBI Configuration" page accessible only to users with the MLGOO_DILG role.
+
+**FR-6.2.1.1a:** The system MUST pre-populate the BBI configuration interface with the **9 mandatory Barangay-Based Institutions** as defined in the SGLGB framework:
+
+| # | BBI Name | Code | Governance Area | Indicator |
+|---|----------|------|-----------------|-----------|
+| 1 | Barangay Disaster Risk Reduction and Management Committee | **BDRRMC** | Core 2: Disaster Preparedness | 2.1 |
+| 2 | Barangay Anti-Drug Abuse Council | **BADAC** | Core 3: Safety, Peace and Order | 3.1 |
+| 3 | Barangay Peace and Order Committee | **BPOC** | Core 3: Safety, Peace and Order | 3.2 |
+| 4 | Lupong Tagapamayapa (Barangay Justice System) | **LT** | Core 3: Safety, Peace and Order | 3.3 |
+| 5 | Barangay Violence Against Women Desk | **VAW Desk** | Essential 1: Social Protection | 4.1 |
+| 6 | Barangay Development Council | **BDC** | Essential 1: Social Protection | 4.3 |
+| 7 | Barangay Council for the Protection of Children | **BCPC** | Essential 1: Social Protection | 4.5 |
+| 8 | Barangay Nutrition Committee | **BNC** | Essential 1: Social Protection | 4.8 |
+| 9 | Barangay Ecological Solid Waste Management Committee | **BESWMC** | Essential 3: Environmental Management | 6.1 |
+
+**Key Points:**
+- Each BBI has **ONE dedicated functionality indicator**
+- BBI functionality status is **determined by** the indicator's pass/fail result (NOT the other way around)
+- **Direction**: Indicator result → BBI status (one-way relationship)
+- **No cross-references**: Indicators do NOT check other BBI statuses as validation criteria
+
+**Note**: For complete BBI functionality determination rules, grace period handling, and the BBI tracking system, see:
+**📄 [Indicator Builder Specification v1.4](/docs/indicator-builder-specification.md#barangay-based-institutions-bbis)**
 
 **FR-6.2.1.2:** The system MUST allow the MLGOO-DILG to create a new BBI with the following fields:
 - BBI Name (e.g., "Lupon Tagapamayapa", "Barangay Anti-Drug Abuse Council")
