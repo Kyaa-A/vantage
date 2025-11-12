@@ -7,7 +7,10 @@ import {
   Circle,
   CheckCircle,
   AlertCircle,
+  Folder,
 } from "lucide-react";
+import Image from "next/image";
+import { getGovernanceAreaLogo } from "@/lib/governance-area-logos";
 
 interface AssessmentTreeNodeProps {
   type: "area" | "indicator";
@@ -58,7 +61,33 @@ export function AssessmentTreeNode({
 
   const getStatusIcon = () => {
     if (type === "area") {
-      if (!progress) return null;
+      const area = item as GovernanceArea;
+      const logoPath = getGovernanceAreaLogo(area.code);
+
+      // Use governance area logo if available
+      if (logoPath) {
+        return (
+          <div className="relative h-6 w-6 flex-shrink-0 transition-transform duration-200 group-hover:scale-105">
+            <Image
+              src={logoPath}
+              alt={`${area.name} icon`}
+              width={24}
+              height={24}
+              className="object-contain"
+              priority
+            />
+            {/* Completion badge overlay */}
+            {progress && progress.percentage === 100 && (
+              <div className="absolute -top-1 -right-1 h-3 w-3 bg-green-500 rounded-full border-2 border-[var(--card)]">
+                <CheckCircle className="h-full w-full text-white" />
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      // Fallback to progress indicator if no logo
+      if (!progress) return <Folder className="h-4 w-4 text-[var(--text-secondary)]" />;
       if (progress.percentage === 100) {
         return <CheckCircle className="h-4 w-4 text-green-500" />;
       }

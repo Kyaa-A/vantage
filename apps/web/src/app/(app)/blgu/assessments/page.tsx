@@ -211,6 +211,7 @@ export default function BLGUAssessmentsPage() {
             selectedIndicator={selectedIndicator}
             isLocked={isLocked}
             updateAssessmentData={updateAssessmentData}
+            onIndicatorSelect={handleIndicatorSelect}
           />
         </main>
       </div>

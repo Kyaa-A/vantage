@@ -11,6 +11,7 @@ export {
     useAssessmentValidation, useCurrentAssessment, useDeleteMOV, useGovernanceArea, useIndicator, useSubmitAssessment, useUpdateIndicatorAnswer,
     useUploadMOV
 } from './useAssessment';
+export { useIndicatorNavigation } from './useIndicatorNavigation';
 
 // Intelligence hooks
 export { useIntelligence } from './useIntelligence';

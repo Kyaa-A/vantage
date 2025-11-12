@@ -15,4 +15,5 @@ export { SubmitAssessmentButton } from "./submission/SubmitAssessmentButton";
 
 // Tree Navigation Components
 export { AssessmentContentPanel } from "./AssessmentContentPanel";
+export { IndicatorNavigationFooter } from "./IndicatorNavigationFooter";
 export * from "./tree-navigation";
